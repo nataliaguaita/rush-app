@@ -1,10 +1,9 @@
-"use server";
+"use client";
 
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 
 export async function logout() {
-  const supabase = await createClient();
+  const supabase = createClient();
   await supabase.auth.signOut();
-  redirect("/login");
+  window.location.href = "/login";
 }

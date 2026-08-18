@@ -1,25 +1,34 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Phone } from "lucide-react";
 
-export default async function ClientesPage() {
-  const supabase = await createClient();
-  const { data: clientes } = await supabase
-    .from("clientes")
-    .select("*, enderecos(*)")
-    .order("name");
+export default function ClientesPage() {
+  const [clientes, setClientes] = useState<any[]>([]);
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function load() {
+      const { data } = await supabase
+        .from("clientes")
+        .select("*, enderecos(*)")
+        .order("name");
+      setClientes(data ?? []);
+    }
+    load();
+  }, []);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Clientes</h1>
-          <p className="text-muted-foreground">
-            {clientes?.length ?? 0} clientes cadastrados
-          </p>
+          <p className="text-muted-foreground">{clientes.length} clientes cadastrados</p>
         </div>
         <Link href="/dashboard/clientes/novo">
           <Button>
@@ -29,7 +38,7 @@ export default async function ClientesPage() {
         </Link>
       </div>
 
-      {!clientes || clientes.length === 0 ? (
+      {clientes.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
             Nenhum cliente cadastrado ainda.
@@ -38,10 +47,7 @@ export default async function ClientesPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {clientes.map((cliente) => (
-            <Link
-              key={cliente.id}
-              href={`/dashboard/clientes/${cliente.id}`}
-            >
+            <Link key={cliente.id} href={`/dashboard/clientes/${cliente.id}`}>
               <Card className="transition-shadow hover:shadow-md cursor-pointer">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">

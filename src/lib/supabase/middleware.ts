@@ -30,62 +30,17 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isAuthPage = request.nextUrl.pathname === "/login";
-  const isPublicPage = request.nextUrl.pathname === "/";
 
-  if (!user && !isAuthPage && !isPublicPage) {
+  if (!user && !isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
   if (user && isAuthPage) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
     const url = request.nextUrl.clone();
-    if (profile?.role === "entregador") {
-      url.pathname = "/entregador";
-    } else {
-      url.pathname = "/dashboard";
-    }
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
-  }
-
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    const path = request.nextUrl.pathname;
-
-    if (path.startsWith("/entregador") && profile?.role !== "entregador") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
-      return NextResponse.redirect(url);
-    }
-
-    if (
-      path.startsWith("/dashboard") &&
-      profile?.role === "entregador"
-    ) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/entregador";
-      return NextResponse.redirect(url);
-    }
-
-    if (
-      path.startsWith("/configuracoes") &&
-      profile?.role !== "admin"
-    ) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
-      return NextResponse.redirect(url);
-    }
   }
 
   return supabaseResponse;

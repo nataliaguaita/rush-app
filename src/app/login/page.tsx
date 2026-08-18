@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,14 +15,17 @@ import { Truck } from "lucide-react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (!email || !password) return;
+
     setLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -34,13 +35,13 @@ export default function LoginPage() {
 
     if (error) {
       toast.error("Erro ao fazer login", {
-        description: "Verifique seu email e senha.",
+        description: error.message,
       });
       setLoading(false);
       return;
     }
 
-    router.refresh();
+    window.location.href = "/";
   }
 
   return (
@@ -59,10 +60,9 @@ export default function LoginPage() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -70,16 +70,19 @@ export default function LoginPage() {
               <Label htmlFor="password">Senha</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80 disabled:opacity-50"
+            >
               {loading ? "Entrando..." : "Entrar"}
-            </Button>
+            </button>
           </form>
         </CardContent>
       </Card>

@@ -1,11 +1,9 @@
-"use server";
+"use client";
 
-import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 export async function createCliente(formData: FormData) {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const name = formData.get("name") as string;
   const phone = (formData.get("phone") as string) || null;
@@ -31,26 +29,20 @@ export async function createCliente(formData: FormData) {
       cep: (formData.get("cep") as string) || null,
     });
   }
-
-  revalidatePath("/dashboard/clientes");
-  redirect("/dashboard/clientes");
 }
 
 export async function updateCliente(id: string, formData: FormData) {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const name = formData.get("name") as string;
   const phone = (formData.get("phone") as string) || null;
   const active = formData.get("active") === "true";
 
   await supabase.from("clientes").update({ name, phone, active }).eq("id", id);
-
-  revalidatePath("/dashboard/clientes");
-  redirect(`/dashboard/clientes/${id}`);
 }
 
 export async function addEndereco(clienteId: string, formData: FormData) {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   await supabase.from("enderecos").insert({
     cliente_id: clienteId,
@@ -62,12 +54,9 @@ export async function addEndereco(clienteId: string, formData: FormData) {
     cidade: (formData.get("cidade") as string) || "",
     cep: (formData.get("cep") as string) || null,
   });
-
-  revalidatePath(`/dashboard/clientes/${clienteId}`);
 }
 
-export async function deleteEndereco(clienteId: string, enderecoId: string) {
-  const supabase = await createClient();
+export async function deleteEndereco(enderecoId: string) {
+  const supabase = createClient();
   await supabase.from("enderecos").delete().eq("id", enderecoId);
-  revalidatePath(`/dashboard/clientes/${clienteId}`);
 }

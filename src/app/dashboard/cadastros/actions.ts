@@ -1,11 +1,10 @@
-"use server";
+"use client";
 
-import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/client";
 import type { UserRole } from "@/types/database";
 
 export async function createUser(formData: FormData) {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
@@ -31,6 +30,5 @@ export async function createUser(formData: FormData) {
       .eq("id", data.user.id);
   }
 
-  revalidatePath("/dashboard/cadastros");
   return { success: true };
 }

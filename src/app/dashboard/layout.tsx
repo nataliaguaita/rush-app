@@ -1,27 +1,60 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { SidebarNav } from "@/components/sidebar-nav";
+"use client";
 
-export default async function DashboardLayout({
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { SidebarNav } from "@/components/sidebar-nav";
+import type { Profile } from "@/types/database";
+
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const supabase = createClient();
 
-  if (!user) redirect("/login");
+  useEffect(() => {
+    async function loadProfile() {
+      const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
 
-  if (!profile) redirect("/login");
-  if (profile.role === "entregador") redirect("/entregador");
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (!data) {
+        router.replace("/login");
+        return;
+      }
+
+      if (data.role === "entregador") {
+        router.replace("/entregador");
+        return;
+      }
+
+      setProfile(data as Profile);
+      setLoading(false);
+    }
+
+    loadProfile();
+  }, []);
+
+  if (loading || !profile) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-muted-foreground">Carregando...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen">

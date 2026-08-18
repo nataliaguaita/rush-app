@@ -1,4 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,38 +18,42 @@ const statusLabels: Record<string, { label: string; variant: "default" | "second
   recusada: { label: "Recusada", variant: "destructive" },
 };
 
-export default async function EntregasPage() {
-  const supabase = await createClient();
+export default function EntregasPage() {
+  const [entregas, setEntregas] = useState<any[]>([]);
+  const [entregadores, setEntregadores] = useState<any[]>([]);
+  const supabase = createClient();
 
-  const { data: entregas } = await supabase
-    .from("entregas")
-    .select("*, cliente:clientes(*), endereco:enderecos(*), entregador:profiles!entregas_entregador_id_fkey(*)")
-    .order("is_urgent", { ascending: false })
-    .order("created_at", { ascending: false });
+  useEffect(() => {
+    async function load() {
+      const { data: e } = await supabase
+        .from("entregas")
+        .select("*, cliente:clientes(*), endereco:enderecos(*), entregador:profiles!entregas_entregador_id_fkey(*)")
+        .order("is_urgent", { ascending: false })
+        .order("created_at", { ascending: false });
 
-  const { data: entregadores } = await supabase
-    .from("profiles")
-    .select("id, name")
-    .eq("role", "entregador")
-    .eq("active", true);
+      setEntregas(e ?? []);
 
-  const allEntregas = entregas ?? [];
-  const pendentes = allEntregas.filter(
-    (e) => e.status === "aguardando_atribuicao"
-  );
-  const emAndamento = allEntregas.filter(
-    (e) => e.status === "rota_definida" || e.status === "em_rota"
-  );
-  const finalizadas = allEntregas.filter(
-    (e) => e.status === "entregue" || e.status === "recusada"
-  );
+      const { data: ent } = await supabase
+        .from("profiles")
+        .select("id, name")
+        .eq("role", "entregador")
+        .eq("active", true);
+
+      setEntregadores(ent ?? []);
+    }
+    load();
+  }, []);
+
+  const pendentes = entregas.filter((e) => e.status === "aguardando_atribuicao");
+  const emAndamento = entregas.filter((e) => e.status === "rota_definida" || e.status === "em_rota");
+  const finalizadas = entregas.filter((e) => e.status === "entregue" || e.status === "recusada");
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Entregas</h1>
-          <p className="text-muted-foreground">{allEntregas.length} entregas</p>
+          <p className="text-muted-foreground">{entregas.length} entregas</p>
         </div>
         <Link href="/dashboard/entregas/nova">
           <Button>
@@ -58,54 +65,30 @@ export default async function EntregasPage() {
 
       <Tabs defaultValue="pendentes">
         <TabsList>
-          <TabsTrigger value="pendentes">
-            Pendentes ({pendentes.length})
-          </TabsTrigger>
-          <TabsTrigger value="andamento">
-            Em Andamento ({emAndamento.length})
-          </TabsTrigger>
-          <TabsTrigger value="finalizadas">
-            Finalizadas ({finalizadas.length})
-          </TabsTrigger>
-          <TabsTrigger value="todas">Todas ({allEntregas.length})</TabsTrigger>
+          <TabsTrigger value="pendentes">Pendentes ({pendentes.length})</TabsTrigger>
+          <TabsTrigger value="andamento">Em Andamento ({emAndamento.length})</TabsTrigger>
+          <TabsTrigger value="finalizadas">Finalizadas ({finalizadas.length})</TabsTrigger>
+          <TabsTrigger value="todas">Todas ({entregas.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pendentes" className="mt-4">
-          <EntregaList
-            entregas={pendentes}
-            entregadores={entregadores ?? []}
-          />
+          <EntregaList entregas={pendentes} entregadores={entregadores} />
         </TabsContent>
         <TabsContent value="andamento" className="mt-4">
-          <EntregaList
-            entregas={emAndamento}
-            entregadores={entregadores ?? []}
-          />
+          <EntregaList entregas={emAndamento} entregadores={entregadores} />
         </TabsContent>
         <TabsContent value="finalizadas" className="mt-4">
-          <EntregaList
-            entregas={finalizadas}
-            entregadores={entregadores ?? []}
-          />
+          <EntregaList entregas={finalizadas} entregadores={entregadores} />
         </TabsContent>
         <TabsContent value="todas" className="mt-4">
-          <EntregaList
-            entregas={allEntregas}
-            entregadores={entregadores ?? []}
-          />
+          <EntregaList entregas={entregas} entregadores={entregadores} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function EntregaList({
-  entregas,
-  entregadores,
-}: {
-  entregas: any[];
-  entregadores: { id: string; name: string }[];
-}) {
+function EntregaList({ entregas, entregadores }: { entregas: any[]; entregadores: any[] }) {
   if (entregas.length === 0) {
     return (
       <Card>
@@ -119,54 +102,38 @@ function EntregaList({
   return (
     <div className="space-y-3">
       {entregas.map((entrega) => {
-        const statusInfo = statusLabels[entrega.status] ?? {
-          label: entrega.status,
-          variant: "secondary" as const,
-        };
+        const statusInfo = statusLabels[entrega.status] ?? { label: entrega.status, variant: "secondary" as const };
         return (
           <Card key={entrega.id}>
             <CardContent className="py-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">
-                      {entrega.cliente?.name ?? "Cliente"}
-                    </span>
+                    <span className="font-medium">{entrega.cliente?.name ?? "Cliente"}</span>
                     {entrega.is_urgent && (
                       <Badge variant="destructive" className="text-xs">
                         <AlertTriangle className="mr-1 h-3 w-3" />
                         Urgente
                       </Badge>
                     )}
-                    <Badge variant={statusInfo.variant}>
-                      {statusInfo.label}
-                    </Badge>
+                    <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
                   </div>
                   {entrega.endereco && (
                     <p className="flex items-center gap-1 text-sm text-muted-foreground">
                       <MapPin className="h-3 w-3" />
                       {entrega.endereco.rua}, {entrega.endereco.numero}
-                      {entrega.endereco.bairro
-                        ? ` - ${entrega.endereco.bairro}`
-                        : ""}
+                      {entrega.endereco.bairro ? ` - ${entrega.endereco.bairro}` : ""}
                     </p>
                   )}
                   {entrega.valor && (
-                    <p className="text-sm font-medium">
-                      R$ {Number(entrega.valor).toFixed(2)}
-                    </p>
+                    <p className="text-sm font-medium">R$ {Number(entrega.valor).toFixed(2)}</p>
                   )}
                   {entrega.entregador && (
-                    <p className="text-xs text-muted-foreground">
-                      Entregador: {entrega.entregador.name}
-                    </p>
+                    <p className="text-xs text-muted-foreground">Entregador: {entrega.entregador.name}</p>
                   )}
                 </div>
                 {entrega.status === "aguardando_atribuicao" && (
-                  <AssignEntregadorSelect
-                    entregaId={entrega.id}
-                    entregadores={entregadores}
-                  />
+                  <AssignEntregadorSelect entregaId={entrega.id} entregadores={entregadores} />
                 )}
               </div>
             </CardContent>

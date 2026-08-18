@@ -6,74 +6,73 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { addEndereco } from "../actions";
+import { toast } from "sonner";
 
-export function AddEnderecoForm({ clienteId }: { clienteId: string }) {
+export function AddEnderecoForm({
+  clienteId,
+  onSaved,
+}: {
+  clienteId: string;
+  onSaved: () => void;
+}) {
   const [open, setOpen] = useState(false);
-  const addWithId = addEndereco.bind(null, clienteId);
 
   if (!open) {
     return (
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={() => setOpen(true)}
-      >
+      <Button variant="outline" className="w-full" onClick={() => setOpen(true)}>
         <Plus className="mr-2 h-4 w-4" />
         Adicionar Endereço
       </Button>
     );
   }
 
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    await addEndereco(clienteId, new FormData(e.currentTarget));
+    toast.success("Endereço adicionado!");
+    setOpen(false);
+    onSaved();
+  }
+
   return (
-    <form
-      action={async (formData) => {
-        await addWithId(formData);
-        setOpen(false);
-      }}
-      className="space-y-3 rounded-lg border p-4"
-    >
+    <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border p-4">
       <div className="space-y-2">
-        <Label htmlFor="new-label">Apelido</Label>
-        <Input id="new-label" name="label" placeholder='Ex: "Filial"' />
+        <Label>Apelido</Label>
+        <Input name="label" placeholder='Ex: "Filial"' />
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div className="col-span-2 space-y-2">
-          <Label htmlFor="new-rua">Rua *</Label>
-          <Input id="new-rua" name="rua" required />
+          <Label>Rua *</Label>
+          <Input name="rua" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="new-numero">Nº *</Label>
-          <Input id="new-numero" name="numero" required />
+          <Label>Nº *</Label>
+          <Input name="numero" required />
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="new-complemento">Complemento</Label>
-        <Input id="new-complemento" name="complemento" />
+        <Label>Complemento</Label>
+        <Input name="complemento" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="new-bairro">Bairro</Label>
-          <Input id="new-bairro" name="bairro" />
+          <Label>Bairro</Label>
+          <Input name="bairro" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="new-cidade">Cidade *</Label>
-          <Input id="new-cidade" name="cidade" required />
+          <Label>Cidade *</Label>
+          <Input name="cidade" required />
         </div>
       </div>
       <div className="w-1/3 space-y-2">
-        <Label htmlFor="new-cep">CEP</Label>
-        <Input id="new-cep" name="cep" />
+        <Label>CEP</Label>
+        <Input name="cep" />
       </div>
       <div className="flex gap-2">
-        <Button type="submit" size="sm">
+        <button type="submit" className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/80">
           Salvar
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setOpen(false)}
-        >
+        </button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
           Cancelar
         </Button>
       </div>

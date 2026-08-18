@@ -22,6 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { createEntrega } from "../actions";
+import { toast } from "sonner";
 import type { ClienteWithEnderecos } from "@/types/database";
 
 export function NovaEntregaForm({
@@ -36,7 +37,19 @@ export function NovaEntregaForm({
   const enderecos = selectedCliente?.enderecos ?? [];
 
   return (
-    <form action={createEntrega} className="space-y-4">
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        try {
+          await createEntrega(new FormData(e.currentTarget));
+          toast.success("Entrega cadastrada!");
+          window.location.href = "/dashboard/entregas";
+        } catch (err: any) {
+          toast.error("Erro ao criar entrega", { description: err.message });
+        }
+      }}
+      className="space-y-4"
+    >
       <div className="flex items-center gap-4 mb-6">
         <Link href="/dashboard/entregas">
           <Button variant="ghost" size="icon" type="button">

@@ -1,51 +1,46 @@
-import { createClient } from "@/lib/supabase/server";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CadastroDialog } from "./cadastro-dialog";
 
-export default async function CadastrosPage() {
-  const supabase = await createClient();
+export default function CadastrosPage() {
+  const [profiles, setProfiles] = useState<any[]>([]);
+  const supabase = createClient();
 
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("name");
+  useEffect(() => {
+    async function load() {
+      const { data } = await supabase.from("profiles").select("*").order("name");
+      setProfiles(data ?? []);
+    }
+    load();
+  }, []);
 
-  const vendedores = profiles?.filter((p) => p.role === "vendedor") ?? [];
-  const entregadores = profiles?.filter((p) => p.role === "entregador") ?? [];
+  const vendedores = profiles.filter((p) => p.role === "vendedor");
+  const entregadores = profiles.filter((p) => p.role === "entregador");
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Cadastros</h1>
-          <p className="text-muted-foreground">
-            Gerencie vendedores e entregadores
-          </p>
+          <p className="text-muted-foreground">Gerencie vendedores e entregadores</p>
         </div>
         <CadastroDialog />
       </div>
 
       <Tabs defaultValue="vendedores">
         <TabsList>
-          <TabsTrigger value="vendedores">
-            Vendedores ({vendedores.length})
-          </TabsTrigger>
-          <TabsTrigger value="entregadores">
-            Entregadores ({entregadores.length})
-          </TabsTrigger>
+          <TabsTrigger value="vendedores">Vendedores ({vendedores.length})</TabsTrigger>
+          <TabsTrigger value="entregadores">Entregadores ({entregadores.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="vendedores" className="mt-4">
           <ProfileList profiles={vendedores} />
         </TabsContent>
-
         <TabsContent value="entregadores" className="mt-4">
           <ProfileList profiles={entregadores} />
         </TabsContent>
@@ -54,11 +49,7 @@ export default async function CadastrosPage() {
   );
 }
 
-function ProfileList({
-  profiles,
-}: {
-  profiles: { id: string; name: string; phone: string | null; active: boolean; role: string }[];
-}) {
+function ProfileList({ profiles }: { profiles: any[] }) {
   if (profiles.length === 0) {
     return (
       <Card>
@@ -80,11 +71,7 @@ function ProfileList({
               </div>
               <div>
                 <p className="font-medium">{profile.name}</p>
-                {profile.phone && (
-                  <p className="text-sm text-muted-foreground">
-                    {profile.phone}
-                  </p>
-                )}
+                {profile.phone && <p className="text-sm text-muted-foreground">{profile.phone}</p>}
               </div>
             </div>
             <Badge variant={profile.active ? "default" : "secondary"}>

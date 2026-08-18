@@ -27,11 +27,9 @@ export function EntregadorNav({ profile }: { profile: Profile }) {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">{profile.name}</span>
-          <form action={logout}>
-            <Button variant="ghost" size="icon" type="submit">
+          <Button variant="ghost" size="icon" onClick={() => logout()}>
               <LogOut className="h-4 w-4" />
             </Button>
-          </form>
         </div>
       </div>
       <nav className="flex border-t">

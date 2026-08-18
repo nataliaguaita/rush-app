@@ -21,6 +21,7 @@ export function AssignEntregadorSelect({
     if (!value) return;
     await assignEntregador(entregaId, value);
     toast.success("Entregador atribuído!");
+    window.location.reload();
   }
 
   return (

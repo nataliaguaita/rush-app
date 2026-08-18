@@ -1,23 +1,41 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+"use client";
 
-export default async function Home() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+import { useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
-  if (!user) redirect("/login");
+export default function Home() {
+  const router = useRouter();
+  const supabase = createClient();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  useEffect(() => {
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
 
-  if (profile?.role === "entregador") {
-    redirect("/entregador");
-  }
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
 
-  redirect("/dashboard");
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.role === "entregador") {
+        router.replace("/entregador");
+      } else {
+        router.replace("/dashboard");
+      }
+    }
+
+    checkAuth();
+  }, []);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <p className="text-muted-foreground">Carregando...</p>
+    </div>
+  );
 }

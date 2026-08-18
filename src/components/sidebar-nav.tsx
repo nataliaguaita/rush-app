@@ -79,17 +79,15 @@ export function SidebarNav({ profile }: { profile: Profile }) {
             {profile.role}
           </p>
         </div>
-        <form action={logout}>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start gap-2 text-muted-foreground"
-            type="submit"
-          >
-            <LogOut className="h-4 w-4" />
-            Sair
-          </Button>
-        </form>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-muted-foreground"
+          onClick={() => logout()}
+        >
+          <LogOut className="h-4 w-4" />
+          Sair
+        </Button>
       </div>
     </aside>
   );

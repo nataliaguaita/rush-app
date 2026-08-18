@@ -11,14 +11,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Cliente } from "@/types/database";
 import { updateCliente } from "../actions";
+import { toast } from "sonner";
 
-export function ClienteEditForm({ cliente }: { cliente: Cliente }) {
-  const updateWithId = updateCliente.bind(null, cliente.id);
+export function ClienteEditForm({
+  cliente,
+  onSaved,
+}: {
+  cliente: any;
+  onSaved: () => void;
+}) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    await updateCliente(cliente.id, new FormData(e.currentTarget));
+    toast.success("Cliente atualizado!");
+    onSaved();
+  }
 
   return (
-    <form action={updateWithId}>
+    <form onSubmit={handleSubmit}>
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Editar Dados</CardTitle>
@@ -26,20 +37,11 @@ export function ClienteEditForm({ cliente }: { cliente: Cliente }) {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nome</Label>
-            <Input
-              id="name"
-              name="name"
-              defaultValue={cliente.name}
-              required
-            />
+            <Input id="name" name="name" defaultValue={cliente.name} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="phone">WhatsApp / Telefone</Label>
-            <Input
-              id="phone"
-              name="phone"
-              defaultValue={cliente.phone ?? ""}
-            />
+            <Input id="phone" name="phone" defaultValue={cliente.phone ?? ""} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="active">Status</Label>
@@ -53,7 +55,12 @@ export function ClienteEditForm({ cliente }: { cliente: Cliente }) {
               </SelectContent>
             </Select>
           </div>
-          <Button type="submit">Salvar Alterações</Button>
+          <button
+            type="submit"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/80"
+          >
+            Salvar Alterações
+          </button>
         </CardContent>
       </Card>
     </form>
