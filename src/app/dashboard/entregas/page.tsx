@@ -1,0 +1,178 @@
+import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, MapPin, AlertTriangle } from "lucide-react";
+import { AssignEntregadorSelect } from "./assign-entregador-select";
+
+const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  aguardando_atribuicao: { label: "Aguardando", variant: "secondary" },
+  rota_definida: { label: "Rota Definida", variant: "outline" },
+  em_rota: { label: "Em Rota", variant: "default" },
+  entregue: { label: "Entregue", variant: "default" },
+  recusada: { label: "Recusada", variant: "destructive" },
+};
+
+export default async function EntregasPage() {
+  const supabase = await createClient();
+
+  const { data: entregas } = await supabase
+    .from("entregas")
+    .select("*, cliente:clientes(*), endereco:enderecos(*), entregador:profiles!entregas_entregador_id_fkey(*)")
+    .order("is_urgent", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  const { data: entregadores } = await supabase
+    .from("profiles")
+    .select("id, name")
+    .eq("role", "entregador")
+    .eq("active", true);
+
+  const allEntregas = entregas ?? [];
+  const pendentes = allEntregas.filter(
+    (e) => e.status === "aguardando_atribuicao"
+  );
+  const emAndamento = allEntregas.filter(
+    (e) => e.status === "rota_definida" || e.status === "em_rota"
+  );
+  const finalizadas = allEntregas.filter(
+    (e) => e.status === "entregue" || e.status === "recusada"
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Entregas</h1>
+          <p className="text-muted-foreground">{allEntregas.length} entregas</p>
+        </div>
+        <Link href="/dashboard/entregas/nova">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Entrega
+          </Button>
+        </Link>
+      </div>
+
+      <Tabs defaultValue="pendentes">
+        <TabsList>
+          <TabsTrigger value="pendentes">
+            Pendentes ({pendentes.length})
+          </TabsTrigger>
+          <TabsTrigger value="andamento">
+            Em Andamento ({emAndamento.length})
+          </TabsTrigger>
+          <TabsTrigger value="finalizadas">
+            Finalizadas ({finalizadas.length})
+          </TabsTrigger>
+          <TabsTrigger value="todas">Todas ({allEntregas.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pendentes" className="mt-4">
+          <EntregaList
+            entregas={pendentes}
+            entregadores={entregadores ?? []}
+          />
+        </TabsContent>
+        <TabsContent value="andamento" className="mt-4">
+          <EntregaList
+            entregas={emAndamento}
+            entregadores={entregadores ?? []}
+          />
+        </TabsContent>
+        <TabsContent value="finalizadas" className="mt-4">
+          <EntregaList
+            entregas={finalizadas}
+            entregadores={entregadores ?? []}
+          />
+        </TabsContent>
+        <TabsContent value="todas" className="mt-4">
+          <EntregaList
+            entregas={allEntregas}
+            entregadores={entregadores ?? []}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function EntregaList({
+  entregas,
+  entregadores,
+}: {
+  entregas: any[];
+  entregadores: { id: string; name: string }[];
+}) {
+  if (entregas.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-muted-foreground">
+          Nenhuma entrega nesta categoria.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {entregas.map((entrega) => {
+        const statusInfo = statusLabels[entrega.status] ?? {
+          label: entrega.status,
+          variant: "secondary" as const,
+        };
+        return (
+          <Card key={entrega.id}>
+            <CardContent className="py-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">
+                      {entrega.cliente?.name ?? "Cliente"}
+                    </span>
+                    {entrega.is_urgent && (
+                      <Badge variant="destructive" className="text-xs">
+                        <AlertTriangle className="mr-1 h-3 w-3" />
+                        Urgente
+                      </Badge>
+                    )}
+                    <Badge variant={statusInfo.variant}>
+                      {statusInfo.label}
+                    </Badge>
+                  </div>
+                  {entrega.endereco && (
+                    <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <MapPin className="h-3 w-3" />
+                      {entrega.endereco.rua}, {entrega.endereco.numero}
+                      {entrega.endereco.bairro
+                        ? ` - ${entrega.endereco.bairro}`
+                        : ""}
+                    </p>
+                  )}
+                  {entrega.valor && (
+                    <p className="text-sm font-medium">
+                      R$ {Number(entrega.valor).toFixed(2)}
+                    </p>
+                  )}
+                  {entrega.entregador && (
+                    <p className="text-xs text-muted-foreground">
+                      Entregador: {entrega.entregador.name}
+                    </p>
+                  )}
+                </div>
+                {entrega.status === "aguardando_atribuicao" && (
+                  <AssignEntregadorSelect
+                    entregaId={entrega.id}
+                    entregadores={entregadores}
+                  />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
