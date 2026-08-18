@@ -1,33 +1,22 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
-import type { UserRole } from "@/types/database";
-
 export async function createUser(formData: FormData) {
-  const supabase = createClient();
-
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
-  const role = formData.get("role") as UserRole;
+  const role = formData.get("role") as string;
   const phone = (formData.get("phone") as string) || null;
 
-  const { data, error } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { name, role },
+  const res = await fetch("/api/admin/create-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password, role, phone }),
   });
 
-  if (error) {
-    return { error: error.message };
-  }
+  const data = await res.json();
 
-  if (phone && data.user) {
-    await supabase
-      .from("profiles")
-      .update({ phone })
-      .eq("id", data.user.id);
+  if (!res.ok) {
+    return { error: data.error };
   }
 
   return { success: true };
