@@ -108,6 +108,34 @@ export function EntregaCard({
     setConfirmType(type);
   }
 
+  function compressImage(file: File, maxSize = 1200, quality = 0.7): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxSize || height > maxSize) {
+          const ratio = Math.min(maxSize / width, maxSize / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return reject(new Error("Falha ao comprimir"));
+            resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
   async function handleFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -115,9 +143,10 @@ export function EntregaCard({
     setFotoPreview(URL.createObjectURL(file));
     setFotoStatus("uploading");
 
-    const fd = new FormData();
-    fd.append("foto", file);
     try {
+      const compressed = await compressImage(file);
+      const fd = new FormData();
+      fd.append("foto", compressed);
       await uploadFotoEntrega(entrega.id, fd);
       setFotoStatus("done");
       toast.success("Foto enviada!");
@@ -220,7 +249,7 @@ export function EntregaCard({
             </div>
             <div className="space-y-2">
               <Label>Cargo *</Label>
-              <Select name="receiver_role" required value={receiverRole} onValueChange={setReceiverRole}>
+              <Select name="receiver_role" required value={receiverRole} onValueChange={(value) => setReceiverRole(value ?? "")}>
                 <SelectTrigger size="lg" className="w-full">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
