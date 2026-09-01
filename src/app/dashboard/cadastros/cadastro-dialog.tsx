@@ -23,7 +23,7 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { createUser } from "./actions";
 
-export function CadastroDialog() {
+export function CadastroDialog({ onCreated }: { onCreated?: () => void }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -39,6 +39,7 @@ export function CadastroDialog() {
 
     toast.success("Usuário criado com sucesso!");
     setOpen(false);
+    onCreated?.();
   }
 
   return (

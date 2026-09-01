@@ -1,23 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CadastroDialog } from "./cadastro-dialog";
+import { EditProfileDialog } from "./edit-profile-dialog";
 
 export default function CadastrosPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const supabase = createClient();
 
-  useEffect(() => {
-    async function load() {
-      const { data } = await supabase.from("profiles").select("*").order("name");
-      setProfiles(data ?? []);
-    }
-    load();
+  const load = useCallback(async () => {
+    const { data } = await supabase.from("profiles").select("*").order("name");
+    setProfiles(data ?? []);
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const vendedores = profiles.filter((p) => p.role === "vendedor");
   const entregadores = profiles.filter((p) => p.role === "entregador");
@@ -29,7 +31,7 @@ export default function CadastrosPage() {
           <h1 className="text-2xl font-bold">Cadastros</h1>
           <p className="text-muted-foreground">Gerencie vendedores e entregadores</p>
         </div>
-        <CadastroDialog />
+        <CadastroDialog onCreated={load} />
       </div>
 
       <Tabs defaultValue="vendedores">
@@ -39,17 +41,23 @@ export default function CadastrosPage() {
         </TabsList>
 
         <TabsContent value="vendedores" className="mt-4">
-          <ProfileList profiles={vendedores} />
+          <ProfileList profiles={vendedores} onUpdated={load} />
         </TabsContent>
         <TabsContent value="entregadores" className="mt-4">
-          <ProfileList profiles={entregadores} />
+          <ProfileList profiles={entregadores} onUpdated={load} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function ProfileList({ profiles }: { profiles: any[] }) {
+function ProfileList({
+  profiles,
+  onUpdated,
+}: {
+  profiles: any[];
+  onUpdated: () => void;
+}) {
   if (profiles.length === 0) {
     return (
       <Card>
@@ -74,9 +82,12 @@ function ProfileList({ profiles }: { profiles: any[] }) {
                 {profile.phone && <p className="text-sm text-muted-foreground">{profile.phone}</p>}
               </div>
             </div>
-            <Badge variant={profile.active ? "default" : "secondary"}>
-              {profile.active ? "Ativo" : "Inativo"}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant={profile.active ? "default" : "secondary"}>
+                {profile.active ? "Ativo" : "Inativo"}
+              </Badge>
+              <EditProfileDialog profile={profile} onSaved={onUpdated} />
+            </div>
           </CardContent>
         </Card>
       ))}

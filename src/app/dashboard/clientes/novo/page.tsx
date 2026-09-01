@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,16 +12,58 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { createCliente } from "../actions";
-import { ArrowLeft } from "lucide-react";
+import { createClienteMultiEnderecos } from "../actions";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
+interface EnderecoForm {
+  key: number;
+  label: string;
+  rua: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  cep: string;
+}
+
+function emptyEndereco(key: number): EnderecoForm {
+  return { key, label: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", cep: "" };
+}
+
 export default function NovoClientePage() {
+  const [enderecos, setEnderecos] = useState<EnderecoForm[]>([emptyEndereco(0)]);
+  const [nextKey, setNextKey] = useState(1);
+
+  function addEndereco() {
+    setEnderecos((prev) => [...prev, emptyEndereco(nextKey)]);
+    setNextKey((k) => k + 1);
+  }
+
+  function removeEndereco(key: number) {
+    setEnderecos((prev) => prev.filter((e) => e.key !== key));
+  }
+
+  function updateEndereco(key: number, field: keyof EnderecoForm, value: string) {
+    setEnderecos((prev) =>
+      prev.map((e) => (e.key === key ? { ...e, [field]: value } : e))
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const phone = (formData.get("phone") as string) || null;
+
     try {
-      await createCliente(new FormData(e.currentTarget));
+      await createClienteMultiEnderecos(
+        { name, phone },
+        enderecos
+          .filter((end) => end.rua.trim() !== "")
+          .map(({ key: _key, ...rest }) => rest)
+      );
       toast.success("Cliente cadastrado!");
       window.location.href = "/dashboard/clientes";
     } catch (err: any) {
@@ -38,7 +81,7 @@ export default function NovoClientePage() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold">Novo Cliente</h1>
-          <p className="text-muted-foreground">Cadastre um novo cliente com endereço</p>
+          <p className="text-muted-foreground">Cadastre um novo cliente com endereço(s)</p>
         </div>
       </div>
 
@@ -59,47 +102,108 @@ export default function NovoClientePage() {
           </CardContent>
         </Card>
 
-        <Card className="mt-4">
-          <CardHeader>
-            <CardTitle className="text-lg">Endereço</CardTitle>
-            <CardDescription>Adicione o endereço principal</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="label">Apelido do endereço</Label>
-              <Input id="label" name="label" placeholder='Ex: "Escritório"' />
-            </div>
-            <Separator />
-            <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="rua">Rua *</Label>
-                <Input id="rua" name="rua" required placeholder="Rua" />
+        {enderecos.map((end, index) => (
+          <Card key={end.key} className="mt-4">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">
+                    {enderecos.length === 1 ? "Endereço" : `Endereço ${index + 1}`}
+                  </CardTitle>
+                  {index === 0 && (
+                    <CardDescription>Adicione o endereço principal</CardDescription>
+                  )}
+                </div>
+                {enderecos.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeEndereco(end.key)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Apelido do endereço</Label>
+                <Input
+                  value={end.label}
+                  onChange={(e) => updateEndereco(end.key, "label", e.target.value)}
+                  placeholder='Ex: "Escritório"'
+                />
+              </div>
+              <Separator />
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2 space-y-2">
+                  <Label>Rua *</Label>
+                  <Input
+                    value={end.rua}
+                    onChange={(e) => updateEndereco(end.key, "rua", e.target.value)}
+                    required
+                    placeholder="Rua"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Número *</Label>
+                  <Input
+                    value={end.numero}
+                    onChange={(e) => updateEndereco(end.key, "numero", e.target.value)}
+                    required
+                    placeholder="Nº"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="numero">Número *</Label>
-                <Input id="numero" name="numero" required placeholder="Nº" />
+                <Label>Complemento</Label>
+                <Input
+                  value={end.complemento}
+                  onChange={(e) => updateEndereco(end.key, "complemento", e.target.value)}
+                  placeholder="Sala, andar, bloco..."
+                />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="complemento">Complemento</Label>
-              <Input id="complemento" name="complemento" placeholder="Sala, andar, bloco..." />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="bairro">Bairro</Label>
-                <Input id="bairro" name="bairro" placeholder="Bairro" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Bairro</Label>
+                  <Input
+                    value={end.bairro}
+                    onChange={(e) => updateEndereco(end.key, "bairro", e.target.value)}
+                    placeholder="Bairro"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Cidade *</Label>
+                  <Input
+                    value={end.cidade}
+                    onChange={(e) => updateEndereco(end.key, "cidade", e.target.value)}
+                    required
+                    placeholder="Cidade"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="cidade">Cidade *</Label>
-                <Input id="cidade" name="cidade" required placeholder="Cidade" />
+              <div className="w-1/3 space-y-2">
+                <Label>CEP</Label>
+                <Input
+                  value={end.cep}
+                  onChange={(e) => updateEndereco(end.key, "cep", e.target.value)}
+                  placeholder="00000-000"
+                />
               </div>
-            </div>
-            <div className="w-1/3 space-y-2">
-              <Label htmlFor="cep">CEP</Label>
-              <Input id="cep" name="cep" placeholder="00000-000" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
+
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-4 w-full"
+          onClick={addEndereco}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Adicionar outro endereço
+        </Button>
 
         <div className="mt-6 flex justify-end gap-3">
           <Link href="/dashboard/clientes">

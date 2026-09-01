@@ -31,6 +31,45 @@ export async function createCliente(formData: FormData) {
   }
 }
 
+export async function createClienteMultiEnderecos(
+  clienteData: { name: string; phone: string | null },
+  enderecos: {
+    label: string;
+    rua: string;
+    numero: string;
+    complemento: string;
+    bairro: string;
+    cidade: string;
+    cep: string;
+  }[]
+) {
+  const supabase = createClient();
+
+  const { data: cliente, error } = await supabase
+    .from("clientes")
+    .insert({ name: clienteData.name, phone: clienteData.phone, active: true })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  if (enderecos.length > 0) {
+    const rows = enderecos.map((end) => ({
+      cliente_id: cliente.id,
+      label: end.label || null,
+      rua: end.rua,
+      numero: end.numero || "",
+      complemento: end.complemento || null,
+      bairro: end.bairro || null,
+      cidade: end.cidade || "",
+      cep: end.cep || null,
+    }));
+
+    const { error: endError } = await supabase.from("enderecos").insert(rows);
+    if (endError) throw new Error(endError.message);
+  }
+}
+
 export async function updateCliente(id: string, formData: FormData) {
   const supabase = createClient();
 

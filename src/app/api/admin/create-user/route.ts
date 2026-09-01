@@ -1,16 +1,45 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createClient as createServerClient } from "@/lib/supabase/server";
+
+function getAdminClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
 
 export async function POST(request: Request) {
-  const serverSupabase = await createServerClient();
-  const { data: { user } } = await serverSupabase.auth.getUser();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  console.log("[create-user] SUPABASE_URL:", supabaseUrl);
+  console.log("[create-user] SERVICE_KEY present:", !!serviceKey, "length:", serviceKey?.length);
 
-  if (!user) {
+  // Test raw fetch to Supabase
+  try {
+    const testRes = await fetch(`${supabaseUrl}/rest/v1/`, {
+      headers: { apikey: serviceKey! },
+    });
+    console.log("[create-user] raw fetch test:", testRes.status);
+  } catch (e: any) {
+    console.log("[create-user] raw fetch FAILED:", e.message, e.cause);
+  }
+
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const { data: profile } = await serverSupabase
+  const token = authHeader.split(" ")[1];
+  const adminSupabase = getAdminClient();
+
+  const { data: { user }, error: authError } = await adminSupabase.auth.getUser(token);
+  if (authError || !user) {
+    console.log("[create-user] auth failed:", authError?.message);
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+
+  const { data: profile } = await adminSupabase
     .from("profiles")
     .select("role")
     .eq("id", user.id)
@@ -26,12 +55,6 @@ export async function POST(request: Request) {
   if (!name || !email || !password || !role) {
     return NextResponse.json({ error: "Campos obrigatórios faltando" }, { status: 400 });
   }
-
-  const adminSupabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
 
   const { data, error } = await adminSupabase.auth.admin.createUser({
     email,
