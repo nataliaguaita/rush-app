@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,11 +22,18 @@ export function ClienteEditForm({
   cliente: any;
   onSaved: () => void;
 }) {
+  const [loading, setLoading] = useState(false);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    await updateCliente(cliente.id, new FormData(e.currentTarget));
-    toast.success("Cliente atualizado!");
-    onSaved();
+    setLoading(true);
+    try {
+      await updateCliente(cliente.id, new FormData(e.currentTarget));
+      toast.success("Cliente atualizado!");
+      onSaved();
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -59,12 +67,9 @@ export function ClienteEditForm({
               </SelectContent>
             </Select>
           </div>
-          <button
-            type="submit"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/80"
-          >
-            Salvar Alterações
-          </button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Salvando..." : "Salvar Alterações"}
+          </Button>
         </CardContent>
       </Card>
     </form>

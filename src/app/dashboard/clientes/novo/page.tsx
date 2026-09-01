@@ -35,6 +35,7 @@ function emptyEndereco(key: number): EnderecoForm {
 export default function NovoClientePage() {
   const [enderecos, setEnderecos] = useState<EnderecoForm[]>([emptyEndereco(0)]);
   const [nextKey, setNextKey] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   function addEndereco() {
     setEnderecos((prev) => [...prev, emptyEndereco(nextKey)]);
@@ -57,6 +58,7 @@ export default function NovoClientePage() {
     const name = formData.get("name") as string;
     const phone = (formData.get("phone") as string) || null;
 
+    setLoading(true);
     try {
       await createClienteMultiEnderecos(
         { name, phone },
@@ -68,6 +70,7 @@ export default function NovoClientePage() {
       window.location.href = "/dashboard/clientes";
     } catch (err: any) {
       toast.error("Erro ao cadastrar", { description: err.message });
+      setLoading(false);
     }
   }
 
@@ -75,7 +78,7 @@ export default function NovoClientePage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/dashboard/clientes">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" aria-label="Voltar">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
@@ -120,6 +123,7 @@ export default function NovoClientePage() {
                     variant="ghost"
                     size="icon"
                     onClick={() => removeEndereco(end.key)}
+                    aria-label={`Remover endereço ${index + 1}`}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -209,12 +213,9 @@ export default function NovoClientePage() {
           <Link href="/dashboard/clientes">
             <Button variant="outline" type="button">Cancelar</Button>
           </Link>
-          <button
-            type="submit"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/80"
-          >
-            Cadastrar Cliente
-          </button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Cadastrando..." : "Cadastrar Cliente"}
+          </Button>
         </div>
       </form>
     </div>

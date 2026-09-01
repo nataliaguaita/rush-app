@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
@@ -52,7 +53,7 @@ export function NovaEntregaForm({
     >
       <div className="flex items-center gap-4 mb-6">
         <Link href="/dashboard/entregas">
-          <Button variant="ghost" size="icon" type="button">
+          <Button variant="ghost" size="icon" type="button" aria-label="Voltar">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
@@ -148,34 +149,18 @@ export function NovaEntregaForm({
           <div className="space-y-2">
             <Label>O motoboy deve:</Label>
             <div className="flex flex-wrap gap-4">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  name="actions"
-                  value="entregar"
-                  defaultChecked
-                  className="rounded"
-                />
-                Entregar
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  name="actions"
-                  value="receber"
-                  className="rounded"
-                />
-                Receber
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  name="actions"
-                  value="assinar_nota"
-                  className="rounded"
-                />
-                Assinar Nota
-              </label>
+              <div className="flex items-center gap-2">
+                <Checkbox id="action-entregar" name="actions" value="entregar" defaultChecked />
+                <Label htmlFor="action-entregar" className="text-sm font-normal">Entregar</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox id="action-receber" name="actions" value="receber" />
+                <Label htmlFor="action-receber" className="text-sm font-normal">Receber</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox id="action-assinar" name="actions" value="assinar_nota" />
+                <Label htmlFor="action-assinar" className="text-sm font-normal">Assinar Nota</Label>
+              </div>
             </div>
           </div>
 
@@ -195,23 +180,17 @@ export function NovaEntregaForm({
           </div>
 
           <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="is_urgent"
-                className="rounded"
-              />
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-              Urgente
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="return_reminder"
-                className="rounded"
-              />
-              Lembrete de devolução
-            </label>
+            <div className="flex items-center gap-2">
+              <Checkbox id="is_urgent" name="is_urgent" />
+              <Label htmlFor="is_urgent" className="gap-1.5 text-sm font-normal">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                Urgente
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox id="return_reminder" name="return_reminder" />
+              <Label htmlFor="return_reminder" className="text-sm font-normal">Lembrete de devolução</Label>
+            </div>
           </div>
         </CardContent>
       </Card>

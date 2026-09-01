@@ -35,7 +35,7 @@ export function EntregadorNav({
             {profile.name}
           </span>
           <ThemeToggle collapsed />
-          <Button variant="ghost" size="icon" onClick={() => logout()}>
+          <Button variant="ghost" size="icon" onClick={() => logout()} aria-label="Sair">
               <LogOut className="h-4 w-4" />
             </Button>
         </div>

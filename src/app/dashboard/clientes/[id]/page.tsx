@@ -7,6 +7,17 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { ArrowLeft, MapPin, Phone, Trash2 } from "lucide-react";
 import { ClienteEditForm } from "./cliente-edit-form";
 import { AddEnderecoForm } from "./add-endereco-form";
@@ -44,7 +55,7 @@ export default function ClienteDetailPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/dashboard/clientes">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" aria-label="Voltar">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
@@ -85,13 +96,33 @@ export default function ClienteDetailPage() {
                     </p>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDeleteEndereco(end.id)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger
+                    render={
+                      <Button variant="ghost" size="icon" aria-label="Remover endereço">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    }
+                  />
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remover endereço?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {end.label ? `"${end.label}" — ` : ""}
+                        {end.rua}, {end.numero}. Esta ação não pode ser desfeita.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        variant="destructive"
+                        onClick={() => handleDeleteEndereco(end.id)}
+                      >
+                        Remover
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             ))
           ) : (

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,11 +12,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Truck } from "lucide-react";
+import { Truck, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const supabase = createClient();
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
@@ -83,21 +85,30 @@ export default function LoginPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="pr-10"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="absolute top-1/2 right-1 -translate-y-1/2 text-muted-foreground"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80 disabled:opacity-50"
-            >
+            <Button type="submit" size="lg" disabled={loading} className="w-full">
               {loading ? "Entrando..." : "Entrar"}
-            </button>
+            </Button>
           </form>
         </CardContent>
       </Card>

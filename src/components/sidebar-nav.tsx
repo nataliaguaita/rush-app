@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -49,13 +49,10 @@ export function SidebarNav({
 }) {
   const pathname = usePathname();
   const links = profile.role === "admin" ? adminLinks : vendedorLinks;
-  const [collapsedPref, setCollapsedPref] = useState(false);
+  const [collapsedPref, setCollapsedPref] = useState(
+    () => collapsible && localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true"
+  );
   const collapsed = collapsible && collapsedPref;
-
-  useEffect(() => {
-    if (!collapsible) return;
-    setCollapsedPref(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
-  }, [collapsible]);
 
   function toggleCollapsed() {
     setCollapsedPref((prev) => {

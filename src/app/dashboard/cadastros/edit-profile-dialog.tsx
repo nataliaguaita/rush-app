@@ -64,7 +64,7 @@ export function EditProfileDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" aria-label={`Editar ${profile.name}`}>
             <Pencil className="h-4 w-4" />
           </Button>
         }

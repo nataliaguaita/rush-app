@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Phone } from "lucide-react";
+import { Plus, Phone, Users } from "lucide-react";
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<any[]>([]);
@@ -40,8 +40,20 @@ export default function ClientesPage() {
 
       {clientes.length === 0 ? (
         <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            Nenhum cliente cadastrado ainda.
+          <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Users className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="font-medium">Nenhum cliente cadastrado ainda</p>
+              <p className="text-sm text-muted-foreground">Cadastre o primeiro cliente para começar a criar entregas.</p>
+            </div>
+            <Link href="/dashboard/clientes/novo">
+              <Button size="sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Cliente
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       ) : (
