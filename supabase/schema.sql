@@ -175,6 +175,8 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM anon, authenticated, public;
+
 -- ============================================
 -- ROW LEVEL SECURITY
 -- ============================================
@@ -310,6 +312,8 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM anon, authenticated, public;
 
 -- Opcional: defina um username para sua conta admin atual (que hoje só
 -- tem email) para poder usar o novo campo "Usuário" no login também:
