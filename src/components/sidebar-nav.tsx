@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/types/database";
+import Image from "next/image";
 import {
   LayoutDashboard,
   Package,
@@ -69,17 +70,11 @@ export function SidebarNav({
         collapsible ? (collapsed ? "w-17" : "w-60") : "w-full"
       )}
     >
-      <div className="flex items-center gap-2 border-b px-4 py-4">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-          <Truck className="h-4 w-4 text-primary-foreground" />
-        </div>
-        {!collapsed && (
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">Rush App</p>
-            <p className="truncate text-xs text-muted-foreground">
-              Dental Marechal
-            </p>
-          </div>
+      <div className="flex items-center justify-center border-b px-4 py-[10px]">
+        {collapsed ? (
+          <Image src="/icon.svg" alt="Rush" width={28} height={28} className="shrink-0" />
+        ) : (
+          <Image src="/logo.svg" alt="Rush" width={100} height={23} className="shrink-0" />
         )}
       </div>
 

@@ -12,7 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Truck, Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
@@ -64,11 +65,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-            <Truck className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-xl">Rush App</CardTitle>
-          <CardDescription>Dental Marechal — Gestão de Entregas</CardDescription>
+          <Image src="/logo.svg" alt="Rush" width={150} height={34} className="mx-auto mb-2" />
+          <CardDescription>Gestão de Entregas</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">

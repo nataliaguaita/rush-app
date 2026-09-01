@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, Truck } from "lucide-react";
+import Image from "next/image";
+import { Menu } from "lucide-react";
 import type { Profile } from "@/types/database";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -24,12 +25,7 @@ export function AppShell({
   return (
     <div className="flex h-screen flex-col md:flex-row">
       <header className="flex items-center justify-between border-b bg-card px-4 py-3 md:hidden">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Truck className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="font-semibold">Rush App</span>
-        </div>
+        <Image src="/logo.svg" alt="Rush" width={100} height={23} />
         <div className="flex items-center gap-1">
           <ThemeToggle collapsed />
           <Button
