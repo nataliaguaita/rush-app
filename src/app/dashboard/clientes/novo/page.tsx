@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCep } from "@/lib/use-cep";
+import { Loader2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -30,6 +32,132 @@ interface EnderecoForm {
 
 function emptyEndereco(key: number): EnderecoForm {
   return { key, label: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", cep: "" };
+}
+
+function EnderecoCard({
+  end,
+  index,
+  total,
+  onUpdate,
+  onRemove,
+}: {
+  end: EnderecoForm;
+  index: number;
+  total: number;
+  onUpdate: (key: number, field: keyof EnderecoForm, value: string) => void;
+  onRemove: (key: number) => void;
+}) {
+  const handleCepResult = useCallback(
+    (data: { rua: string; bairro: string; cidade: string }) => {
+      onUpdate(end.key, "rua", data.rua);
+      onUpdate(end.key, "bairro", data.bairro);
+      onUpdate(end.key, "cidade", data.cidade);
+    },
+    [end.key, onUpdate]
+  );
+  const { fetchCep, loading: cepLoading } = useCep(handleCepResult);
+
+  return (
+    <Card className="mt-4">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-lg">
+              {total === 1 ? "Endereço" : `Endereço ${index + 1}`}
+            </CardTitle>
+            {index === 0 && (
+              <CardDescription>Adicione o endereço principal</CardDescription>
+            )}
+          </div>
+          {total > 1 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => onRemove(end.key)}
+              aria-label={`Remover endereço ${index + 1}`}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label>Apelido do endereço</Label>
+          <Input
+            value={end.label}
+            onChange={(e) => onUpdate(end.key, "label", e.target.value)}
+            placeholder='Ex: "Escritório"'
+          />
+        </div>
+        <Separator />
+        <div className="w-full sm:w-1/3 space-y-2">
+          <Label>CEP</Label>
+          <div className="relative">
+            <Input
+              value={end.cep}
+              onChange={(e) => {
+                onUpdate(end.key, "cep", e.target.value);
+                fetchCep(e.target.value);
+              }}
+              placeholder="00000-000"
+            />
+            {cepLoading && (
+              <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+            )}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="sm:col-span-2 space-y-2">
+            <Label>Rua *</Label>
+            <Input
+              value={end.rua}
+              onChange={(e) => onUpdate(end.key, "rua", e.target.value)}
+              required
+              placeholder="Rua"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Número *</Label>
+            <Input
+              value={end.numero}
+              onChange={(e) => onUpdate(end.key, "numero", e.target.value)}
+              required
+              placeholder="Nº"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Complemento</Label>
+          <Input
+            value={end.complemento}
+            onChange={(e) => onUpdate(end.key, "complemento", e.target.value)}
+            placeholder="Sala, andar, bloco..."
+          />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Bairro</Label>
+            <Input
+              value={end.bairro}
+              onChange={(e) => onUpdate(end.key, "bairro", e.target.value)}
+              placeholder="Bairro"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Cidade *</Label>
+            <Input
+              value={end.cidade}
+              onChange={(e) => onUpdate(end.key, "cidade", e.target.value)}
+              required
+              placeholder="Cidade"
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function NovoClientePage() {
@@ -106,97 +234,14 @@ export default function NovoClientePage() {
         </Card>
 
         {enderecos.map((end, index) => (
-          <Card key={end.key} className="mt-4">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg">
-                    {enderecos.length === 1 ? "Endereço" : `Endereço ${index + 1}`}
-                  </CardTitle>
-                  {index === 0 && (
-                    <CardDescription>Adicione o endereço principal</CardDescription>
-                  )}
-                </div>
-                {enderecos.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeEndereco(end.key)}
-                    aria-label={`Remover endereço ${index + 1}`}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Apelido do endereço</Label>
-                <Input
-                  value={end.label}
-                  onChange={(e) => updateEndereco(end.key, "label", e.target.value)}
-                  placeholder='Ex: "Escritório"'
-                />
-              </div>
-              <Separator />
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="sm:col-span-2 space-y-2">
-                  <Label>Rua *</Label>
-                  <Input
-                    value={end.rua}
-                    onChange={(e) => updateEndereco(end.key, "rua", e.target.value)}
-                    required
-                    placeholder="Rua"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Número *</Label>
-                  <Input
-                    value={end.numero}
-                    onChange={(e) => updateEndereco(end.key, "numero", e.target.value)}
-                    required
-                    placeholder="Nº"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Complemento</Label>
-                <Input
-                  value={end.complemento}
-                  onChange={(e) => updateEndereco(end.key, "complemento", e.target.value)}
-                  placeholder="Sala, andar, bloco..."
-                />
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Bairro</Label>
-                  <Input
-                    value={end.bairro}
-                    onChange={(e) => updateEndereco(end.key, "bairro", e.target.value)}
-                    placeholder="Bairro"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Cidade *</Label>
-                  <Input
-                    value={end.cidade}
-                    onChange={(e) => updateEndereco(end.key, "cidade", e.target.value)}
-                    required
-                    placeholder="Cidade"
-                  />
-                </div>
-              </div>
-              <div className="w-full sm:w-1/3 space-y-2">
-                <Label>CEP</Label>
-                <Input
-                  value={end.cep}
-                  onChange={(e) => updateEndereco(end.key, "cep", e.target.value)}
-                  placeholder="00000-000"
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <EnderecoCard
+            key={end.key}
+            end={end}
+            index={index}
+            total={enderecos.length}
+            onUpdate={updateEndereco}
+            onRemove={removeEndereco}
+          />
         ))}
 
         <Button
