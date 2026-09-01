@@ -81,8 +81,17 @@ export function CadastroDialog({ onCreated }: { onCreated?: () => void }) {
             <Input id="name" name="name" required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input id="email" name="email" type="email" required />
+            <Label htmlFor="username">Nome de usuário *</Label>
+            <Input
+              id="username"
+              name="username"
+              placeholder="ex: joao.silva"
+              autoCapitalize="none"
+              autoCorrect="off"
+              pattern="[a-zA-Z0-9._-]{3,30}"
+              title="3-30 caracteres: letras, números, ponto, hífen ou underscore"
+              required
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Senha *</Label>

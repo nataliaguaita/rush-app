@@ -24,20 +24,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const { data: profile } = await adminSupabase
+  const { data: callerProfile } = await adminSupabase
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.role !== "admin") {
+  if (!callerProfile || callerProfile.role !== "admin") {
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   const body = await request.json();
-  const { name, username: rawUsername, password, role, phone } = body;
+  const { id, name, username: rawUsername, password, role, phone, active } = body;
 
-  if (!name || !rawUsername || !password || !role) {
+  if (!id || !name || !rawUsername || !role) {
     return NextResponse.json({ error: "Campos obrigatórios faltando" }, { status: 400 });
   }
 
@@ -49,25 +49,29 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data, error } = await adminSupabase.auth.admin.createUser({
+  const authUpdate: Record<string, unknown> = {
     email: usernameToSyntheticEmail(username),
-    password,
-    email_confirm: true,
     user_metadata: { name, role, username },
-  });
-
-  if (error) {
-    if (error.message.toLowerCase().includes("already been registered")) {
-      return NextResponse.json({ error: "Esse nome de usuário já está em uso" }, { status: 400 });
-    }
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  };
+  if (password) {
+    authUpdate.password = password;
   }
 
-  if (data.user) {
-    await adminSupabase
-      .from("profiles")
-      .update({ username, phone: phone || null })
-      .eq("id", data.user.id);
+  const { error: authUpdateError } = await adminSupabase.auth.admin.updateUserById(id, authUpdate);
+  if (authUpdateError) {
+    if (authUpdateError.message.toLowerCase().includes("already been registered")) {
+      return NextResponse.json({ error: "Esse nome de usuário já está em uso" }, { status: 400 });
+    }
+    return NextResponse.json({ error: authUpdateError.message }, { status: 400 });
+  }
+
+  const { error: profileError } = await adminSupabase
+    .from("profiles")
+    .update({ name, username, role, phone: phone || null, active })
+    .eq("id", id);
+
+  if (profileError) {
+    return NextResponse.json({ error: profileError.message }, { status: 400 });
   }
 
   return NextResponse.json({ success: true });

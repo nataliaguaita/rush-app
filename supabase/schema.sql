@@ -22,6 +22,7 @@ CREATE TYPE receiver_role AS ENUM ('secretaria', 'porteiro', 'morador_vizinho', 
 CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
+  username TEXT UNIQUE,
   role user_role NOT NULL DEFAULT 'vendedor',
   phone TEXT,
   active BOOLEAN NOT NULL DEFAULT true,
@@ -159,10 +160,11 @@ CREATE TRIGGER entregas_updated_at
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO profiles (id, name, role)
+  INSERT INTO profiles (id, name, username, role)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'name', NEW.email),
+    NEW.raw_user_meta_data->>'username',
     COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'vendedor')
   );
   RETURN NEW;
@@ -286,3 +288,29 @@ CREATE POLICY "entregas_storage_select" ON storage.objects
 -- REALTIME
 -- ============================================
 ALTER PUBLICATION supabase_realtime ADD TABLE entregas;
+
+-- ============================================
+-- MIGRATION: username login (run on an existing database)
+-- Cadastro de vendedor/motoboy passa a exigir usuário + senha, sem email.
+-- Login continua aceitando o email de contas antigas (ex: admin) que
+-- ainda não tiverem um username cadastrado.
+-- ============================================
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS username TEXT UNIQUE;
+
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO profiles (id, name, username, role)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'name', NEW.email),
+    NEW.raw_user_meta_data->>'username',
+    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'vendedor')
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Opcional: defina um username para sua conta admin atual (que hoje só
+-- tem email) para poder usar o novo campo "Usuário" no login também:
+-- UPDATE profiles SET username = 'admin' WHERE id = '<seu-user-id>';

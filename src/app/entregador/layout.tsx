@@ -23,13 +23,13 @@ export default function EntregadorLayout({ children }: { children: React.ReactNo
         .eq("id", user.id)
         .single();
 
-      if (!data || data.role !== "entregador") {
-        router.replace("/dashboard");
+      if (data && data.role === "entregador") {
+        setProfile(data as Profile);
+        setLoading(false);
         return;
       }
 
-      setProfile(data as Profile);
-      setLoading(false);
+      router.replace("/dashboard");
     }
     loadProfile();
   }, []);

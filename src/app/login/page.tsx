@@ -21,12 +21,28 @@ export default function LoginPage() {
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
+    const identifier = (formData.get("username") as string).trim();
     const password = formData.get("password") as string;
 
-    if (!email || !password) return;
+    if (!identifier || !password) return;
 
     setLoading(true);
+
+    let email = identifier;
+    if (!identifier.includes("@")) {
+      const res = await fetch("/api/resolve-username", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: identifier }),
+      });
+      const data = await res.json();
+      if (!data.email) {
+        toast.error("Usuário ou senha inválidos");
+        setLoading(false);
+        return;
+      }
+      email = data.email;
+    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -34,9 +50,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      toast.error("Erro ao fazer login", {
-        description: error.message,
-      });
+      toast.error("Usuário ou senha inválidos");
       setLoading(false);
       return;
     }
@@ -57,12 +71,13 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Usuário</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="seu@email.com"
+                id="username"
+                name="username"
+                placeholder="seu.usuario"
+                autoCapitalize="none"
+                autoCorrect="off"
                 required
               />
             </div>

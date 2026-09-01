@@ -79,7 +79,11 @@ function ProfileList({
               </div>
               <div className="min-w-0">
                 <p className="truncate font-medium">{profile.name}</p>
-                {profile.phone && <p className="text-sm text-muted-foreground">{profile.phone}</p>}
+                <p className="truncate text-sm text-muted-foreground">
+                  {profile.username && `@${profile.username}`}
+                  {profile.username && profile.phone && " · "}
+                  {profile.phone}
+                </p>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-2">

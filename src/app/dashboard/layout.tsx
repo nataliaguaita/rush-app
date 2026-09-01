@@ -56,5 +56,9 @@ export default function DashboardLayout({
     );
   }
 
-  return <AppShell profile={profile}>{children}</AppShell>;
+  return (
+    <AppShell profile={profile}>
+      {children}
+    </AppShell>
+  );
 }

@@ -38,8 +38,12 @@ export function EditProfileDialog({
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
+    const password = (formData.get("password") as string) || undefined;
     const result = await updateProfile(profile.id, {
       name: formData.get("name") as string,
+      username: formData.get("username") as string,
+      password,
+      role: formData.get("role") as string,
       phone: (formData.get("phone") as string) || null,
       active: formData.get("active") === "true",
     });
@@ -74,12 +78,51 @@ export function EditProfileDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
+            <Label htmlFor="edit-role">Tipo</Label>
+            <Select
+              name="role"
+              defaultValue={profile.role}
+              items={{ vendedor: "Vendedor", entregador: "Entregador" }}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="vendedor">Vendedor</SelectItem>
+                <SelectItem value="entregador">Entregador</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="edit-name">Nome *</Label>
             <Input
               id="edit-name"
               name="name"
               defaultValue={profile.name}
               required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-username">Nome de usuário *</Label>
+            <Input
+              id="edit-username"
+              name="username"
+              defaultValue={profile.username ?? ""}
+              autoCapitalize="none"
+              autoCorrect="off"
+              pattern="[a-zA-Z0-9._-]{3,30}"
+              title="3-30 caracteres: letras, números, ponto, hífen ou underscore"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-password">Senha</Label>
+            <Input
+              id="edit-password"
+              name="password"
+              type="password"
+              placeholder="Deixe em branco para não alterar"
+              minLength={6}
             />
           </div>
           <div className="space-y-2">

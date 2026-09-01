@@ -9,7 +9,11 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { logout } from "@/app/login/actions";
 
-export function EntregadorNav({ profile }: { profile: Profile }) {
+export function EntregadorNav({
+  profile,
+}: {
+  profile: Profile;
+}) {
   const pathname = usePathname();
 
   const links = [

@@ -16,6 +16,7 @@ export type ReceiverRole =
 export interface Profile {
   id: string;
   name: string;
+  username: string | null;
   role: UserRole;
   phone: string | null;
   active: boolean;
