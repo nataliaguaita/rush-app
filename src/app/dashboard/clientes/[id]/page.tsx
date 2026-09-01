@@ -48,8 +48,8 @@ export default function ClienteDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">{cliente.name}</h1>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-2xl font-bold">{cliente.name}</h1>
           {cliente.phone && (
             <p className="flex items-center gap-1 text-sm text-muted-foreground">
               <Phone className="h-3 w-3" />

@@ -147,7 +147,7 @@ export function NovaEntregaForm({
 
           <div className="space-y-2">
             <Label>O motoboy deve:</Label>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -194,7 +194,7 @@ export function NovaEntregaForm({
             </Select>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"

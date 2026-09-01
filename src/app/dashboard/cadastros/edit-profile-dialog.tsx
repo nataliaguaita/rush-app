@@ -92,7 +92,11 @@ export function EditProfileDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="edit-active">Status</Label>
-            <Select name="active" defaultValue={String(profile.active)}>
+            <Select
+              name="active"
+              defaultValue={String(profile.active)}
+              items={{ true: "Ativo", false: "Inativo" }}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

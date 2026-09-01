@@ -41,7 +41,9 @@ export default function EntregadorLayout({ children }: { children: React.ReactNo
   return (
     <div className="flex h-screen flex-col">
       <EntregadorNav profile={profile} />
-      <main className="flex-1 overflow-y-auto bg-muted/30 p-4">{children}</main>
+      <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-6">
+        <div className="mx-auto max-w-3xl">{children}</div>
+      </main>
     </div>
   );
 }

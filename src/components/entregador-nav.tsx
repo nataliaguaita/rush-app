@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { Profile } from "@/types/database";
 import { Package, CheckCircle, Truck, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { logout } from "@/app/login/actions";
 
 export function EntregadorNav({ profile }: { profile: Profile }) {
@@ -18,21 +19,24 @@ export function EntregadorNav({ profile }: { profile: Profile }) {
 
   return (
     <header className="border-b bg-card">
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2">
+      <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-4 py-3">
+        <div className="flex shrink-0 items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <Truck className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="font-semibold">Rush</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{profile.name}</span>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="hidden truncate text-sm text-muted-foreground sm:inline">
+            {profile.name}
+          </span>
+          <ThemeToggle collapsed />
           <Button variant="ghost" size="icon" onClick={() => logout()}>
               <LogOut className="h-4 w-4" />
             </Button>
         </div>
       </div>
-      <nav className="flex border-t">
+      <nav className="mx-auto flex max-w-3xl border-t">
         {links.map((link) => {
           const Icon = link.icon;
           const isActive =

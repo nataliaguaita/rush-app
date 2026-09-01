@@ -79,7 +79,7 @@ export default function NovoClientePage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <div>
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold">Novo Cliente</h1>
           <p className="text-muted-foreground">Cadastre um novo cliente com endereço(s)</p>
         </div>
@@ -136,8 +136,8 @@ export default function NovoClientePage() {
                 />
               </div>
               <Separator />
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2 space-y-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="sm:col-span-2 space-y-2">
                   <Label>Rua *</Label>
                   <Input
                     value={end.rua}
@@ -164,7 +164,7 @@ export default function NovoClientePage() {
                   placeholder="Sala, andar, bloco..."
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Bairro</Label>
                   <Input
@@ -183,7 +183,7 @@ export default function NovoClientePage() {
                   />
                 </div>
               </div>
-              <div className="w-1/3 space-y-2">
+              <div className="w-full sm:w-1/3 space-y-2">
                 <Label>CEP</Label>
                 <Input
                   value={end.cep}

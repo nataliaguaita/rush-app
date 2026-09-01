@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { SidebarNav } from "@/components/sidebar-nav";
+import { AppShell } from "@/components/app-shell";
 import type { Profile } from "@/types/database";
 
 export default function DashboardLayout({
@@ -56,12 +56,5 @@ export default function DashboardLayout({
     );
   }
 
-  return (
-    <div className="flex h-screen">
-      <SidebarNav profile={profile} />
-      <main className="flex-1 overflow-y-auto bg-muted/30 p-6">
-        {children}
-      </main>
-    </div>
-  );
+  return <AppShell profile={profile}>{children}</AppShell>;
 }

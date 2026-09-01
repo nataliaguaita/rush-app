@@ -40,8 +40,8 @@ export function AddEnderecoForm({
         <Label>Apelido</Label>
         <Input name="label" placeholder='Ex: "Filial"' />
       </div>
-      <div className="grid grid-cols-3 gap-3">
-        <div className="col-span-2 space-y-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="sm:col-span-2 space-y-2">
           <Label>Rua *</Label>
           <Input name="rua" required />
         </div>
@@ -54,7 +54,7 @@ export function AddEnderecoForm({
         <Label>Complemento</Label>
         <Input name="complemento" />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>Bairro</Label>
           <Input name="bairro" />
@@ -64,7 +64,7 @@ export function AddEnderecoForm({
           <Input name="cidade" required />
         </div>
       </div>
-      <div className="w-1/3 space-y-2">
+      <div className="w-full sm:w-1/3 space-y-2">
         <Label>CEP</Label>
         <Input name="cep" />
       </div>

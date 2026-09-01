@@ -50,7 +50,7 @@ export default function EntregasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Entregas</h1>
           <p className="text-muted-foreground">{entregas.length} entregas</p>
@@ -64,7 +64,7 @@ export default function EntregasPage() {
       </div>
 
       <Tabs defaultValue="pendentes">
-        <TabsList>
+        <TabsList className="w-full overflow-x-auto sm:w-auto">
           <TabsTrigger value="pendentes">Pendentes ({pendentes.length})</TabsTrigger>
           <TabsTrigger value="andamento">Em Andamento ({emAndamento.length})</TabsTrigger>
           <TabsTrigger value="finalizadas">Finalizadas ({finalizadas.length})</TabsTrigger>
@@ -106,9 +106,9 @@ function EntregaList({ entregas, entregadores }: { entregas: any[]; entregadores
         return (
           <Card key={entrega.id}>
             <CardContent className="py-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{entrega.cliente?.name ?? "Cliente"}</span>
                     {entrega.is_urgent && (
                       <Badge variant="destructive" className="text-xs">

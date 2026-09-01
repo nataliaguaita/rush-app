@@ -26,7 +26,7 @@ export function AssignEntregadorSelect({
 
   return (
     <Select onValueChange={handleAssign}>
-      <SelectTrigger className="w-44">
+      <SelectTrigger className="w-full sm:w-44">
         <SelectValue placeholder="Atribuir entregador" />
       </SelectTrigger>
       <SelectContent>

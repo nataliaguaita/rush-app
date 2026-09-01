@@ -47,8 +47,8 @@ export default function EntregasFinalizadasPage() {
           {entregas.map((entrega) => (
             <Card key={entrega.id}>
               <CardContent className="py-4 space-y-2">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0 space-y-1">
                     <span className="font-medium">{entrega.cliente?.name}</span>
                     {entrega.endereco && (
                       <p className="flex items-center gap-1 text-sm text-muted-foreground">

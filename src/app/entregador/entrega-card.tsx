@@ -91,9 +91,9 @@ export function EntregaCard({
     <Card className={isFirst && !isEmRota ? "border-primary" : ""}>
       <CardContent className="py-4 space-y-3">
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="font-medium">{entrega.cliente?.name}</span>
               {entrega.is_urgent && (
                 <Badge variant="destructive" className="text-xs">
@@ -123,7 +123,7 @@ export function EntregaCard({
 
         {/* Actions */}
         {mode === "idle" && (
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             {!isEmRota && isFirst ? (
               <Button className="flex-1" onClick={handleIniciar}>
                 <Navigation className="mr-2 h-4 w-4" />
@@ -145,9 +145,11 @@ export function EntregaCard({
                 <Button
                   variant="destructive"
                   size="sm"
+                  className="gap-2"
                   onClick={() => setMode("recusar")}
                 >
                   <XCircle className="h-4 w-4" />
+                  <span className="sm:hidden">Recusar</span>
                 </Button>
               </>
             ) : null}

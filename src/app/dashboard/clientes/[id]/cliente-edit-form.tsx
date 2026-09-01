@@ -45,7 +45,11 @@ export function ClienteEditForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="active">Status</Label>
-            <Select name="active" defaultValue={String(cliente.active)}>
+            <Select
+              name="active"
+              defaultValue={String(cliente.active)}
+              items={{ true: "Ativo", false: "Inativo" }}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

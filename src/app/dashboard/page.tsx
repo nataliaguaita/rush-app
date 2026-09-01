@@ -90,12 +90,12 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-3">
               {entregadorStats.map((ent) => (
-                <div key={ent.id} className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                <div key={ent.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                       {ent.name.charAt(0).toUpperCase()}
                     </div>
-                    <span className="font-medium">{ent.name}</span>
+                    <span className="truncate font-medium">{ent.name}</span>
                   </div>
                   <Badge variant={ent.feitas === ent.total && ent.total > 0 ? "default" : "secondary"}>
                     {ent.feitas}/{ent.total} concluídas

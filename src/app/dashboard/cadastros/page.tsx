@@ -26,7 +26,7 @@ export default function CadastrosPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Cadastros</h1>
           <p className="text-muted-foreground">Gerencie vendedores e entregadores</p>
@@ -35,7 +35,7 @@ export default function CadastrosPage() {
       </div>
 
       <Tabs defaultValue="vendedores">
-        <TabsList>
+        <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="vendedores">Vendedores ({vendedores.length})</TabsTrigger>
           <TabsTrigger value="entregadores">Entregadores ({entregadores.length})</TabsTrigger>
         </TabsList>
@@ -72,17 +72,17 @@ function ProfileList({
     <div className="space-y-2">
       {profiles.map((profile) => (
         <Card key={profile.id}>
-          <CardContent className="flex items-center justify-between py-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                 {profile.name.charAt(0).toUpperCase()}
               </div>
-              <div>
-                <p className="font-medium">{profile.name}</p>
+              <div className="min-w-0">
+                <p className="truncate font-medium">{profile.name}</p>
                 {profile.phone && <p className="text-sm text-muted-foreground">{profile.phone}</p>}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <Badge variant={profile.active ? "default" : "secondary"}>
                 {profile.active ? "Ativo" : "Inativo"}
               </Badge>

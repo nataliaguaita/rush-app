@@ -62,7 +62,11 @@ export function CadastroDialog({ onCreated }: { onCreated?: () => void }) {
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="role">Tipo</Label>
-            <Select name="role" defaultValue="vendedor">
+            <Select
+              name="role"
+              defaultValue="vendedor"
+              items={{ vendedor: "Vendedor", entregador: "Entregador" }}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
