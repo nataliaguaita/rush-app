@@ -160,16 +160,16 @@ CREATE TRIGGER entregas_updated_at
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO profiles (id, name, username, role)
+  INSERT INTO public.profiles (id, name, username, role)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'name', NEW.email),
     NEW.raw_user_meta_data->>'username',
-    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'vendedor')
+    COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'vendedor')
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
@@ -300,16 +300,16 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS username TEXT UNIQUE;
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO profiles (id, name, username, role)
+  INSERT INTO public.profiles (id, name, username, role)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'name', NEW.email),
     NEW.raw_user_meta_data->>'username',
-    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'vendedor')
+    COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'vendedor')
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Opcional: defina um username para sua conta admin atual (que hoje só
 -- tem email) para poder usar o novo campo "Usuário" no login também:

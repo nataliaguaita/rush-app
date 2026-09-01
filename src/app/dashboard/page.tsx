@@ -4,11 +4,20 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Package, Truck, CheckCircle, Clock } from "lucide-react";
+import { Package, Truck, CheckCircle, Clock, MapPin } from "lucide-react";
+
+const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  aguardando_atribuicao: { label: "Aguardando", variant: "secondary" },
+  rota_definida: { label: "Rota Definida", variant: "outline" },
+  em_rota: { label: "Em Rota", variant: "default" },
+  entregue: { label: "Entregue", variant: "default" },
+  recusada: { label: "Recusada", variant: "destructive" },
+};
 
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState({ total: 0, pendentes: 0, emRota: 0, concluidas: 0 });
-  const [entregadorStats, setEntregadorStats] = useState<any[]>([]);
+  const [entregadores, setEntregadores] = useState<any[]>([]);
+  const [entregasPorEntregador, setEntregasPorEntregador] = useState<Record<string, any[]>>({});
   const supabase = createClient();
 
   useEffect(() => {
@@ -17,9 +26,10 @@ export default function DashboardPage() {
 
       const { data: entregas } = await supabase
         .from("entregas")
-        .select("id, status, entregador_id")
+        .select("*, cliente:clientes(*), endereco:enderecos(*)")
         .gte("created_at", `${today}T00:00:00`)
-        .lte("created_at", `${today}T23:59:59`);
+        .lte("created_at", `${today}T23:59:59`)
+        .order("route_order", { ascending: true, nullsFirst: false });
 
       const all = entregas ?? [];
       setMetrics({
@@ -29,21 +39,19 @@ export default function DashboardPage() {
         concluidas: all.filter((e: any) => e.status === "entregue").length,
       });
 
-      const { data: entregadores } = await supabase
+      const { data: ent } = await supabase
         .from("profiles")
         .select("id, name")
         .eq("role", "entregador")
         .eq("active", true);
 
-      const stats = (entregadores ?? []).map((ent: any) => {
-        const entregasDoEnt = all.filter((e: any) => e.entregador_id === ent.id);
-        return {
-          ...ent,
-          total: entregasDoEnt.length,
-          feitas: entregasDoEnt.filter((e: any) => e.status === "entregue").length,
-        };
-      });
-      setEntregadorStats(stats);
+      setEntregadores(ent ?? []);
+
+      const porEntregador: Record<string, any[]> = {};
+      for (const entregador of ent ?? []) {
+        porEntregador[entregador.id] = all.filter((e: any) => e.entregador_id === entregador.id);
+      }
+      setEntregasPorEntregador(porEntregador);
     }
 
     loadData();
@@ -80,32 +88,71 @@ export default function DashboardPage() {
         })}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Visão por Entregador</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {entregadorStats.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum entregador cadastrado.</p>
-          ) : (
-            <div className="space-y-3">
-              {entregadorStats.map((ent) => (
-                <div key={ent.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                      {ent.name.charAt(0).toUpperCase()}
+      <div>
+        <h2 className="mb-3 text-lg font-semibold">Visão por Entregador</h2>
+        {entregadores.length === 0 ? (
+          <Card>
+            <CardContent className="py-10 text-center text-muted-foreground">
+              Nenhum entregador cadastrado.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {entregadores.map((entregador) => {
+              const entregasDoEntregador = entregasPorEntregador[entregador.id] ?? [];
+              const feitas = entregasDoEntregador.filter((e: any) => e.status === "entregue").length;
+              return (
+                <Card key={entregador.id}>
+                  <CardHeader className="flex flex-row items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                        {entregador.name.charAt(0).toUpperCase()}
+                      </div>
+                      <CardTitle className="truncate text-base">{entregador.name}</CardTitle>
                     </div>
-                    <span className="truncate font-medium">{ent.name}</span>
-                  </div>
-                  <Badge variant={ent.feitas === ent.total && ent.total > 0 ? "default" : "secondary"}>
-                    {ent.feitas}/{ent.total} concluídas
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                    <Badge variant={feitas === entregasDoEntregador.length && entregasDoEntregador.length > 0 ? "default" : "secondary"}>
+                      {feitas}/{entregasDoEntregador.length}
+                    </Badge>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {entregasDoEntregador.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Nenhuma entrega atribuída.</p>
+                    ) : (
+                      entregasDoEntregador.map((entrega: any, index: number) => {
+                        const statusInfo = statusLabels[entrega.status] ?? { label: entrega.status, variant: "secondary" as const };
+                        return (
+                          <div key={entrega.id} className="flex gap-3 rounded-lg border p-3">
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                              {index + 1}
+                            </div>
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="truncate font-medium">{entrega.cliente?.name ?? "Cliente"}</span>
+                                <Badge variant={statusInfo.variant} className="text-xs">
+                                  {statusInfo.label}
+                                </Badge>
+                              </div>
+                              {entrega.endereco && (
+                                <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <MapPin className="h-3 w-3 shrink-0" />
+                                  <span className="truncate">
+                                    {entrega.endereco.rua}, {entrega.endereco.numero}
+                                    {entrega.endereco.bairro ? ` - ${entrega.endereco.bairro}` : ""}
+                                  </span>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

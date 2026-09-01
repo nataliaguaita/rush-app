@@ -110,7 +110,7 @@ export function EditProfileDialog({
               defaultValue={profile.username ?? ""}
               autoCapitalize="none"
               autoCorrect="off"
-              pattern="[a-zA-Z0-9._-]{3,30}"
+              pattern="[a-zA-Z0-9._\-]{3,30}"
               title="3-30 caracteres: letras, números, ponto, hífen ou underscore"
               required
             />
