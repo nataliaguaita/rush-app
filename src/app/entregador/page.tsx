@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,22 @@ export default function EntregadorPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
+  const [completedAt, setCompletedAt] = useState<string | null>(null);
+  const [now, setNow] = useState(() => new Date());
   const supabase = createClient();
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const isNewDay = useMemo(() => {
+    if (!completedAt) return false;
+    const completed = new Date(completedAt);
+    const midnight = new Date(completed);
+    midnight.setHours(24, 0, 0, 0);
+    return now >= midnight;
+  }, [completedAt, now]);
 
   const load = useCallback(async ({ silent = false } = {}) => {
     if (silent) setRefreshing(true);
@@ -42,7 +57,13 @@ export default function EntregadorPage() {
       return;
     }
 
-    setEntregas(data ?? []);
+    const list = data ?? [];
+    setEntregas(list);
+    if (list.length === 0 && !completedAt) {
+      setCompletedAt(new Date().toISOString());
+    } else if (list.length > 0) {
+      setCompletedAt(null);
+    }
     setLoading(false);
     setRefreshing(false);
   }, []);
@@ -100,11 +121,25 @@ export default function EntregadorPage() {
           ))}
         </div>
       ) : entregas.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            Nenhuma entrega designada para você hoje.
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+          {isNewDay ? (
+            <>
+              <div className="text-6xl animate-pulse">📦</div>
+              <div>
+                <p className="text-lg font-semibold">Preparando sua rota...</p>
+                <p className="text-sm text-muted-foreground">As entregas do dia estão sendo atribuídas. Aguarde!</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-6xl animate-bounce">😄</div>
+              <div>
+                <p className="text-lg font-semibold">Tudo entregue!</p>
+                <p className="text-sm text-muted-foreground">Você completou todas as entregas do dia. Bom trabalho!</p>
+              </div>
+            </>
+          )}
+        </div>
       ) : (
         <div className="space-y-3">
           {entregas.map((entrega, index) => (

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { EntregadorNav } from "@/components/entregador-nav";
+import { EntregadorHeader, EntregadorBottomNav } from "@/components/entregador-nav";
 import type { Profile } from "@/types/database";
 
 export default function EntregadorLayout({ children }: { children: React.ReactNode }) {
@@ -40,10 +40,11 @@ export default function EntregadorLayout({ children }: { children: React.ReactNo
 
   return (
     <div className="flex h-screen flex-col">
-      <EntregadorNav profile={profile} />
-      <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-6">
+      <EntregadorHeader profile={profile} />
+      <main className="flex-1 overflow-y-auto bg-muted/30 p-4 pb-20 md:p-6 md:pb-20">
         <div className="mx-auto max-w-3xl">{children}</div>
       </main>
+      <EntregadorBottomNav />
     </div>
   );
 }

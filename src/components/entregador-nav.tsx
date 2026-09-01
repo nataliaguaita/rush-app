@@ -4,23 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/types/database";
-import { Package, CheckCircle, Truck, LogOut } from "lucide-react";
+import { Package, CheckCircle, Truck, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { logout } from "@/app/login/actions";
 
-export function EntregadorNav({
-  profile,
-}: {
-  profile: Profile;
-}) {
-  const pathname = usePathname();
+const links = [
+  { href: "/entregador", label: "Entregas", icon: Package },
+  { href: "/entregador/finalizadas", label: "Finalizadas", icon: CheckCircle },
+];
 
-  const links = [
-    { href: "/entregador", label: "Entregas", icon: Package },
-    { href: "/entregador/finalizadas", label: "Finalizadas", icon: CheckCircle },
-  ];
-
+export function EntregadorHeader({ profile }: { profile: Profile }) {
   return (
     <header className="border-b bg-card">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-4 py-3">
@@ -36,11 +30,20 @@ export function EntregadorNav({
           </span>
           <ThemeToggle collapsed />
           <Button variant="ghost" size="icon" onClick={() => logout()} aria-label="Sair">
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <LogOut className="h-4 w-4" />
+          </Button>
         </div>
       </div>
-      <nav className="mx-auto flex max-w-3xl border-t">
+    </header>
+  );
+}
+
+export function EntregadorBottomNav() {
+  const pathname = usePathname();
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t bg-card pb-[env(safe-area-inset-bottom)]">
+      <div className="mx-auto flex max-w-3xl">
         {links.map((link) => {
           const Icon = link.icon;
           const isActive =
@@ -51,18 +54,21 @@ export function EntregadorNav({
               key={link.href}
               href={link.href}
               className={cn(
-                "flex flex-1 items-center justify-center gap-2 py-2.5 text-sm transition-colors",
+                "flex flex-1 flex-col items-center gap-1 py-2 text-xs transition-colors",
                 isActive
-                  ? "border-b-2 border-primary text-primary font-medium"
+                  ? "text-[#0090FF] font-medium"
                   : "text-muted-foreground"
               )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-5 w-5" />
               {link.label}
             </Link>
           );
         })}
-      </nav>
-    </header>
+      </div>
+    </nav>
   );
 }
+
+// Keep backward compat export
+export { EntregadorHeader as EntregadorNav };

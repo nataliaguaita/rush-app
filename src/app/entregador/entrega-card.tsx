@@ -61,8 +61,11 @@ export function EntregaCard({
   const [loading, setLoading] = useState(false);
   const [fotoStatus, setFotoStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [receiverName, setReceiverName] = useState("");
+  const [receiverRole, setReceiverRole] = useState("");
   const [confirmType, setConfirmType] = useState<"entrega" | "recusa" | null>(null);
   const pendingFormData = useRef<FormData | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const endereco = entrega.endereco;
   const isEmRota = entrega.status === "em_rota";
@@ -132,7 +135,7 @@ export function EntregaCard({
           : ""
       }
     >
-      <CardContent className="py-4 space-y-3">
+      <CardContent className="space-y-3">
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0 space-y-1">
@@ -142,7 +145,7 @@ export function EntregaCard({
               </p>
             )}
             <div className="flex flex-wrap items-center gap-2">
-              <Link href={`/dashboard/entregas/${entrega.id}`} className="font-medium hover:underline">
+              <Link href={`/dashboard/entregas/${entrega.id}`} className="text-base font-semibold hover:underline">
                 {entrega.cliente?.name}
               </Link>
               {entrega.is_urgent && (
@@ -158,7 +161,7 @@ export function EntregaCard({
               {endereco?.bairro ? ` - ${endereco.bairro}` : ""}
             </p>
             {entrega.valor && (
-              <p className="text-sm">R$ {Number(entrega.valor).toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground">R$ {Number(entrega.valor).toFixed(2)}</p>
             )}
             {entrega.notes && (
               <p className="text-xs text-muted-foreground italic">
@@ -173,19 +176,19 @@ export function EntregaCard({
         {mode === "idle" && (
           <div className="flex flex-col gap-2 sm:flex-row">
             {!isEmRota && isFirst ? (
-              <Button size="lg" className="flex-1" onClick={handleIniciar}>
+              <Button size="lg" className="flex-1 bg-[#0090FF] text-white font-bold hover:bg-[#0090FF]/80" onClick={handleIniciar}>
                 <Navigation className="mr-2 h-4 w-4" />
                 Iniciar Entrega
               </Button>
             ) : isEmRota ? (
               <>
-                <Button onClick={openNavigation} variant="outline" size="lg">
+                <Button onClick={openNavigation} variant="outline" size="lg" className="w-full sm:w-auto border-[#0090FF] text-[#0090FF] font-bold hover:bg-[#0090FF]/10">
                   <Navigation className="mr-1 h-4 w-4" />
                   Navegar
                 </Button>
                 <Button
                   size="lg"
-                  className="flex-1"
+                  className="w-full sm:flex-1 bg-[#0090FF] text-white font-bold hover:bg-[#0090FF]/80"
                   onClick={() => setMode("registrar")}
                 >
                   <CheckCircle className="mr-2 h-4 w-4" />
@@ -194,7 +197,7 @@ export function EntregaCard({
                 <Button
                   variant="destructive"
                   size="lg"
-                  className="gap-2"
+                  className="w-full sm:w-auto gap-2"
                   onClick={() => setMode("recusar")}
                 >
                   <XCircle className="h-4 w-4" />
@@ -213,12 +216,12 @@ export function EntregaCard({
           >
             <div className="space-y-2">
               <Label>Quem recebeu? *</Label>
-              <Input name="receiver_name" required placeholder="Nome" />
+              <Input name="receiver_name" required placeholder="Nome" value={receiverName} onChange={(e) => setReceiverName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Cargo *</Label>
-              <Select name="receiver_role" required>
-                <SelectTrigger>
+              <Select name="receiver_role" required value={receiverRole} onValueChange={setReceiverRole}>
+                <SelectTrigger size="lg" className="w-full">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
@@ -231,44 +234,67 @@ export function EntregaCard({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Foto do local</Label>
-              <Input
+              <Label>Foto do local *</Label>
+              <input
+                ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 capture="environment"
                 onChange={handleFoto}
+                className="hidden"
               />
-              {fotoStatus !== "idle" && (
-                <div className="flex items-center gap-2 rounded-lg border p-2">
+              {fotoStatus === "idle" || fotoStatus === "error" ? (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-muted-foreground/30 p-6 text-muted-foreground transition-colors hover:border-[#0090FF] hover:text-[#0090FF]"
+                >
+                  <Camera className="h-5 w-5" />
+                  <span className="text-sm font-medium">Tirar Foto</span>
+                </button>
+              ) : (
+                <div className="relative overflow-hidden rounded-lg border">
                   {fotoPreview && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={fotoPreview}
                       alt="Pré-visualização da foto anexada"
-                      className="h-12 w-12 shrink-0 rounded object-cover"
+                      className="h-32 w-full object-cover"
                     />
                   )}
-                  <div className="flex min-w-0 flex-1 items-center gap-1.5 text-sm">
-                    {fotoStatus === "uploading" && (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
-                        <span className="text-muted-foreground">Enviando foto...</span>
-                      </>
-                    )}
+                  <div className="flex items-center justify-between p-2">
+                    <div className="flex items-center gap-1.5 text-sm">
+                      {fotoStatus === "uploading" && (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
+                          <span className="text-muted-foreground">Enviando...</span>
+                        </>
+                      )}
+                      {fotoStatus === "done" && (
+                        <>
+                          <Camera className="h-3.5 w-3.5 shrink-0 text-status-success" />
+                          <span className="text-status-success">Foto anexada</span>
+                        </>
+                      )}
+                    </div>
                     {fotoStatus === "done" && (
-                      <>
-                        <Camera className="h-3.5 w-3.5 shrink-0 text-status-success" />
-                        <span className="text-status-success">Foto anexada</span>
-                      </>
-                    )}
-                    {fotoStatus === "error" && (
-                      <>
-                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />
-                        <span className="text-destructive">Falha ao enviar. Tente novamente.</span>
-                      </>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFotoStatus("idle");
+                          setFotoPreview(null);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }}
+                        className="text-xs text-muted-foreground hover:text-destructive"
+                      >
+                        Remover
+                      </button>
                     )}
                   </div>
                 </div>
+              )}
+              {fotoStatus === "error" && (
+                <p className="text-xs text-destructive">Falha ao enviar. Toque para tentar novamente.</p>
               )}
             </div>
             <div className="space-y-2">
@@ -279,8 +305,8 @@ export function EntregaCard({
               <Button
                 type="submit"
                 size="lg"
-                disabled={loading || fotoStatus === "uploading"}
-                className="flex-1"
+                disabled={loading || fotoStatus === "uploading" || !receiverName.trim() || !receiverRole || fotoStatus !== "done"}
+                className="flex-1 bg-[#0090FF] text-white font-bold hover:bg-[#0090FF]/80"
               >
                 {fotoStatus === "uploading" ? "Aguardando foto..." : "Confirmar Entrega"}
               </Button>

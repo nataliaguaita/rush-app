@@ -67,7 +67,7 @@ export function CadastroDialog({ onCreated }: { onCreated?: () => void }) {
               defaultValue="vendedor"
               items={{ vendedor: "Vendedor", entregador: "Entregador" }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

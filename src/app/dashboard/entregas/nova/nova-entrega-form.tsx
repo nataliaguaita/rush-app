@@ -77,7 +77,7 @@ export function NovaEntregaForm({
               }}
               required
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Escolha um cliente" />
               </SelectTrigger>
               <SelectContent>
@@ -99,7 +99,7 @@ export function NovaEntregaForm({
                 onValueChange={(v) => setSelectedEnderecoId(v ?? "")}
                 required
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Escolha o endereço" />
                 </SelectTrigger>
                 <SelectContent>
@@ -169,7 +169,7 @@ export function NovaEntregaForm({
           <div className="space-y-2">
             <Label>Programar Entrega</Label>
             <Select name="scheduled_period">
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Sem programação" />
               </SelectTrigger>
               <SelectContent>

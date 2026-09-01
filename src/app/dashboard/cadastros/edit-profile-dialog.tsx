@@ -84,7 +84,7 @@ export function EditProfileDialog({
               defaultValue={profile.role}
               items={{ vendedor: "Vendedor", entregador: "Entregador" }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -140,7 +140,7 @@ export function EditProfileDialog({
               defaultValue={String(profile.active)}
               items={{ true: "Ativo", false: "Inativo" }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
