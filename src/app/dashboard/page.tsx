@@ -5,28 +5,35 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
-import { Package, Truck, CheckCircle, Clock, MapPin, RefreshCw, AlertTriangle } from "lucide-react";
+import { RECEIVER_ROLE_LABELS } from "@/lib/status";
+import { Package, Truck, CheckCircle, Clock, MapPin, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { format, addDays, subDays } from "date-fns";
+import Link from "next/link";
+import { PesquisarEntregaDialog } from "./entregas/pesquisar-entrega-dialog";
 
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState({ total: 0, pendentes: 0, emRota: 0, concluidas: 0 });
+  const [entregas, setEntregas] = useState<any[]>([]);
   const [entregadores, setEntregadores] = useState<any[]>([]);
   const [entregasPorEntregador, setEntregasPorEntregador] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const supabase = createClient();
 
   const loadData = useCallback(async ({ silent = false } = {}) => {
     if (silent) setRefreshing(true);
     setError(false);
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = selectedDate;
 
-    const { data: entregas, error: entregasError } = await supabase
+    const { data: entregasData, error: entregasError } = await supabase
       .from("entregas")
-      .select("*, cliente:clientes(*), endereco:enderecos(*)")
+      .select("*, cliente:clientes(*), endereco:enderecos(*), entregador:profiles!entregas_entregador_id_fkey(id, name)")
       .gte("created_at", `${today}T00:00:00`)
       .lte("created_at", `${today}T23:59:59`)
       .order("route_order", { ascending: true, nullsFirst: false });
@@ -44,7 +51,8 @@ export default function DashboardPage() {
       return;
     }
 
-    const all = entregas ?? [];
+    const all = entregasData ?? [];
+    setEntregas(all);
     setMetrics({
       total: all.length,
       pendentes: all.filter((e: any) => e.status === "aguardando_atribuicao").length,
@@ -61,7 +69,7 @@ export default function DashboardPage() {
     setEntregasPorEntregador(porEntregador);
     setLoading(false);
     setRefreshing(false);
-  }, []);
+  }, [selectedDate]);
 
   useEffect(() => {
     loadData();
@@ -92,17 +100,49 @@ export default function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Torre de Controle</h1>
-          <p className="text-muted-foreground">Visão geral das entregas de hoje</p>
+          <p className="text-muted-foreground">Visão geral das entregas</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => loadData({ silent: true })}
-          disabled={refreshing}
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setSelectedDate(format(subDays(new Date(selectedDate + "T00:00:00"), 1), "yyyy-MM-dd"))}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            max={format(new Date(), "yyyy-MM-dd")}
+            className="h-8 w-auto text-center text-sm"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            disabled={selectedDate === format(new Date(), "yyyy-MM-dd")}
+            onClick={() => setSelectedDate(format(addDays(new Date(selectedDate + "T00:00:00"), 1), "yyyy-MM-dd"))}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => loadData({ silent: true })}
+            disabled={refreshing}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            Atualizar
+          </Button>
+          <PesquisarEntregaDialog entregas={entregas} entregadores={entregadores} />
+          <Link href="/dashboard/entregas/nova">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Entrega
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {error ? (
@@ -146,7 +186,7 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {entregadores.map((entregador) => {
                   const entregasDoEntregador = entregasPorEntregador[entregador.id] ?? [];
                   const feitas = entregasDoEntregador.filter((e: any) => e.status === "entregue").length;
@@ -168,15 +208,21 @@ export default function DashboardPage() {
                           <p className="text-sm text-muted-foreground">Nenhuma entrega atribuída.</p>
                         ) : (
                           entregasDoEntregador.map((entrega: any, index: number) => (
-                            <div key={entrega.id} className="flex gap-3 rounded-lg border p-3">
+                            <Link
+                              key={entrega.id}
+                              href={`/dashboard/entregas/${entrega.id}`}
+                              className="group relative flex gap-3 overflow-hidden rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                            >
+                              {entrega.status === "em_rota" && (
+                                <div className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-status-active/20">
+                                  <div className="h-full w-1/3 animate-[shimmer_1.5s_ease-in-out_infinite] bg-status-active" />
+                                </div>
+                              )}
                               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
                                 {index + 1}
                               </div>
                               <div className="min-w-0 flex-1 space-y-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="truncate font-medium">{entrega.cliente?.name ?? "Cliente"}</span>
-                                  <StatusBadge status={entrega.status} className="text-xs" />
-                                </div>
+                                <span className="truncate font-medium block">{entrega.cliente?.name ?? "Cliente"}</span>
                                 {entrega.endereco && (
                                   <p className="flex items-center gap-1 text-sm text-muted-foreground">
                                     <MapPin className="h-3 w-3 shrink-0" />
@@ -186,8 +232,20 @@ export default function DashboardPage() {
                                     </span>
                                   </p>
                                 )}
+                                {entrega.status === "entregue" && entrega.delivered_at && (
+                                  <p className="text-xs text-status-success">
+                                    {new Date(entrega.delivered_at).toLocaleDateString("pt-BR")} às{" "}
+                                    {new Date(entrega.delivered_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                                    {entrega.receiver_name && (
+                                      <> · {entrega.receiver_name}{entrega.receiver_role ? ` (${RECEIVER_ROLE_LABELS[entrega.receiver_role] ?? entrega.receiver_role})` : ""}</>
+                                    )}
+                                  </p>
+                                )}
                               </div>
-                            </div>
+                              <div className="flex shrink-0 items-center">
+                                <StatusBadge status={entrega.status} className="text-xs" />
+                              </div>
+                            </Link>
                           ))
                         )}
                       </CardContent>

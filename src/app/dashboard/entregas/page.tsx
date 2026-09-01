@@ -4,14 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StatusBadge } from "@/components/status-badge";
-import { Plus, MapPin, AlertTriangle, RefreshCw } from "lucide-react";
-import { AssignEntregadorSelect } from "./assign-entregador-select";
-import { PesquisarEntregaDialog } from "./pesquisar-entrega-dialog";
+import { Plus, AlertTriangle, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { format, addDays, subDays } from "date-fns";
+import { KanbanBoard } from "./kanban-board";
 
 export default function EntregasPage() {
   const [entregas, setEntregas] = useState<any[]>([]);
@@ -19,46 +17,52 @@ export default function EntregasPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const supabase = createClient();
 
-  const load = useCallback(async ({ silent = false } = {}) => {
-    if (silent) setRefreshing(true);
-    setError(false);
+  const load = useCallback(
+    async ({ silent = false } = {}) => {
+      if (silent) setRefreshing(true);
+      setError(false);
 
-    const { data: e, error: entregasError } = await supabase
-      .from("entregas")
-      .select("*, cliente:clientes(*), endereco:enderecos(*), entregador:profiles!entregas_entregador_id_fkey(*)")
-      .order("is_urgent", { ascending: false })
-      .order("created_at", { ascending: false });
+      const { data: e, error: entregasError } = await supabase
+        .from("entregas")
+        .select("*, cliente:clientes(*), endereco:enderecos(*)")
+        .gte("created_at", `${selectedDate}T00:00:00`)
+        .lte("created_at", `${selectedDate}T23:59:59`)
+        .in("status", ["aguardando_atribuicao", "rota_definida"])
+        .order("route_order", { ascending: true, nullsFirst: true });
 
-    const { data: ent, error: entregadoresError } = await supabase
-      .from("profiles")
-      .select("id, name")
-      .eq("role", "entregador")
-      .eq("active", true);
+      const { data: ent, error: entregadoresError } = await supabase
+        .from("profiles")
+        .select("id, name")
+        .eq("role", "entregador")
+        .eq("active", true);
 
-    if (entregasError || entregadoresError) {
-      setError(true);
+      if (entregasError || entregadoresError) {
+        setError(true);
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+
+      setEntregas(e ?? []);
+      setEntregadores(ent ?? []);
       setLoading(false);
       setRefreshing(false);
-      return;
-    }
-
-    setEntregas(e ?? []);
-    setEntregadores(ent ?? []);
-    setLoading(false);
-    setRefreshing(false);
-  }, []);
+    },
+    [selectedDate],
+  );
 
   useEffect(() => {
     load();
 
     const channel = supabase
-      .channel("entregas-list")
+      .channel("entregas-kanban")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "entregas" },
-        () => load({ silent: true })
+        { event: "INSERT", schema: "public", table: "entregas" },
+        () => load({ silent: true }),
       )
       .subscribe();
 
@@ -67,23 +71,63 @@ export default function EntregasPage() {
     };
   }, [load]);
 
-  const pendentes = entregas.filter((e) => e.status === "aguardando_atribuicao");
-  const emAndamento = entregas.filter((e) => e.status === "rota_definida" || e.status === "em_rota");
-  const finalizadas = entregas.filter((e) => e.status === "entregue" || e.status === "recusada");
+  const pendentes = entregas.filter((e) => !e.entregador_id).length;
+  const atribuidas = entregas.filter(
+    (e) => e.entregador_id && e.status === "aguardando_atribuicao",
+  ).length;
+  const liberadas = entregas.filter((e) => e.status === "rota_definida").length;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Entregas</h1>
-          <p className="text-muted-foreground">{entregas.length} entregas</p>
+          <h1 className="text-2xl font-bold">Organizar Entregas</h1>
+          <p className="text-muted-foreground">
+            {entregas.length} entrega{entregas.length !== 1 ? "s" : ""}
+            {pendentes > 0 && ` · ${pendentes} sem motoboy`}
+            {atribuidas > 0 && ` · ${atribuidas} atribuída${atribuidas > 1 ? "s" : ""}`}
+            {liberadas > 0 && ` · ${liberadas} liberada${liberadas > 1 ? "s" : ""}`}
+          </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => load({ silent: true })} disabled={refreshing}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            <span className="sr-only sm:not-sr-only">Atualizar</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() =>
+              setSelectedDate(
+                format(subDays(new Date(selectedDate + "T00:00:00"), 1), "yyyy-MM-dd"),
+              )
+            }
+          >
+            <ChevronLeft className="h-4 w-4" />
           </Button>
-          <PesquisarEntregaDialog entregas={entregas} entregadores={entregadores} />
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="h-8 w-auto text-center text-sm"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() =>
+              setSelectedDate(
+                format(addDays(new Date(selectedDate + "T00:00:00"), 1), "yyyy-MM-dd"),
+              )
+            }
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => load({ silent: true })}
+            disabled={refreshing}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            Atualizar
+          </Button>
           <Link href="/dashboard/entregas/nova">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -98,112 +142,31 @@ export default function EntregasPage() {
           <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
             <AlertTriangle className="h-5 w-5 text-destructive" />
             <p className="text-sm font-medium">Não foi possível carregar as entregas.</p>
-            <p className="text-sm text-muted-foreground">Verifique sua conexão e tente novamente.</p>
             <Button variant="outline" size="sm" className="mt-2" onClick={() => load()}>
               Tentar novamente
             </Button>
           </CardContent>
         </Card>
       ) : loading ? (
-        <ListSkeleton />
+        <KanbanSkeleton />
       ) : (
-        <Tabs defaultValue="pendentes">
-          <div className="relative">
-            <TabsList className="w-full overflow-x-auto sm:w-auto">
-              <TabsTrigger value="pendentes">Pendentes ({pendentes.length})</TabsTrigger>
-              <TabsTrigger value="andamento">Em Andamento ({emAndamento.length})</TabsTrigger>
-              <TabsTrigger value="finalizadas">Finalizadas ({finalizadas.length})</TabsTrigger>
-              <TabsTrigger value="todas">Todas ({entregas.length})</TabsTrigger>
-            </TabsList>
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-muted to-transparent sm:hidden" />
-          </div>
-
-          <TabsContent value="pendentes" className="mt-4">
-            <EntregaList entregas={pendentes} entregadores={entregadores} />
-          </TabsContent>
-          <TabsContent value="andamento" className="mt-4">
-            <EntregaList entregas={emAndamento} entregadores={entregadores} />
-          </TabsContent>
-          <TabsContent value="finalizadas" className="mt-4">
-            <EntregaList entregas={finalizadas} entregadores={entregadores} />
-          </TabsContent>
-          <TabsContent value="todas" className="mt-4">
-            <EntregaList entregas={entregas} entregadores={entregadores} />
-          </TabsContent>
-        </Tabs>
+        <KanbanBoard entregas={entregas} entregadores={entregadores} />
       )}
     </div>
   );
 }
 
-function EntregaList({ entregas, entregadores }: { entregas: any[]; entregadores: any[] }) {
-  if (entregas.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-10 text-center text-muted-foreground">
-          Nenhuma entrega nesta categoria.
-        </CardContent>
-      </Card>
-    );
-  }
-
+function KanbanSkeleton() {
   return (
-    <div className="space-y-3">
-      {entregas.map((entrega) => (
-        <Link key={entrega.id} href={`/dashboard/entregas/${entrega.id}`}>
-          <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
-            <CardContent className="py-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium">{entrega.cliente?.name ?? "Cliente"}</span>
-                    {entrega.is_urgent && (
-                      <Badge variant="destructive" className="text-xs">
-                        <AlertTriangle className="mr-1 h-3 w-3" />
-                        Urgente
-                      </Badge>
-                    )}
-                    <StatusBadge status={entrega.status} />
-                  </div>
-                  {entrega.endereco && (
-                    <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
-                      {entrega.endereco.rua}, {entrega.endereco.numero}
-                      {entrega.endereco.bairro ? ` - ${entrega.endereco.bairro}` : ""}
-                    </p>
-                  )}
-                  {entrega.valor && (
-                    <p className="text-sm font-medium">R$ {Number(entrega.valor).toFixed(2)}</p>
-                  )}
-                  {entrega.entregador && (
-                    <p className="text-xs text-muted-foreground">Entregador: {entrega.entregador.name}</p>
-                  )}
-                </div>
-                {entrega.status === "aguardando_atribuicao" && (
-                  <div onClick={(e) => e.preventDefault()}>
-                    <AssignEntregadorSelect entregaId={entrega.id} entregadores={entregadores} />
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-      ))}
-    </div>
-  );
-}
-
-function ListSkeleton() {
-  return (
-    <div className="space-y-3">
-      <Skeleton className="h-9 w-full max-w-md" />
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={i}>
-          <CardContent className="space-y-2 py-4">
-            <Skeleton className="h-4 w-40" />
-            <Skeleton className="h-3 w-56" />
-          </CardContent>
-        </Card>
+    <div className="flex gap-4 overflow-x-auto pb-4">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="min-w-[280px] flex-1 space-y-2">
+          <Skeleton className="h-10 w-full rounded-t-lg" />
+          <div className="space-y-2 rounded-b-lg border-2 border-dashed border-transparent p-2">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        </div>
       ))}
     </div>
   );

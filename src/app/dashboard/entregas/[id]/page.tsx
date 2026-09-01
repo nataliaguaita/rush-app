@@ -85,13 +85,15 @@ export default function EntregaDetailPage() {
 
     if (fotosData && fotosData.length > 0) {
       setFotos(fotosData);
-      const urls = fotosData.map((f: any) => {
-        const { data } = supabase.storage
-          .from("entregas")
-          .getPublicUrl(f.storage_path);
-        return data.publicUrl;
-      });
-      setFotosUrls(urls);
+      const urls = await Promise.all(
+        fotosData.map(async (f: any) => {
+          const { data } = await supabase.storage
+            .from("entregas")
+            .createSignedUrl(f.storage_path, 3600);
+          return data?.signedUrl ?? "";
+        })
+      );
+      setFotosUrls(urls.filter(Boolean));
     }
 
     setLoading(false);

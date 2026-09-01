@@ -249,7 +249,7 @@ export function EntregaCard({
             </div>
             <div className="space-y-2">
               <Label>Cargo *</Label>
-              <Select name="receiver_role" required value={receiverRole} onValueChange={(value) => setReceiverRole(value ?? "")}>
+              <Select name="receiver_role" required value={receiverRole} onValueChange={(value) => setReceiverRole(value ?? "")} items={Object.fromEntries(receiverRoles.map((r) => [r.value, r.label]))}>
                 <SelectTrigger size="lg" className="w-full">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>

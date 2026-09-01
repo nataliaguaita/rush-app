@@ -25,7 +25,7 @@ export function AssignEntregadorSelect({
   }
 
   return (
-    <Select onValueChange={handleAssign}>
+    <Select onValueChange={handleAssign} items={Object.fromEntries(entregadores.map((ent) => [ent.id, ent.name]))}>
       <SelectTrigger className="w-full sm:w-44">
         <SelectValue placeholder="Atribuir entregador" />
       </SelectTrigger>

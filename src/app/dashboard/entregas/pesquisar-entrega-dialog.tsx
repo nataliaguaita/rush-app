@@ -215,6 +215,7 @@ export function PesquisarEntregaDialog({
                 setEntregadorId(v as string);
                 setSearched(false);
               }}
+              items={Object.fromEntries([["", "Todos"], ...entregadores.map((ent) => [ent.id, ent.name])])}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Todos os motoboys" />

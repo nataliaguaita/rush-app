@@ -23,7 +23,7 @@ import { logout } from "@/app/login/actions";
 
 const adminLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/entregas", label: "Entregas", icon: Package },
+  { href: "/dashboard/entregas", label: "Organizar Entregas", icon: Package },
   { href: "/dashboard/entregas/nova", label: "Nova Entrega", icon: Truck },
   { href: "/dashboard/clientes", label: "Clientes", icon: Users },
   { href: "/dashboard/cadastros", label: "Cadastros", icon: UserPlus },
@@ -32,7 +32,7 @@ const adminLinks = [
 
 const vendedorLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/entregas", label: "Entregas", icon: Package },
+  { href: "/dashboard/entregas", label: "Organizar Entregas", icon: Package },
   { href: "/dashboard/entregas/nova", label: "Nova Entrega", icon: Truck },
   { href: "/dashboard/clientes", label: "Clientes", icon: Users },
 ];
