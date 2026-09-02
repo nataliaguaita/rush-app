@@ -211,7 +211,13 @@ export function EntregaCard({
             )}
             {entrega.actions?.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {entrega.actions.map((a: string) => {
+                {entrega.actions.filter((a: string) => {
+                  if (a === "entregar") {
+                    const hasOther = entrega.actions.includes("receber") || entrega.actions.includes("assinar_nota");
+                    return !hasOther;
+                  }
+                  return true;
+                }).map((a: string) => {
                   const cfg = actionConfig[a];
                   if (!cfg) return null;
                   const Icon = cfg.icon;
