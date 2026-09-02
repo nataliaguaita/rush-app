@@ -35,6 +35,9 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  Package,
+  Banknote,
+  FileSignature,
 } from "lucide-react";
 import {
   iniciarEntrega,
@@ -44,11 +47,18 @@ import {
 } from "./actions";
 import { toast } from "sonner";
 
+const actionConfig: Record<string, { label: string; icon: typeof Package }> = {
+  entregar: { label: "Entregar", icon: Package },
+  receber: { label: "Receber", icon: Banknote },
+  assinar_nota: { label: "Assinar Nota", icon: FileSignature },
+};
+
 const receiverRoles = [
   { value: "secretaria", label: "Secretária" },
   { value: "porteiro", label: "Porteiro" },
   { value: "morador_vizinho", label: "Morador / Vizinho" },
   { value: "proprietario", label: "Proprietário da Compra" },
+  { value: "outro", label: "Outro" },
 ];
 
 export function EntregaCard({
@@ -64,6 +74,7 @@ export function EntregaCard({
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [receiverName, setReceiverName] = useState("");
   const [receiverRole, setReceiverRole] = useState("");
+  const [customRole, setCustomRole] = useState("");
   const [confirmType, setConfirmType] = useState<"entrega" | "recusa" | null>(null);
   const pendingFormData = useRef<FormData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -188,8 +199,23 @@ export function EntregaCard({
               {endereco?.rua}, {endereco?.numero}
               {endereco?.bairro ? ` - ${endereco.bairro}` : ""}
             </p>
-            {entrega.valor && (
-              <p className="text-sm text-muted-foreground">R$ {Number(entrega.valor).toFixed(2)}</p>
+            {entrega.actions?.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {entrega.actions.map((a: string) => {
+                  const cfg = actionConfig[a];
+                  if (!cfg) return null;
+                  const Icon = cfg.icon;
+                  return (
+                    <Badge key={a} variant="secondary" className="text-xs gap-1">
+                      <Icon className="h-3 w-3" />
+                      {cfg.label}
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+            {entrega.valor && entrega.actions?.includes("receber") && (
+              <p className="text-sm font-medium text-emerald-600">R$ {Number(entrega.valor).toFixed(2)}</p>
             )}
             {entrega.notes && (
               <p className="text-xs text-muted-foreground italic">
@@ -260,6 +286,9 @@ export function EntregaCard({
                   ))}
                 </SelectContent>
               </Select>
+              {receiverRole === "outro" && (
+                <Input name="custom_role" required placeholder="Qual o cargo?" value={customRole} onChange={(e) => setCustomRole(e.target.value)} />
+              )}
             </div>
             <div className="space-y-2">
               <Label>Foto do local *</Label>
@@ -333,7 +362,7 @@ export function EntregaCard({
               <Button
                 type="submit"
                 size="lg"
-                disabled={loading || fotoStatus === "uploading" || !receiverName.trim() || !receiverRole || fotoStatus !== "done"}
+                disabled={loading || fotoStatus === "uploading" || !receiverName.trim() || !receiverRole || (receiverRole === "outro" && !customRole.trim()) || fotoStatus !== "done"}
                 className="flex-1 bg-[#0090FF] text-white font-bold hover:bg-[#0090FF]/80"
               >
                 {fotoStatus === "uploading" ? "Aguardando foto..." : "Confirmar Entrega"}

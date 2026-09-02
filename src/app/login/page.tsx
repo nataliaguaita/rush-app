@@ -63,7 +63,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full max-w-sm py-10">
         <CardHeader className="text-center">
           <Image src="/logo.svg" alt="Rush" width={150} height={34} className="mx-auto mb-2" />
           <CardDescription>Gestão de Entregas</CardDescription>
