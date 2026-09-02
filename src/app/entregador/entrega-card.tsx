@@ -46,6 +46,7 @@ import {
   registrarEntrega,
   registrarRecusa,
   uploadFotoEntrega,
+  removerFotosEntrega,
 } from "./actions";
 import { toast } from "sonner";
 
@@ -417,7 +418,13 @@ export function EntregaCard({
                     {fotoStatus === "done" && (
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={async () => {
+                          setFotoStatus("uploading");
+                          try {
+                            await removerFotosEntrega(entrega.id);
+                          } catch {
+                            toast.error("Falha ao remover foto.");
+                          }
                           setFotoStatus("idle");
                           setFotoPreview(null);
                           if (fileInputRef.current) fileInputRef.current.value = "";

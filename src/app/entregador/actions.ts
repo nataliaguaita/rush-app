@@ -43,6 +43,20 @@ export async function registrarRecusa(entregaId: string, motivo: string) {
   if (error) throw new Error(error.message);
 }
 
+export async function removerFotosEntrega(entregaId: string) {
+  const supabase = createClient();
+  const { data: fotos } = await supabase
+    .from("entrega_fotos")
+    .select("id, storage_path")
+    .eq("entrega_id", entregaId);
+
+  if (!fotos || fotos.length === 0) return;
+
+  const paths = fotos.map((f) => f.storage_path);
+  await supabase.storage.from("entregas").remove(paths);
+  await supabase.from("entrega_fotos").delete().eq("entrega_id", entregaId);
+}
+
 export async function uploadFotoEntrega(entregaId: string, formData: FormData) {
   const supabase = createClient();
   const file = formData.get("foto") as File;
