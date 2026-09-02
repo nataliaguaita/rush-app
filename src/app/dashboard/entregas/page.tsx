@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, AlertTriangle, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, AlertTriangle, RefreshCw, ChevronLeft, ChevronRight, Sun, Sunset } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import { KanbanBoard } from "./kanban-board";
 
@@ -18,6 +18,7 @@ export default function EntregasPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [selectedPeriod, setSelectedPeriod] = useState<"todos" | "manha" | "tarde">("todos");
   const supabase = createClient();
 
   const load = useCallback(
@@ -71,11 +72,15 @@ export default function EntregasPage() {
     };
   }, [load]);
 
-  const pendentes = entregas.filter((e) => !e.entregador_id).length;
-  const atribuidas = entregas.filter(
+  const filteredEntregas = selectedPeriod === "todos"
+    ? entregas
+    : entregas.filter((e) => e.scheduled_period === selectedPeriod);
+
+  const pendentes = filteredEntregas.filter((e) => !e.entregador_id).length;
+  const atribuidas = filteredEntregas.filter(
     (e) => e.entregador_id && e.status === "aguardando_atribuicao",
   ).length;
-  const liberadas = entregas.filter((e) => e.status === "rota_definida").length;
+  const liberadas = filteredEntregas.filter((e) => e.status === "rota_definida").length;
 
   return (
     <div className="space-y-6">
@@ -83,7 +88,7 @@ export default function EntregasPage() {
         <div>
           <h1 className="text-2xl font-bold">Organizar Entregas</h1>
           <p className="text-muted-foreground">
-            {entregas.length} entrega{entregas.length !== 1 ? "s" : ""}
+            {filteredEntregas.length} entrega{filteredEntregas.length !== 1 ? "s" : ""}
             {pendentes > 0 && ` · ${pendentes} sem motoboy`}
             {atribuidas > 0 && ` · ${atribuidas} atribuída${atribuidas > 1 ? "s" : ""}`}
             {liberadas > 0 && ` · ${liberadas} liberada${liberadas > 1 ? "s" : ""}`}
@@ -120,6 +125,43 @@ export default function EntregasPage() {
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
+          <div className="flex h-8 rounded-md border border-input">
+            <button
+              type="button"
+              className={`flex items-center gap-1 rounded-l-md px-2.5 text-xs font-medium transition-colors ${
+                selectedPeriod === "todos"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent"
+              }`}
+              onClick={() => setSelectedPeriod("todos")}
+            >
+              Todos
+            </button>
+            <button
+              type="button"
+              className={`flex items-center gap-1 border-x border-input px-2.5 text-xs font-medium transition-colors ${
+                selectedPeriod === "manha"
+                  ? "bg-amber-500 text-white"
+                  : "text-muted-foreground hover:bg-accent"
+              }`}
+              onClick={() => setSelectedPeriod("manha")}
+            >
+              <Sun className="h-3.5 w-3.5" />
+              Manhã
+            </button>
+            <button
+              type="button"
+              className={`flex items-center gap-1 rounded-r-md px-2.5 text-xs font-medium transition-colors ${
+                selectedPeriod === "tarde"
+                  ? "bg-blue-500 text-white"
+                  : "text-muted-foreground hover:bg-accent"
+              }`}
+              onClick={() => setSelectedPeriod("tarde")}
+            >
+              <Sunset className="h-3.5 w-3.5" />
+              Tarde
+            </button>
+          </div>
           <Button
             variant="outline"
             onClick={() => load({ silent: true })}
@@ -129,7 +171,7 @@ export default function EntregasPage() {
             Atualizar
           </Button>
           <Link href="/dashboard/entregas/nova">
-            <Button>
+            <Button className="bg-blue-500 text-white hover:bg-blue-600">
               <Plus className="mr-2 h-4 w-4" />
               Nova Entrega
             </Button>
@@ -150,7 +192,7 @@ export default function EntregasPage() {
       ) : loading ? (
         <KanbanSkeleton />
       ) : (
-        <KanbanBoard entregas={entregas} entregadores={entregadores} />
+        <KanbanBoard entregas={filteredEntregas} entregadores={entregadores} />
       )}
     </div>
   );

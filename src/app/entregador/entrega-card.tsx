@@ -287,7 +287,7 @@ export function EntregaCard({
                   if (!cfg) return null;
                   const Icon = cfg.icon;
                   return (
-                    <Badge key={a} variant="secondary" className="text-xs gap-1">
+                    <Badge key={a} variant="secondary" className="text-xs gap-1 border-emerald-500/30 bg-emerald-500/10 text-emerald-700">
                       <Icon className="h-3 w-3" />
                       {cfg.label}
                     </Badge>

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
 import { RECEIVER_ROLE_LABELS, formatOrderNumber, formatScheduledDate } from "@/lib/status";
-import { Package, Truck, CheckCircle, Clock, MapPin, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight, Plus, Calendar } from "lucide-react";
+import { Package, Truck, CheckCircle, Clock, MapPin, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight, Plus, Calendar, Sun, Sunset } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import Link from "next/link";
 import { PesquisarEntregaDialog } from "./entregas/pesquisar-entrega-dialog";
@@ -56,7 +56,7 @@ export default function DashboardPage() {
     setMetrics({
       total: all.length,
       pendentes: all.filter((e: any) => e.status === "aguardando_atribuicao").length,
-      emRota: all.filter((e: any) => e.status === "em_rota").length,
+      emRota: all.filter((e: any) => e.status === "rota_definida" || e.status === "em_rota").length,
       concluidas: all.filter((e: any) => e.status === "entregue").length,
     });
 
@@ -91,7 +91,7 @@ export default function DashboardPage() {
   const cards = [
     { title: "Total de Entregas Hoje", value: metrics.total, icon: Package, className: "text-muted-foreground" },
     { title: "Entregas Pendentes", value: metrics.pendentes, icon: Clock, className: "text-status-pending" },
-    { title: "Em Rota", value: metrics.emRota, icon: Truck, className: "text-status-active" },
+    { title: "Em Andamento", value: metrics.emRota, icon: Truck, className: "text-status-active" },
     { title: "Concluídas", value: metrics.concluidas, icon: CheckCircle, className: "text-status-success" },
   ];
 
@@ -137,7 +137,7 @@ export default function DashboardPage() {
           </Button>
           <PesquisarEntregaDialog entregas={entregas} entregadores={entregadores} />
           <Link href="/dashboard/entregas/nova">
-            <Button>
+            <Button className="bg-blue-500 text-white hover:bg-blue-600">
               <Plus className="mr-2 h-4 w-4" />
               Nova Entrega
             </Button>
@@ -207,55 +207,34 @@ export default function DashboardPage() {
                         {entregasDoEntregador.length === 0 ? (
                           <p className="text-sm text-muted-foreground">Nenhuma entrega atribuída.</p>
                         ) : (
-                          entregasDoEntregador.map((entrega: any, index: number) => (
-                            <Link
-                              key={entrega.id}
-                              href={`/dashboard/entregas/${entrega.id}`}
-                              className="group relative flex gap-3 overflow-hidden rounded-lg border p-3 transition-colors hover:bg-muted/50"
-                            >
-                              {entrega.status === "em_rota" && (
-                                <div className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-status-active/20">
-                                  <div className="h-full w-1/3 animate-[shimmer_1.5s_ease-in-out_infinite] bg-status-active" />
+                          <>
+                            {(() => {
+                              const manha = entregasDoEntregador.filter((e: any) => e.scheduled_period === "manha");
+                              const tarde = entregasDoEntregador.filter((e: any) => e.scheduled_period === "tarde");
+                              const semPeriodo = entregasDoEntregador.filter((e: any) => !e.scheduled_period);
+                              const sections: { label: string; icon: React.ReactNode; color: string; items: any[] }[] = [];
+                              if (manha.length > 0) sections.push({ label: "Manhã", icon: <Sun className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400", items: manha });
+                              if (tarde.length > 0) sections.push({ label: "Tarde", icon: <Sunset className="h-3.5 w-3.5" />, color: "text-blue-600 dark:text-blue-400", items: tarde });
+                              if (semPeriodo.length > 0) sections.push({ label: "Sem período", icon: null, color: "text-muted-foreground", items: semPeriodo });
+
+                              return sections.map((section, si) => (
+                                <div key={section.label}>
+                                  {si > 0 && <div className="my-2" />}
+                                  <div className={`flex items-center gap-1.5 text-xs font-semibold ${section.color}`}>
+                                    {section.icon}
+                                    {section.label}
+                                    <span className="text-muted-foreground font-normal">({section.items.length})</span>
+                                  </div>
+                                  <div className="my-1.5 border-b" />
+                                  <div className="space-y-2">
+                                    {section.items.map((entrega: any, index: number) => (
+                                      <EntregaRow key={entrega.id} entrega={entrega} index={index} />
+                                    ))}
+                                  </div>
                                 </div>
-                              )}
-                              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
-                                {index + 1}
-                              </div>
-                              <div className="min-w-0 flex-1 space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs font-mono text-muted-foreground">{formatOrderNumber(entrega.order_number)}</span>
-                                  <span className="truncate font-medium">{entrega.cliente?.name ?? "Cliente"}</span>
-                                </div>
-                                {entrega.endereco && (
-                                  <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                                    <MapPin className="h-3 w-3 shrink-0" />
-                                    <span className="truncate">
-                                      {entrega.endereco.rua}, {entrega.endereco.numero}
-                                      {entrega.endereco.bairro ? ` - ${entrega.endereco.bairro}` : ""}
-                                    </span>
-                                  </p>
-                                )}
-                                {entrega.scheduled_date && (
-                                  <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                                    <Calendar className="h-3 w-3 shrink-0" />
-                                    {formatScheduledDate(entrega.scheduled_date)}
-                                  </p>
-                                )}
-                                {entrega.status === "entregue" && entrega.delivered_at && (
-                                  <p className="text-xs text-status-success">
-                                    {new Date(entrega.delivered_at).toLocaleDateString("pt-BR")} às{" "}
-                                    {new Date(entrega.delivered_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                                    {entrega.receiver_name && (
-                                      <> · {entrega.receiver_name}{entrega.receiver_role ? ` (${RECEIVER_ROLE_LABELS[entrega.receiver_role] ?? entrega.receiver_role})` : ""}</>
-                                    )}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="flex shrink-0 items-center">
-                                <StatusBadge status={entrega.status} className="text-xs" />
-                              </div>
-                            </Link>
-                          ))
+                              ));
+                            })()}
+                          </>
                         )}
                       </CardContent>
                     </Card>
@@ -267,6 +246,57 @@ export default function DashboardPage() {
         </>
       )}
     </div>
+  );
+}
+
+function EntregaRow({ entrega, index }: { entrega: any; index: number }) {
+  return (
+    <Link
+      href={`/dashboard/entregas/${entrega.id}`}
+      className="group relative flex gap-3 overflow-hidden rounded-lg border p-3 transition-colors hover:bg-muted/50"
+    >
+      {entrega.status === "em_rota" && (
+        <div className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-status-active/20">
+          <div className="h-full w-1/3 animate-[shimmer_1.5s_ease-in-out_infinite] bg-status-active" />
+        </div>
+      )}
+      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+        {index + 1}
+      </div>
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono text-muted-foreground">{formatOrderNumber(entrega.order_number)}</span>
+          <span className="truncate font-medium">{entrega.cliente?.name ?? "Cliente"}</span>
+        </div>
+        {entrega.endereco && (
+          <p className="flex items-center gap-1 text-sm text-muted-foreground">
+            <MapPin className="h-3 w-3 shrink-0" />
+            <span className="truncate">
+              {entrega.endereco.rua}, {entrega.endereco.numero}
+              {entrega.endereco.bairro ? ` - ${entrega.endereco.bairro}` : ""}
+            </span>
+          </p>
+        )}
+        {entrega.scheduled_date && (
+          <p className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Calendar className="h-3 w-3 shrink-0" />
+            {formatScheduledDate(entrega.scheduled_date)}
+          </p>
+        )}
+        {entrega.status === "entregue" && entrega.delivered_at && (
+          <p className="text-xs text-status-success">
+            {new Date(entrega.delivered_at).toLocaleDateString("pt-BR")} às{" "}
+            {new Date(entrega.delivered_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            {entrega.receiver_name && (
+              <> · {entrega.receiver_name}{entrega.receiver_role ? ` (${RECEIVER_ROLE_LABELS[entrega.receiver_role] ?? entrega.receiver_role})` : ""}</>
+            )}
+          </p>
+        )}
+      </div>
+      <div className="flex shrink-0 items-center">
+        <StatusBadge status={entrega.status} className="text-xs" />
+      </div>
+    </Link>
   );
 }
 

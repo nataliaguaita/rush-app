@@ -18,9 +18,11 @@ import { toast } from "sonner";
 export function ClienteEditForm({
   cliente,
   onSaved,
+  onCancel,
 }: {
   cliente: any;
   onSaved: () => void;
+  onCancel?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
 
@@ -39,8 +41,13 @@ export function ClienteEditForm({
   return (
     <form onSubmit={handleSubmit}>
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Editar Dados</CardTitle>
+          {onCancel && (
+            <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+              Cancelar
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -56,7 +63,6 @@ export function ClienteEditForm({
             <Select
               name="active"
               defaultValue={String(cliente.active)}
-              items={{ true: "Ativo", false: "Inativo" }}
             >
               <SelectTrigger className="w-full">
                 <SelectValue />
@@ -67,7 +73,7 @@ export function ClienteEditForm({
               </SelectContent>
             </Select>
           </div>
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading} className="bg-blue-500 text-white hover:bg-blue-600">
             {loading ? "Salvando..." : "Salvar Alterações"}
           </Button>
         </CardContent>

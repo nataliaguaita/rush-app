@@ -51,6 +51,7 @@ import {
   Sunset,
   Calendar,
   Clock,
+  Check,
 } from "lucide-react";
 import { persistColumnState, releaseRoute, togglePostponed } from "./actions";
 import { formatOrderNumber, formatScheduledDate } from "@/lib/status";
@@ -199,24 +200,25 @@ function SortableCard({
                   </span>
                 )}
                 {entrega.scheduled_period === "manha" && (
-                  <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+                  <Badge variant="outline" className="h-5 border-amber-500/50 bg-amber-50 px-1.5 text-[10px] text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
                     <Sun className="mr-0.5 h-2.5 w-2.5" />
                     Manhã
                   </Badge>
                 )}
                 {entrega.scheduled_period === "tarde" && (
-                  <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+                  <Badge variant="outline" className="h-5 border-blue-500/50 bg-blue-50 px-1.5 text-[10px] text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
                     <Sunset className="mr-0.5 h-2.5 w-2.5" />
                     Tarde
                   </Badge>
                 )}
                 {isReleased && (
-                  <Badge className="h-5 bg-status-active/15 px-1.5 text-[10px] text-status-active">
+                  <Badge variant="outline" className="h-5 border-green-500/50 bg-green-50 px-1.5 text-[10px] text-green-700 dark:bg-green-500/10 dark:text-green-400">
+                    <Check className="mr-0.5 h-2.5 w-2.5" />
                     Liberada
                   </Badge>
                 )}
                 {entrega.is_postponed && (
-                  <Badge variant="outline" className="h-5 border-amber-500/50 px-1.5 text-[10px] text-amber-600">
+                  <Badge variant="outline" className="h-5 border-red-500/50 bg-red-50 px-1.5 text-[10px] text-red-700 dark:bg-red-500/10 dark:text-red-400">
                     <Clock className="mr-0.5 h-2.5 w-2.5" />
                     Adiada
                   </Badge>

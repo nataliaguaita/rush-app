@@ -1,118 +1,172 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { geocodeExistingAddresses } from "./actions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Phone, Users, MapPin, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
+
+const PER_PAGE = 20;
+
+type Filtro = "A–Z" | "Mais recentes" | "Inativos";
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<any[]>([]);
-  const [semGps, setSemGps] = useState(0);
-  const [geocoding, setGeocoding] = useState(false);
+  const [busca, setBusca] = useState("");
+  const [filtro, setFiltro] = useState<Filtro>("A–Z");
+  const [pagina, setPagina] = useState(1);
   const supabase = createClient();
 
   useEffect(() => {
-    async function load() {
-      const { data } = await supabase
-        .from("clientes")
-        .select("*, enderecos(*)")
-        .order("name");
-      setClientes(data ?? []);
-
-      const { count } = await supabase
-        .from("enderecos")
-        .select("id", { count: "exact", head: true })
-        .is("lat", null);
-      setSemGps(count ?? 0);
-    }
-    load();
+    supabase
+      .from("clientes")
+      .select("id, name, active, created_at")
+      .order("name")
+      .then(({ data }) => setClientes(data ?? []));
   }, []);
 
-  async function handleGeocode() {
-    setGeocoding(true);
-    try {
-      const result = await geocodeExistingAddresses();
-      toast.success(`${result.updated} de ${result.total} endereços atualizados com GPS.`);
-      setSemGps((prev) => prev - result.updated);
-    } catch {
-      toast.error("Erro ao geocodificar endereços.");
+  const filtrados = useMemo(() => {
+    const filtered = clientes.filter((c) => {
+      const matchNome = c.name?.toLowerCase().includes(busca.toLowerCase());
+      if (filtro === "Inativos") return matchNome && !c.active;
+      return matchNome && c.active !== false;
+    });
+    if (filtro === "Mais recentes") {
+      filtered.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    } else {
+      filtered.sort((a, b) =>
+        (a.name ?? "").localeCompare(b.name ?? "", "pt-BR")
+      );
     }
-    setGeocoding(false);
-  }
+    return filtered;
+  }, [clientes, busca, filtro]);
+
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / PER_PAGE));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const visiveis = filtrados.slice(
+    (paginaAtual - 1) * PER_PAGE,
+    paginaAtual * PER_PAGE
+  );
+
+  useEffect(() => {
+    setPagina(1);
+  }, [busca, filtro]);
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-[50vw] space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Clientes</h1>
-          <p className="text-muted-foreground">{clientes.length} clientes cadastrados</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {semGps > 0 && (
-            <Button variant="outline" onClick={handleGeocode} disabled={geocoding}>
-              {geocoding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MapPin className="mr-2 h-4 w-4" />}
-              {geocoding ? "Geocodificando..." : `Corrigir GPS (${semGps})`}
-            </Button>
-          )}
-          <Link href="/dashboard/clientes/novo">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Cliente
-            </Button>
-          </Link>
-        </div>
+        <h1 className="text-2xl font-bold">Clientes</h1>
+        <Link href="/dashboard/clientes/novo">
+          <Button className="bg-blue-500 text-white hover:bg-blue-600">
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Cliente
+          </Button>
+        </Link>
       </div>
 
-      {clientes.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-              <Users className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="font-medium">Nenhum cliente cadastrado ainda</p>
-              <p className="text-sm text-muted-foreground">Cadastre o primeiro cliente para começar a criar entregas.</p>
-            </div>
-            <Link href="/dashboard/clientes/novo">
-              <Button size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Cliente
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {clientes.map((cliente) => (
-            <Link key={cliente.id} href={`/dashboard/clientes/${cliente.id}`}>
-              <Card className="transition-shadow hover:shadow-md cursor-pointer">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{cliente.name}</CardTitle>
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Pesquisar por nome..."
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={filtro} onValueChange={(v) => setFiltro(v as Filtro)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="A–Z">A–Z</SelectItem>
+            <SelectItem value="Mais recentes">Mais recentes</SelectItem>
+            <SelectItem value="Inativos">Inativos</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead className="w-[100px] text-right">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visiveis.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
+                  Nenhum cliente encontrado.
+                </TableCell>
+              </TableRow>
+            ) : (
+              visiveis.map((cliente) => (
+                <TableRow key={cliente.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableCell>
+                    <Link href={`/dashboard/clientes/${cliente.id}`} className="block w-full uppercase">
+                      {cliente.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-right">
                     <Badge variant={cliente.active ? "default" : "secondary"}>
                       {cliente.active ? "Ativo" : "Inativo"}
                     </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-1">
-                  {cliente.phone && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Phone className="h-3 w-3" />
-                      {cliente.phone}
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    {cliente.enderecos?.length ?? 0} endereço(s)
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {totalPaginas > 1 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            {filtrados.length} cliente{filtrados.length !== 1 && "s"} — página{" "}
+            {paginaAtual} de {totalPaginas}
+          </span>
+          <div className="flex gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              disabled={paginaAtual <= 1}
+              onClick={() => setPagina((p) => p - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              disabled={paginaAtual >= totalPaginas}
+              onClick={() => setPagina((p) => p + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
     </div>

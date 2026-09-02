@@ -3,14 +3,26 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
 import { RECEIVER_ROLE_LABELS } from "@/lib/status";
 import {
-  ArrowLeft,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ChevronLeft,
   MapPin,
   Copy,
   Check,
@@ -22,10 +34,15 @@ import {
   Camera,
   DollarSign,
   Calendar,
+  Pencil,
+  Share2,
 } from "lucide-react";
 import { formatOrderNumber } from "@/lib/status";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { updateEntrega } from "../actions";
+import { toast } from "sonner";
+import Link from "next/link";
 
 const actionLabels: Record<string, string> = {
   entregar: "Entregar",
@@ -43,6 +60,7 @@ export default function EntregaDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [editing, setEditing] = useState(false);
   const supabase = createClient();
 
   const load = useCallback(async () => {
@@ -121,9 +139,36 @@ export default function EntregaDetailPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  const canEdit = entrega?.status === "aguardando_atribuicao";
+
+  async function shareWhatsApp() {
+    const deliveredDate = format(new Date(entrega.delivered_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    const text = [
+      `✅ Entrega ${formatOrderNumber(entrega.order_number)} realizada!`,
+      entrega.receiver_name ? `Recebido por: ${entrega.receiver_name}` : null,
+      `Data: ${deliveredDate}`,
+    ].filter(Boolean).join("\n");
+
+    if (fotosUrls.length > 0 && navigator.canShare) {
+      try {
+        const res = await fetch(fotosUrls[0]);
+        const blob = await res.blob();
+        const file = new File([blob], "comprovante-entrega.jpg", { type: blob.type });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ text, files: [file] });
+          return;
+        }
+      } catch {
+        // fallback below
+      }
+    }
+
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+  }
+
   if (loading) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4">
+      <div className="space-y-4 w-[50vw] min-w-[340px] mx-auto">
         <div className="flex items-center gap-3">
           <Skeleton className="h-8 w-8 rounded-lg" />
           <Skeleton className="h-6 w-48" />
@@ -142,9 +187,9 @@ export default function EntregaDetailPage() {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4">
+      <div className="space-y-4 w-[50vw] min-w-[340px] mx-auto">
         <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ChevronLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
         <Card className="border-destructive/30">
@@ -164,7 +209,7 @@ export default function EntregaDetailPage() {
     return (
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ChevronLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
         <Card>
@@ -176,34 +221,60 @@ export default function EntregaDetailPage() {
     );
   }
 
+  if (editing) {
+    return (
+      <EditEntregaView
+        entrega={entrega}
+        onCancel={() => setEditing(false)}
+        onSaved={() => {
+          setEditing(false);
+          load();
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
+    <div className="space-y-4 w-[50vw] min-w-[340px] mx-auto">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon-sm" onClick={() => router.back()} aria-label="Voltar">
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold">Entrega {formatOrderNumber(entrega.order_number)}</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">
+            Entrega {formatOrderNumber(entrega.order_number)}
+          </h1>
+          <div className="flex items-center gap-2 mt-1">
+            <StatusBadge status={entrega.status} />
+            {entrega.is_urgent && (
+              <Badge variant="destructive">
+                <AlertTriangle className="mr-1 h-3 w-3" />
+                Urgente
+              </Badge>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          {entrega.is_urgent && (
-            <Badge variant="destructive">
-              <AlertTriangle className="mr-1 h-3 w-3" />
-              Urgente
-            </Badge>
+          {canEdit && (
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <Pencil className="mr-1 h-4 w-4" />
+              Editar
+            </Button>
           )}
-          <StatusBadge status={entrega.status} />
+          <Button variant="outline" size="sm" onClick={() => router.back()}>
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            Voltar
+          </Button>
         </div>
       </div>
 
       {/* Cliente e Valor */}
       <Card>
-        <CardContent className="py-4 space-y-3">
+        <CardHeader>
+          <CardTitle className="text-lg">Cliente</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
           <div className="flex items-start gap-3">
             <User className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" />
             <div>
-              <p className="text-xs text-muted-foreground">Cliente</p>
               <p className="font-medium">{entrega.cliente?.name ?? "—"}</p>
               {entrega.cliente?.phone && (
                 <p className="text-sm text-muted-foreground">{entrega.cliente.phone}</p>
@@ -225,11 +296,13 @@ export default function EntregaDetailPage() {
 
       {/* Endereço */}
       <Card>
-        <CardContent className="py-4">
+        <CardHeader>
+          <CardTitle className="text-lg">Endereço</CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="flex items-start gap-3">
             <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground">Endereço</p>
               <p className="text-sm">{formatEndereco(entrega.endereco)}</p>
               {entrega.endereco?.label && (
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -256,11 +329,10 @@ export default function EntregaDetailPage() {
       {/* Observações e Notas */}
       {(entrega.notes || entrega.interested_name || entrega.actions?.length > 0 || entrega.scheduled_period) && (
         <Card>
-          <CardContent className="py-4 space-y-3">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <FileText className="h-4 w-4" />
-              Observações e Notas
-            </div>
+          <CardHeader>
+            <CardTitle className="text-lg">Observações e Notas</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
 
             {entrega.actions?.length > 0 && (
               <div>
@@ -316,7 +388,10 @@ export default function EntregaDetailPage() {
 
       {/* Responsáveis */}
       <Card>
-        <CardContent className="py-4 space-y-3">
+        <CardHeader>
+          <CardTitle className="text-lg">Responsáveis</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
           <div className="flex items-start gap-3">
             <User className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" />
             <div>
@@ -350,11 +425,10 @@ export default function EntregaDetailPage() {
       {/* Informações da entrega (quando finalizada) */}
       {(entrega.status === "entregue" || entrega.status === "recusada") && (
         <Card>
-          <CardContent className="py-4 space-y-3">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              Informações da Finalização
-            </div>
+          <CardHeader>
+            <CardTitle className="text-lg">Informações da Finalização</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
 
             {entrega.status === "entregue" && (
               <>
@@ -430,9 +504,263 @@ export default function EntregaDetailPage() {
                 </div>
               </div>
             )}
+
+            {entrega.status === "entregue" && entrega.delivered_at && (
+              <Button variant="outline" size="sm" onClick={shareWhatsApp} className="w-full">
+                <Share2 className="mr-2 h-4 w-4" />
+                Compartilhar via WhatsApp
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
     </div>
+  );
+}
+
+function EditEntregaView({
+  entrega,
+  onCancel,
+  onSaved,
+}: {
+  entrega: any;
+  onCancel: () => void;
+  onSaved: () => void;
+}) {
+  const [valor, setValor] = useState(() => {
+    if (entrega.valor == null) return "";
+    return Number(entrega.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  });
+  const [actionReceber, setActionReceber] = useState(entrega.actions?.includes("receber") ?? false);
+  const [actionAssinar, setActionAssinar] = useState(entrega.actions?.includes("assinar_nota") ?? false);
+  const [scheduledDate, setScheduledDate] = useState(entrega.scheduled_date ?? format(new Date(), "yyyy-MM-dd"));
+  const [scheduledPeriod, setScheduledPeriod] = useState(entrega.scheduled_period ?? "manha");
+  const [isUrgent, setIsUrgent] = useState(entrega.is_urgent ?? false);
+  const [returnReminder, setReturnReminder] = useState(entrega.return_reminder ?? false);
+  const [returnNotes, setReturnNotes] = useState(entrega.interested_note ?? "");
+  const [interestedName, setInterestedName] = useState(entrega.interested_name ?? "");
+  const [notes, setNotes] = useState(entrega.notes ?? "");
+  const [saving, setSaving] = useState(false);
+
+  function formatCurrency(raw: string) {
+    const digits = raw.replace(/\D/g, "");
+    if (!digits) return "";
+    const num = parseInt(digits, 10) / 100;
+    return num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function parseValor(formatted: string): string {
+    if (!formatted) return "";
+    return formatted.replace(/\./g, "").replace(",", ".");
+  }
+
+  function handleReceber(checked: boolean) {
+    setActionReceber(checked);
+    if (checked) setActionAssinar(false);
+  }
+
+  function handleAssinar(checked: boolean) {
+    setActionAssinar(checked);
+    if (checked) setActionReceber(false);
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const fd = new FormData(e.currentTarget);
+      fd.set("valor", parseValor(valor));
+      await updateEntrega(entrega.id, fd);
+      toast.success("Entrega atualizada!");
+      onSaved();
+    } catch (err: any) {
+      toast.error("Erro ao atualizar entrega", { description: err.message });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 mx-auto max-w-2xl">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">
+            Editar Entrega {formatOrderNumber(entrega.order_number)}
+          </h1>
+          <div className="flex items-center gap-2 mt-1">
+            <StatusBadge status={entrega.status} />
+          </div>
+        </div>
+        <Button variant="outline" size="sm" type="button" onClick={onCancel}>
+          <ChevronLeft className="mr-1 h-4 w-4" />
+          Voltar
+        </Button>
+      </div>
+
+      {/* Detalhes */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Detalhes da Entrega</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="valor">Valor</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+              <Input
+                id="valor"
+                name="valor_display"
+                value={valor}
+                onChange={(e) => setValor(formatCurrency(e.target.value))}
+                placeholder="0,00"
+                className="pl-9"
+                inputMode="numeric"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>O motoboy deve:</Label>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center gap-2 opacity-70">
+                <Checkbox id="action-entregar" checked disabled />
+                <Label htmlFor="action-entregar" className="text-sm font-normal">Entregar</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="action-receber"
+                  name="actions"
+                  value="receber"
+                  checked={actionReceber}
+                  onCheckedChange={handleReceber}
+                />
+                <Label htmlFor="action-receber" className="text-sm font-normal">Receber</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="action-assinar"
+                  name="actions"
+                  value="assinar_nota"
+                  checked={actionAssinar}
+                  onCheckedChange={handleAssinar}
+                />
+                <Label htmlFor="action-assinar" className="text-sm font-normal">Assinar Nota</Label>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" name="actions" value="entregar" />
+
+          <Separator />
+
+          <div className="space-y-2">
+            <Label>Programar Entrega</Label>
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                name="scheduled_date"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                className="flex-1"
+              />
+              <Select
+                name="scheduled_period"
+                value={scheduledPeriod}
+                onValueChange={setScheduledPeriod}
+                items={{ manha: "Manhã", tarde: "Tarde" }}
+              >
+                <SelectTrigger className="w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manha">Manhã</SelectItem>
+                  <SelectItem value="tarde">Tarde</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="is_urgent"
+                name="is_urgent"
+                checked={isUrgent}
+                onCheckedChange={(v) => setIsUrgent(!!v)}
+              />
+              <Label htmlFor="is_urgent" className="flex items-center gap-1.5 text-sm font-normal">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                Urgente
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="return_reminder"
+                name="return_reminder"
+                checked={returnReminder}
+                onCheckedChange={(v) => setReturnReminder(!!v)}
+              />
+              <Label htmlFor="return_reminder" className="text-sm font-normal">Lembrete de devolução</Label>
+            </div>
+          </div>
+
+          {returnReminder && (
+            <div className="space-y-2">
+              <Label htmlFor="return_notes">O que deve ser pego de devolução?</Label>
+              <Textarea
+                id="return_notes"
+                name="return_notes"
+                value={returnNotes}
+                onChange={(e) => setReturnNotes(e.target.value)}
+                placeholder="Material, local de retirada, observações..."
+                rows={2}
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Interessado */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Interessado (opcional)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Label htmlFor="interested_name">Nome</Label>
+            <Input
+              id="interested_name"
+              name="interested_name"
+              value={interestedName}
+              onChange={(e) => setInterestedName(e.target.value)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Observações */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Observações</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            name="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Observações sobre a entrega..."
+            rows={3}
+          />
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end gap-3 pb-8">
+        <Button variant="outline" type="button" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={saving}>
+          {saving ? "Salvando..." : "Salvar Alterações"}
+        </Button>
+      </div>
+    </form>
   );
 }

@@ -4,26 +4,25 @@ import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Loader2 } from "lucide-react";
-import { addEndereco } from "../actions";
+import { Loader2 } from "lucide-react";
+import { updateEndereco } from "../actions";
 import { toast } from "sonner";
 import { useCep } from "@/lib/use-cep";
 
-export function AddEnderecoForm({
-  clienteId,
+export function EditEnderecoForm({
+  endereco,
   onSaved,
   onCancel,
-  startOpen = false,
 }: {
-  clienteId: string;
+  endereco: any;
   onSaved: () => void;
-  onCancel?: () => void;
-  startOpen?: boolean;
+  onCancel: () => void;
 }) {
-  const [open, setOpen] = useState(startOpen);
-  const [rua, setRua] = useState("");
-  const [bairro, setBairro] = useState("");
-  const [cidade, setCidade] = useState("");
+  const [rua, setRua] = useState(endereco.rua ?? "");
+  const [bairro, setBairro] = useState(endereco.bairro ?? "");
+  const [cidade, setCidade] = useState(endereco.cidade ?? "");
+  const [loading, setLoading] = useState(false);
+
   const handleCepResult = useCallback(
     (data: { rua: string; bairro: string; cidade: string }) => {
       setRua(data.rua);
@@ -34,35 +33,30 @@ export function AddEnderecoForm({
   );
   const { fetchCep, loading: cepLoading } = useCep(handleCepResult);
 
-  if (!open) {
-    return (
-      <Button variant="outline" className="w-full" onClick={() => setOpen(true)}>
-        <Plus className="mr-2 h-4 w-4" />
-        Adicionar Endereço
-      </Button>
-    );
-  }
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    await addEndereco(clienteId, new FormData(e.currentTarget));
-    toast.success("Endereço adicionado!");
-    setRua(""); setBairro(""); setCidade("");
-    setOpen(false);
-    onSaved();
+    setLoading(true);
+    try {
+      await updateEndereco(endereco.id, new FormData(e.currentTarget));
+      toast.success("Endereço atualizado!");
+      onSaved();
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border p-4">
       <div className="space-y-2">
         <Label>Apelido</Label>
-        <Input name="label" placeholder='Ex: "Filial"' />
+        <Input name="label" defaultValue={endereco.label ?? ""} placeholder='Ex: "Filial"' />
       </div>
       <div className="w-full sm:w-1/3 space-y-2">
         <Label>CEP</Label>
         <div className="relative">
           <Input
             name="cep"
+            defaultValue={endereco.cep ?? ""}
             placeholder="00000-000"
             onChange={(e) => fetchCep(e.target.value)}
           />
@@ -78,12 +72,12 @@ export function AddEnderecoForm({
         </div>
         <div className="space-y-2">
           <Label>Nº *</Label>
-          <Input name="numero" required />
+          <Input name="numero" required defaultValue={endereco.numero ?? ""} />
         </div>
       </div>
       <div className="space-y-2">
         <Label>Complemento</Label>
-        <Input name="complemento" />
+        <Input name="complemento" defaultValue={endereco.complemento ?? ""} />
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-2">
@@ -96,10 +90,10 @@ export function AddEnderecoForm({
         </div>
       </div>
       <div className="flex gap-2">
-        <button type="submit" className="rounded-lg bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-600">
-          Salvar
-        </button>
-        <Button type="button" variant="ghost" size="sm" onClick={() => { setOpen(false); onCancel?.(); }}>
+        <Button type="submit" size="sm" disabled={loading}>
+          {loading ? "Salvando..." : "Salvar"}
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
           Cancelar
         </Button>
       </div>

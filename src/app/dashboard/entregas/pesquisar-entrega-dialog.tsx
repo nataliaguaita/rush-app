@@ -37,6 +37,7 @@ export function PesquisarEntregaDialog({
   entregadores,
 }: PesquisarEntregaDialogProps) {
   const [open, setOpen] = useState(false);
+  const [orderNumberQuery, setOrderNumberQuery] = useState("");
   const [clienteQuery, setClienteQuery] = useState("");
   const [entregadorId, setEntregadorId] = useState("");
   const [data, setData] = useState("");
@@ -65,6 +66,10 @@ export function PesquisarEntregaDialog({
   const results = useMemo(() => {
     if (!searched) return [];
     return entregas.filter((e) => {
+      if (orderNumberQuery.trim()) {
+        const num = orderNumberQuery.replace(/^#/, "").trim();
+        if (!String(e.order_number).includes(num)) return false;
+      }
       if (selectedClienteId && e.cliente_id !== selectedClienteId) return false;
       if (entregadorId && e.entregador_id !== entregadorId) return false;
       if (data) {
@@ -75,9 +80,9 @@ export function PesquisarEntregaDialog({
       }
       return true;
     });
-  }, [entregas, selectedClienteId, entregadorId, data, searched]);
+  }, [entregas, orderNumberQuery, selectedClienteId, entregadorId, data, searched]);
 
-  const hasFilters = selectedClienteId || entregadorId || data;
+  const hasFilters = orderNumberQuery.trim() || selectedClienteId || entregadorId || data;
 
   function handleSearch() {
     if (!hasFilters) return;
@@ -85,6 +90,7 @@ export function PesquisarEntregaDialog({
   }
 
   function handleClear() {
+    setOrderNumberQuery("");
     setClienteQuery("");
     setEntregadorId("");
     setData("");
@@ -148,6 +154,19 @@ export function PesquisarEntregaDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Número da entrega */}
+          <div className="space-y-2">
+            <Label>Número da entrega</Label>
+            <Input
+              placeholder="Ex: 42 ou #0042"
+              value={orderNumberQuery}
+              onChange={(e) => {
+                setOrderNumberQuery(e.target.value);
+                setSearched(false);
+              }}
+            />
+          </div>
+
           {/* Cliente search */}
           <div className="space-y-2">
             <Label>Cliente</Label>

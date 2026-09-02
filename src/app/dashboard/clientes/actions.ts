@@ -111,6 +111,25 @@ export async function addEndereco(clienteId: string, formData: FormData) {
   });
 }
 
+export async function updateEndereco(enderecoId: string, formData: FormData) {
+  const supabase = createClient();
+  const rua = formData.get("rua") as string;
+  const numero = (formData.get("numero") as string) || "";
+  const cidade = (formData.get("cidade") as string) || "";
+  const coords = await geocode(rua, numero, cidade);
+
+  await supabase.from("enderecos").update({
+    label: (formData.get("label") as string) || null,
+    rua,
+    numero,
+    complemento: (formData.get("complemento") as string) || null,
+    bairro: (formData.get("bairro") as string) || null,
+    cidade,
+    cep: (formData.get("cep") as string) || null,
+    ...coords,
+  }).eq("id", enderecoId);
+}
+
 export async function deleteEndereco(enderecoId: string) {
   const supabase = createClient();
   await supabase.from("enderecos").delete().eq("id", enderecoId);

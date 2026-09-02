@@ -68,6 +68,48 @@ export async function createEntrega(formData: FormData) {
   if (error) throw new Error(error.message);
 }
 
+export async function updateEntrega(entregaId: string, formData: FormData) {
+  const supabase = createClient();
+
+  const { data: entrega } = await supabase
+    .from("entregas")
+    .select("status")
+    .eq("id", entregaId)
+    .single();
+
+  if (!entrega || entrega.status !== "aguardando_atribuicao") {
+    throw new Error("Entrega não pode mais ser editada");
+  }
+
+  const rawValor = formData.get("valor") as string;
+  const valor = rawValor ? parseFloat(rawValor) : null;
+  const scheduledPeriod = (formData.get("scheduled_period") as string) || null;
+  const scheduledDate = (formData.get("scheduled_date") as string) || null;
+  const isUrgent = formData.get("is_urgent") === "on";
+  const returnReminder = formData.get("return_reminder") === "on";
+  const returnNotes = (formData.get("return_notes") as string) || null;
+  const notes = (formData.get("notes") as string) || null;
+  const interestedName = (formData.get("interested_name") as string) || null;
+  const actions = [...new Set(formData.getAll("actions") as string[])];
+
+  const { error } = await supabase
+    .from("entregas")
+    .update({
+      valor,
+      actions: actions.length > 0 ? actions : ["entregar"],
+      scheduled_period: scheduledPeriod as "manha" | "tarde" | null,
+      scheduled_date: scheduledDate,
+      is_urgent: isUrgent,
+      return_reminder: returnReminder,
+      interested_name: interestedName,
+      interested_note: returnReminder ? returnNotes : null,
+      notes,
+    })
+    .eq("id", entregaId);
+
+  if (error) throw new Error(error.message);
+}
+
 export async function assignEntregador(entregaId: string, entregadorId: string) {
   const supabase = createClient();
   await supabase
