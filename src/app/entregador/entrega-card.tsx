@@ -168,12 +168,17 @@ export function EntregaCard({
 
   return (
     <Card
-      className={
+      className={`relative overflow-hidden ${
         isFirst && !isEmRota
           ? "border-l-4 border-l-primary bg-primary/5"
           : ""
-      }
+      }`}
     >
+      {isEmRota && (
+        <div className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-status-active/20">
+          <div className="h-full w-1/3 animate-[shimmer_1.5s_ease-in-out_infinite] bg-status-active" />
+        </div>
+      )}
       <CardContent className="space-y-3">
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-2">
@@ -239,7 +244,7 @@ export function EntregaCard({
               </p>
             )}
           </div>
-          <StatusBadge status={entrega.status} />
+          {isEmRota && <StatusBadge status={entrega.status} />}
         </div>
 
         {/* Actions */}
