@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pencil } from "lucide-react";
+import { Pencil, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { updateProfile } from "./actions";
 
@@ -32,6 +32,7 @@ export function EditProfileDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -117,13 +118,26 @@ export function EditProfileDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="edit-password">Senha</Label>
-            <Input
-              id="edit-password"
-              name="password"
-              type="password"
-              placeholder="Deixe em branco para não alterar"
-              minLength={6}
-            />
+            <div className="relative">
+              <Input
+                id="edit-password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Deixe em branco para não alterar"
+                minLength={6}
+                className="pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full w-10 hover:bg-transparent"
+                onClick={() => setShowPassword((v) => !v)}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="edit-phone">Telefone</Label>

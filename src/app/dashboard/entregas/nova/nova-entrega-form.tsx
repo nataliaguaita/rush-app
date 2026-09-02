@@ -53,7 +53,7 @@ export function NovaEntregaForm({
   const { fetchCep, loading: cepLoading } = useCep(handleCepResult);
 
   const selectedCliente = clientes.find((c) => c.id === selectedClienteId);
-  const enderecos = selectedCliente?.enderecos ?? [];
+  const enderecos = (selectedCliente?.enderecos ?? []).filter((e) => e.active !== false);
 
   const filteredClientes = useMemo(() => {
     if (!clienteSearch.trim()) return clientes;
@@ -344,7 +344,7 @@ export function NovaEntregaForm({
           </div>
 
           <div className="space-y-2">
-            <Label>O motoboy deve:</Label>
+            <Label>O entregador deve:</Label>
             <div className="flex flex-wrap gap-4">
               <div className="flex items-center gap-2 opacity-70">
                 <Checkbox

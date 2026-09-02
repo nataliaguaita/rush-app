@@ -45,6 +45,7 @@ export interface Endereco {
   cep: string | null;
   lat: number | null;
   lng: number | null;
+  active: boolean;
   created_at: string;
 }
 

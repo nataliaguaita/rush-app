@@ -98,7 +98,11 @@ export default function ClienteDetailPage() {
   }
 
   async function handleDeleteEndereco(enderecoId: string) {
-    await deleteEndereco(enderecoId);
+    const result = await deleteEndereco(enderecoId);
+    if (result.error) {
+      toast.error("Erro ao remover endereço", { description: result.error });
+      return;
+    }
     toast.success("Endereço removido");
     load();
   }
@@ -165,8 +169,8 @@ export default function ClienteDetailPage() {
           )}
         </CardHeader>
         <CardContent className="space-y-3">
-          {cliente.enderecos && cliente.enderecos.length > 0 ? (
-            cliente.enderecos.map((end: any) =>
+          {cliente.enderecos && cliente.enderecos.filter((e: any) => e.active !== false).length > 0 ? (
+            cliente.enderecos.filter((e: any) => e.active !== false).map((end: any) =>
               editandoEnderecoId === end.id ? (
                 <EditEnderecoForm
                   key={end.id}

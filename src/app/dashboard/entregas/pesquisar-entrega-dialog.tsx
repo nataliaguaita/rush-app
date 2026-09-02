@@ -228,7 +228,7 @@ export function PesquisarEntregaDialog({
 
           {/* Entregador select */}
           <div className="space-y-2">
-            <Label>Motoboy</Label>
+            <Label>Entregador</Label>
             <Select
               value={entregadorId}
               onValueChange={(v) => {
@@ -238,7 +238,7 @@ export function PesquisarEntregaDialog({
               items={Object.fromEntries([["", "Todos"], ...entregadores.map((ent) => [ent.id, ent.name])])}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Todos os motoboys" />
+                <SelectValue placeholder="Todos os entregadores" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Todos</SelectItem>

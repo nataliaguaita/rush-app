@@ -402,7 +402,7 @@ export default function EntregaDetailPage() {
           <div className="flex items-start gap-3">
             <Truck className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" />
             <div>
-              <p className="text-xs text-muted-foreground">Motoboy atribuído</p>
+              <p className="text-xs text-muted-foreground">Entregador atribuído</p>
               <p className="text-sm font-medium">
                 {entrega.entregador?.name ?? "Não atribuído"}
               </p>
@@ -620,7 +620,7 @@ function EditEntregaView({
           </div>
 
           <div className="space-y-2">
-            <Label>O motoboy deve:</Label>
+            <Label>O entregador deve:</Label>
             <div className="flex flex-wrap gap-4">
               <div className="flex items-center gap-2 opacity-70">
                 <Checkbox id="action-entregar" checked disabled />

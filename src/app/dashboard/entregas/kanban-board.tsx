@@ -233,12 +233,12 @@ function SortableCard({
           </div>
 
           <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
-            <Select value={currentColumnId} onValueChange={(v) => v && onAssign(id, v)} items={Object.fromEntries([[UNASSIGNED, "Sem motoboy"], ...entregadores.map((ent) => [ent.id, ent.name])])}>
+            <Select value={currentColumnId} onValueChange={(v) => v && onAssign(id, v)} items={Object.fromEntries([[UNASSIGNED, "Sem entregador"], ...entregadores.map((ent) => [ent.id, ent.name])])}>
               <SelectTrigger className="h-7 w-full text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={UNASSIGNED}>Sem motoboy</SelectItem>
+                <SelectItem value={UNASSIGNED}>Sem entregador</SelectItem>
                 {entregadores.map((ent) => (
                   <SelectItem key={ent.id} value={ent.id}>
                     {ent.name}
@@ -646,7 +646,7 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
             <KanbanColumn
               key={colId}
               columnId={colId}
-              title={colId === UNASSIGNED ? "Sem Motoboy" : (entregador?.name ?? "Motoboy")}
+              title={colId === UNASSIGNED ? "Sem Entregador" : (entregador?.name ?? "Entregador")}
               entregaIds={columns[colId] ?? []}
               entregasMap={entregasMap}
               entregadores={entregadores}
@@ -676,7 +676,7 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Alterar rota liberada?</AlertDialogTitle>
             <AlertDialogDescription>
-              Algumas entregas já foram liberadas para o motoboy. Alterar a ordem vai atualizar a rota dele em tempo real.
+              Algumas entregas já foram liberadas para o entregador. Alterar a ordem vai atualizar a rota dele em tempo real.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -132,7 +132,21 @@ export async function updateEndereco(enderecoId: string, formData: FormData) {
 
 export async function deleteEndereco(enderecoId: string) {
   const supabase = createClient();
-  await supabase.from("enderecos").delete().eq("id", enderecoId);
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { error: "Sessão expirada. Faça login novamente." };
+
+  const res = await fetch("/api/admin/delete-endereco", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ enderecoId }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) return { error: data.error || "Erro ao remover endereço" };
+  return { error: null };
 }
 
 export async function geocodeExistingAddresses(): Promise<{ total: number; updated: number }> {

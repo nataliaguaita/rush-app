@@ -89,7 +89,7 @@ export default function EntregasPage() {
           <h1 className="text-2xl font-bold">Organizar Entregas</h1>
           <p className="text-muted-foreground">
             {filteredEntregas.length} entrega{filteredEntregas.length !== 1 ? "s" : ""}
-            {pendentes > 0 && ` · ${pendentes} sem motoboy`}
+            {pendentes > 0 && ` · ${pendentes} sem entregador`}
             {atribuidas > 0 && ` · ${atribuidas} atribuída${atribuidas > 1 ? "s" : ""}`}
             {liberadas > 0 && ` · ${liberadas} liberada${liberadas > 1 ? "s" : ""}`}
           </p>
