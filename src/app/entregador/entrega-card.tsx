@@ -30,6 +30,7 @@ import Link from "next/link";
 import {
   MapPin,
   AlertTriangle,
+  Clock,
   Navigation,
   Camera,
   CheckCircle,
@@ -193,12 +194,21 @@ export function EntregaCard({
                   Urgente
                 </Badge>
               )}
+              {entrega.is_postponed && (
+                <Badge variant="outline" className="border-amber-500/50 text-xs text-amber-600">
+                  <Clock className="mr-1 h-3 w-3" />
+                  Adiada
+                </Badge>
+              )}
             </div>
             <p className="flex items-center gap-1 text-sm text-muted-foreground">
               <MapPin className="h-3 w-3" />
               {endereco?.rua}, {endereco?.numero}
               {endereco?.bairro ? ` - ${endereco.bairro}` : ""}
             </p>
+            {entrega.interested_name && (
+              <p className="text-sm font-medium">Entregar para {entrega.interested_name}</p>
+            )}
             {entrega.actions?.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {entrega.actions.map((a: string) => {

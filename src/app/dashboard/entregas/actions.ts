@@ -104,6 +104,11 @@ export async function persistColumnState(
   );
 }
 
+export async function togglePostponed(entregaId: string, postponed: boolean) {
+  const supabase = createClient();
+  await supabase.from("entregas").update({ is_postponed: postponed }).eq("id", entregaId);
+}
+
 export async function releaseRoute(entregaIds: string[]) {
   const supabase = createClient();
   const { error } = await supabase

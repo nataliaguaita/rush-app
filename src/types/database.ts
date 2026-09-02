@@ -65,6 +65,7 @@ export interface Entrega {
   interested_name: string | null;
   interested_note: string | null;
   notes: string | null;
+  is_postponed: boolean;
   route_order: number | null;
   receiver_name: string | null;
   receiver_role: ReceiverRole | null;

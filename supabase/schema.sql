@@ -110,6 +110,9 @@ CREATE TABLE entregas (
   receiver_note TEXT,
   delivered_at TIMESTAMPTZ,
 
+  -- Adiada (pulada na rota)
+  is_postponed BOOLEAN NOT NULL DEFAULT false,
+
   -- Recusa
   refusal_reason TEXT,
 

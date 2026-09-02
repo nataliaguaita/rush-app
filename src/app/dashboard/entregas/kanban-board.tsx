@@ -30,6 +30,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   GripVertical,
@@ -40,8 +50,9 @@ import {
   Sun,
   Sunset,
   Calendar,
+  Clock,
 } from "lucide-react";
-import { persistColumnState, releaseRoute } from "./actions";
+import { persistColumnState, releaseRoute, togglePostponed } from "./actions";
 import { formatOrderNumber, formatScheduledDate } from "@/lib/status";
 import Link from "next/link";
 
@@ -123,12 +134,14 @@ function SortableCard({
   entregadores,
   currentColumnId,
   onAssign,
+  onTogglePostponed,
 }: {
   id: string;
   entrega: any;
   entregadores: { id: string; name: string }[];
   currentColumnId: string;
   onAssign: (entregaId: string, targetColumnId: string) => void;
+  onTogglePostponed: (entregaId: string, postponed: boolean) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id });
@@ -202,6 +215,12 @@ function SortableCard({
                     Liberada
                   </Badge>
                 )}
+                {entrega.is_postponed && (
+                  <Badge variant="outline" className="h-5 border-amber-500/50 px-1.5 text-[10px] text-amber-600">
+                    <Clock className="mr-0.5 h-2.5 w-2.5" />
+                    Adiada
+                  </Badge>
+                )}
                 {!entrega.endereco?.lat && (
                   <span className="text-[10px] text-amber-500" title="Sem coordenadas GPS">
                     sem GPS
@@ -211,7 +230,7 @@ function SortableCard({
             </div>
           </div>
 
-          <div onClick={(e) => e.stopPropagation()}>
+          <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
             <Select value={currentColumnId} onValueChange={(v) => v && onAssign(id, v)} items={Object.fromEntries([[UNASSIGNED, "Sem motoboy"], ...entregadores.map((ent) => [ent.id, ent.name])])}>
               <SelectTrigger className="h-7 w-full text-xs">
                 <SelectValue />
@@ -225,6 +244,20 @@ function SortableCard({
                 ))}
               </SelectContent>
             </Select>
+            {currentColumnId !== UNASSIGNED && (
+              <button
+                type="button"
+                title={entrega.is_postponed ? "Remover adiamento" : "Marcar como adiada"}
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md border text-xs transition-colors ${
+                  entrega.is_postponed
+                    ? "border-amber-500/50 bg-amber-50 text-amber-600 hover:bg-amber-100"
+                    : "border-input text-muted-foreground hover:bg-accent hover:text-foreground"
+                }`}
+                onClick={() => onTogglePostponed(id, !entrega.is_postponed)}
+              >
+                <Clock className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -293,6 +326,7 @@ function KanbanColumn({
   entregasMap,
   entregadores,
   onAssign,
+  onTogglePostponed,
   onOptimize,
   onRelease,
 }: {
@@ -302,6 +336,7 @@ function KanbanColumn({
   entregasMap: Record<string, any>;
   entregadores: { id: string; name: string }[];
   onAssign: (entregaId: string, targetColumnId: string) => void;
+  onTogglePostponed: (entregaId: string, postponed: boolean) => void;
   onOptimize?: (columnId: string) => void;
   onRelease?: () => void;
 }) {
@@ -350,6 +385,7 @@ function KanbanColumn({
               entregadores={entregadores}
               currentColumnId={columnId}
               onAssign={onAssign}
+              onTogglePostponed={onTogglePostponed}
             />
           ))}
         </SortableContext>
@@ -384,6 +420,10 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const columnsRef = useRef<Record<string, string[]>>({});
   const dragSourceRef = useRef<string | null>(null);
+  const [pendingDrag, setPendingDrag] = useState<{
+    execute: () => void;
+    rollback: () => void;
+  } | null>(null);
 
   const setColumns = useCallback(
     (fn: (prev: Record<string, string[]>) => Record<string, string[]>) => {
@@ -470,24 +510,48 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
     const currentCol = Object.keys(cols).find((col) => cols[col].includes(aid));
     if (!currentCol) return;
 
-    if (currentCol === originalCol) {
-      const items = cols[currentCol];
-      const oldIdx = items.indexOf(aid);
-      const newIdx = items.indexOf(oid);
-      if (oldIdx !== newIdx && newIdx >= 0) {
-        const newItems = arrayMove(items, oldIdx, newIdx);
-        setColumns(() => ({ ...cols, [currentCol]: newItems }));
-        persistColumnState(currentCol === UNASSIGNED ? null : currentCol, newItems);
+    const snapshotCols = { ...cols };
+    for (const k of Object.keys(snapshotCols)) snapshotCols[k] = [...snapshotCols[k]];
+
+    const persist = () => {
+      if (currentCol === originalCol) {
+        const items = cols[currentCol];
+        const oldIdx = items.indexOf(aid);
+        const newIdx = items.indexOf(oid);
+        if (oldIdx !== newIdx && newIdx >= 0) {
+          const newItems = arrayMove(items, oldIdx, newIdx);
+          setColumns(() => ({ ...cols, [currentCol]: newItems }));
+          persistColumnState(currentCol === UNASSIGNED ? null : currentCol, newItems);
+        }
+      } else if (originalCol) {
+        persistColumnState(
+          originalCol === UNASSIGNED ? null : originalCol,
+          cols[originalCol],
+        );
+        persistColumnState(
+          currentCol === UNASSIGNED ? null : currentCol,
+          cols[currentCol],
+        );
       }
-    } else if (originalCol) {
-      persistColumnState(
-        originalCol === UNASSIGNED ? null : originalCol,
-        cols[originalCol],
-      );
-      persistColumnState(
-        currentCol === UNASSIGNED ? null : currentCol,
-        cols[currentCol],
-      );
+    };
+
+    const rollback = () => {
+      setColumns(() => snapshotCols);
+      columnsRef.current = snapshotCols;
+    };
+
+    // Check if any involved entrega is already released
+    const involvedIds = currentCol === originalCol
+      ? cols[currentCol]
+      : [...(originalCol ? cols[originalCol] : []), ...cols[currentCol]];
+    const hasReleased = involvedIds.some(
+      (id) => entregasMap[id]?.status === "rota_definida",
+    );
+
+    if (hasReleased) {
+      setPendingDrag({ execute: persist, rollback });
+    } else {
+      persist();
     }
   }
 
@@ -511,6 +575,19 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
       });
     },
     [setColumns],
+  );
+
+  const handleTogglePostponed = useCallback(
+    (entregaId: string, postponed: boolean) => {
+      setEntregasMap((prev) => ({
+        ...prev,
+        [entregaId]: { ...prev[entregaId], is_postponed: postponed },
+      }));
+      togglePostponed(entregaId, postponed)
+        .then(() => toast.success(postponed ? "Entrega marcada como adiada" : "Adiamento removido"))
+        .catch(() => toast.error("Erro ao atualizar"));
+    },
+    [],
   );
 
   const handleOptimize = useCallback(
@@ -572,6 +649,7 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
               entregasMap={entregasMap}
               entregadores={entregadores}
               onAssign={handleAssign}
+              onTogglePostponed={handleTogglePostponed}
               onOptimize={colId !== UNASSIGNED ? handleOptimize : undefined}
               onRelease={colId !== UNASSIGNED ? () => handleRelease(colId) : undefined}
             />
@@ -582,6 +660,43 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
       <DragOverlay>
         {activeId ? <CardPreview entrega={entregasMap[activeId]} /> : null}
       </DragOverlay>
+
+      <AlertDialog
+        open={pendingDrag !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            pendingDrag?.rollback();
+            setPendingDrag(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterar rota liberada?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Algumas entregas já foram liberadas para o motoboy. Alterar a ordem vai atualizar a rota dele em tempo real.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                pendingDrag?.rollback();
+                setPendingDrag(null);
+              }}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                pendingDrag?.execute();
+                setPendingDrag(null);
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DndContext>
   );
 }
