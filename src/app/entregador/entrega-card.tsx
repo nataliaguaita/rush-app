@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -90,9 +91,21 @@ export function EntregaCard({
   const [mode, setMode] = usePersistedState<"idle" | "registrar" | "recusar">(`${sk}-mode`, "idle");
   const [loading, setLoading] = useState(false);
   const [fotoStatus, setFotoStatus] = usePersistedState<"idle" | "uploading" | "done" | "error">(`${sk}-foto`, "idle");
-  // If page was killed mid-upload, the upload is lost — reset to idle
+  // On mount: check if photo already exists in DB (page may have been killed after upload)
   useEffect(() => {
-    if (fotoStatus === "uploading") setFotoStatus("idle");
+    if (fotoStatus === "uploading") {
+      setFotoStatus("idle");
+    }
+    if (fotoStatus !== "done") {
+      createClient()
+        .from("entrega_fotos")
+        .select("id")
+        .eq("entrega_id", entrega.id)
+        .limit(1)
+        .then(({ data }) => {
+          if (data && data.length > 0) setFotoStatus("done");
+        });
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [receiverName, setReceiverName] = usePersistedState(`${sk}-name`, "");
