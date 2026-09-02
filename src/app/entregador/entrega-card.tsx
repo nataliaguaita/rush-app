@@ -99,7 +99,7 @@ export function EntregaCard({
   const [receiverRole, setReceiverRole] = usePersistedState(`${sk}-role`, "");
   const [customRole, setCustomRole] = usePersistedState(`${sk}-custom`, "");
   const [confirmType, setConfirmType] = useState<"entrega" | "recusa" | null>(null);
-  const pendingFormData = useRef<FormData | null>(null);
+  const pendingNote = useRef<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function clearPersistedState() {
@@ -125,28 +125,38 @@ export function EntregaCard({
   }
 
   async function handleRegistrar() {
-    const formData = pendingFormData.current;
-    if (!formData) return;
     setLoading(true);
-    await registrarEntrega(entrega.id, formData);
-    clearPersistedState();
-    toast.success("Entrega registrada!");
+    try {
+      const role = receiverRole === "outro" ? customRole : receiverRole;
+      await registrarEntrega(entrega.id, {
+        receiver_name: receiverName,
+        receiver_role: role as any,
+        receiver_note: pendingNote.current,
+      });
+      clearPersistedState();
+      toast.success("Entrega registrada!");
+    } catch {
+      toast.error("Falha ao registrar entrega. Tente novamente.");
+    }
     setLoading(false);
   }
 
   async function handleRecusar() {
-    const formData = pendingFormData.current;
-    if (!formData) return;
     setLoading(true);
-    await registrarRecusa(entrega.id, formData);
-    clearPersistedState();
-    toast.info("Recusa registrada.");
+    try {
+      await registrarRecusa(entrega.id, pendingNote.current || "");
+      clearPersistedState();
+      toast.info("Recusa registrada.");
+    } catch {
+      toast.error("Falha ao registrar recusa. Tente novamente.");
+    }
     setLoading(false);
   }
 
   function handleConfirmSubmit(e: React.FormEvent<HTMLFormElement>, type: "entrega" | "recusa") {
     e.preventDefault();
-    pendingFormData.current = new FormData(e.currentTarget);
+    const fd = new FormData(e.currentTarget);
+    pendingNote.current = (fd.get(type === "entrega" ? "receiver_note" : "refusal_reason") as string) || "";
     setConfirmType(type);
   }
 
@@ -478,7 +488,7 @@ export function EntregaCard({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => (pendingFormData.current = null)}>
+            <AlertDialogCancel>
               Voltar
             </AlertDialogCancel>
             <AlertDialogAction

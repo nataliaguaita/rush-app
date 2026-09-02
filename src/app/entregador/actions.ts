@@ -8,24 +8,31 @@ export async function iniciarEntrega(entregaId: string) {
   await supabase.from("entregas").update({ status: "em_rota" }).eq("id", entregaId);
 }
 
-export async function registrarEntrega(entregaId: string, formData: FormData) {
+export async function registrarEntrega(
+  entregaId: string,
+  dados: { receiver_name: string; receiver_role: ReceiverRole; receiver_note?: string },
+) {
   const supabase = createClient();
 
-  await supabase.from("entregas").update({
+  const { error } = await supabase.from("entregas").update({
     status: "entregue",
-    receiver_name: formData.get("receiver_name") as string,
-    receiver_role: formData.get("receiver_role") as ReceiverRole,
-    receiver_note: (formData.get("receiver_note") as string) || null,
+    receiver_name: dados.receiver_name,
+    receiver_role: dados.receiver_role,
+    receiver_note: dados.receiver_note || null,
     delivered_at: new Date().toISOString(),
   }).eq("id", entregaId);
+
+  if (error) throw new Error(error.message);
 }
 
-export async function registrarRecusa(entregaId: string, formData: FormData) {
+export async function registrarRecusa(entregaId: string, motivo: string) {
   const supabase = createClient();
-  await supabase.from("entregas").update({
+  const { error } = await supabase.from("entregas").update({
     status: "recusada",
-    refusal_reason: formData.get("refusal_reason") as string,
+    refusal_reason: motivo,
   }).eq("id", entregaId);
+
+  if (error) throw new Error(error.message);
 }
 
 export async function uploadFotoEntrega(entregaId: string, formData: FormData) {
