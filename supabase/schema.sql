@@ -65,8 +65,11 @@ CREATE INDEX idx_enderecos_cliente ON enderecos(cliente_id);
 -- ============================================
 -- ENTREGAS
 -- ============================================
+CREATE SEQUENCE entregas_order_number_seq;
+
 CREATE TABLE entregas (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_number INTEGER NOT NULL UNIQUE DEFAULT nextval('entregas_order_number_seq'),
 
   -- Quem criou
   created_by UUID NOT NULL REFERENCES profiles(id),

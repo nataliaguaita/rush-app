@@ -50,6 +50,7 @@ export interface Endereco {
 
 export interface Entrega {
   id: string;
+  order_number: number;
   created_by: string;
   cliente_id: string;
   endereco_id: string;

@@ -40,6 +40,10 @@ export function getStatusMeta(status: string) {
   );
 }
 
+export function formatOrderNumber(orderNumber: number): string {
+  return `#${String(orderNumber).padStart(4, "0")}`;
+}
+
 export const RECEIVER_ROLE_LABELS: Record<string, string> = {
   secretaria: "Secretária",
   porteiro: "Porteiro",

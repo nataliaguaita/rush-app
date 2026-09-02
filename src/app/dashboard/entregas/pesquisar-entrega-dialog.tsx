@@ -23,6 +23,7 @@ import {
 import { StatusBadge } from "@/components/status-badge";
 import Link from "next/link";
 import { Search, MapPin, AlertTriangle, X } from "lucide-react";
+import { formatOrderNumber } from "@/lib/status";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -276,6 +277,7 @@ export function PesquisarEntregaDialog({
                       <CardContent className="py-3">
                         <div className="space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-xs font-mono text-muted-foreground">{formatOrderNumber(entrega.order_number)}</span>
                             <span className="text-sm font-medium">
                               {entrega.cliente?.name ?? "Cliente"}
                             </span>

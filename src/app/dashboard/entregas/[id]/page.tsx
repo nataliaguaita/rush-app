@@ -23,6 +23,7 @@ import {
   DollarSign,
   Calendar,
 } from "lucide-react";
+import { formatOrderNumber } from "@/lib/status";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -183,7 +184,7 @@ export default function EntregaDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold">Detalhes da Entrega</h1>
+          <h1 className="text-xl font-bold">Entrega {formatOrderNumber(entrega.order_number)}</h1>
         </div>
         <div className="flex items-center gap-2">
           {entrega.is_urgent && (

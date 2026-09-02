@@ -49,6 +49,7 @@ import {
   Sunset,
 } from "lucide-react";
 import { persistColumnState, releaseRoute } from "./actions";
+import { formatOrderNumber } from "@/lib/status";
 import Link from "next/link";
 
 const UNASSIGNED = "unassigned";
@@ -161,6 +162,7 @@ function SortableCard({
 
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-2">
+                <span className="text-xs font-mono text-muted-foreground">{formatOrderNumber(entrega.order_number)}</span>
                 <Link
                   href={`/dashboard/entregas/${entrega.id}`}
                   className="truncate font-medium hover:underline"
@@ -241,7 +243,10 @@ function CardPreview({ entrega }: { entrega: any }) {
   return (
     <Card className="w-[300px] shadow-lg ring-2 ring-primary">
       <CardContent className="px-3 py-3">
-        <p className="truncate font-medium">{entrega.cliente?.name ?? "Cliente"}</p>
+        <p className="truncate font-medium">
+          <span className="text-xs font-mono text-muted-foreground mr-1">{formatOrderNumber(entrega.order_number)}</span>
+          {entrega.cliente?.name ?? "Cliente"}
+        </p>
         {entrega.endereco && (
           <p className="truncate text-xs text-muted-foreground">
             <MapPin className="mr-1 inline h-3 w-3" />
@@ -274,7 +279,7 @@ function OptimizeButton({
       .filter((e) => e?.endereco?.lat != null && e?.endereco?.lng != null)
       .map((e) => ({
         id: e.id,
-        label: `${e.cliente?.name ?? "Cliente"} — ${e.endereco.rua}, ${e.endereco.numero}`,
+        label: `${formatOrderNumber(e.order_number)} ${e.cliente?.name ?? "Cliente"} — ${e.endereco.rua}, ${e.endereco.numero}`,
         lat: e.endereco.lat as number,
         lng: e.endereco.lng as number,
       }));

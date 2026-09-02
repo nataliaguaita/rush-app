@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StatusBadge } from "@/components/status-badge";
+import { formatOrderNumber } from "@/lib/status";
 import Link from "next/link";
 import {
   MapPin,
@@ -174,6 +175,7 @@ export function EntregaCard({
               </p>
             )}
             <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-mono text-muted-foreground">{formatOrderNumber(entrega.order_number)}</span>
               <Link href={`/dashboard/entregas/${entrega.id}`} className="text-base font-semibold hover:underline">
                 {entrega.cliente?.name}
               </Link>
