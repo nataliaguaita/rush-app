@@ -84,6 +84,16 @@ export interface EntregaFoto {
   created_at: string;
 }
 
+export interface RotaDiaria {
+  id: string;
+  entregador_id: string;
+  data: string;
+  period: DeliveryPeriod;
+  distance_km: number;
+  entregas_count: number;
+  created_at: string;
+}
+
 export interface EntregaWithRelations extends Entrega {
   cliente?: Cliente;
   endereco?: Endereco;
@@ -126,6 +136,11 @@ export type Database = {
         Row: EntregaFoto;
         Insert: Omit<EntregaFoto, "id" | "created_at"> & { id?: string };
         Update: Partial<Omit<EntregaFoto, "id" | "created_at">>;
+      };
+      rotas_diarias: {
+        Row: RotaDiaria;
+        Insert: Omit<RotaDiaria, "id" | "created_at"> & { id?: string };
+        Update: Partial<Omit<RotaDiaria, "id" | "created_at">>;
       };
     };
   };

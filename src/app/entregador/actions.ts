@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { calcRouteDistanceKm } from "@/lib/route-distance";
 import type { ReceiverRole } from "@/types/database";
 
 export async function iniciarEntrega(entregaId: string) {
@@ -31,6 +32,59 @@ export async function registrarEntrega(
   }).eq("id", entregaId);
 
   if (error) throw new Error(error.message);
+
+  try {
+    await tryCalculateRouteDistance(supabase, entregaId);
+  } catch {}
+}
+
+async function tryCalculateRouteDistance(
+  supabase: ReturnType<typeof createClient>,
+  entregaId: string,
+) {
+  const { data: entrega } = await supabase
+    .from("entregas")
+    .select("entregador_id, scheduled_date, scheduled_period")
+    .eq("id", entregaId)
+    .single();
+
+  if (!entrega?.entregador_id || !entrega?.scheduled_date || !entrega?.scheduled_period) return;
+
+  const { count } = await supabase
+    .from("entregas")
+    .select("*", { count: "exact", head: true })
+    .eq("entregador_id", entrega.entregador_id)
+    .eq("scheduled_date", entrega.scheduled_date)
+    .eq("scheduled_period", entrega.scheduled_period)
+    .not("status", "in", '("entregue","recusada")');
+
+  if ((count ?? 0) > 0) return;
+
+  const { data: delivered } = await supabase
+    .from("entregas")
+    .select("endereco:enderecos(lat, lng)")
+    .eq("entregador_id", entrega.entregador_id)
+    .eq("scheduled_date", entrega.scheduled_date)
+    .eq("scheduled_period", entrega.scheduled_period)
+    .eq("status", "entregue")
+    .order("route_order");
+
+  const waypoints = (delivered ?? [])
+    .map((d: any) => d.endereco)
+    .filter((e: any) => e?.lat && e?.lng);
+
+  const km = await calcRouteDistanceKm(waypoints, entrega.scheduled_period);
+
+  await supabase.from("rotas_diarias").upsert(
+    {
+      entregador_id: entrega.entregador_id,
+      data: entrega.scheduled_date,
+      period: entrega.scheduled_period,
+      distance_km: km,
+      entregas_count: waypoints.length,
+    },
+    { onConflict: "entregador_id,data,period" },
+  );
 }
 
 export async function registrarRecusa(entregaId: string, motivo: string) {

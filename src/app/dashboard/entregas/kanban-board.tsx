@@ -73,8 +73,7 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-const START_LAT = -25.4284;
-const START_LNG = -49.2733;
+import { ORIGIN_LAT, ORIGIN_LNG } from "@/lib/constants";
 
 function nearestNeighborSort(
   ids: string[],
@@ -118,10 +117,10 @@ function optimizeRoute(ids: string[], map: Record<string, any>): string[] {
   const urgent = ids.filter((id) => map[id]?.is_urgent);
   const normal = ids.filter((id) => !map[id]?.is_urgent);
 
-  const urgentResult = nearestNeighborSort(urgent, map, START_LAT, START_LNG);
+  const urgentResult = nearestNeighborSort(urgent, map, ORIGIN_LAT, ORIGIN_LNG);
   const normalStart = urgent.length > 0
     ? { lat: urgentResult.lastLat, lng: urgentResult.lastLng }
-    : { lat: START_LAT, lng: START_LNG };
+    : { lat: ORIGIN_LAT, lng: ORIGIN_LNG };
   const normalResult = nearestNeighborSort(normal, map, normalStart.lat, normalStart.lng);
 
   return [...urgentResult.ordered, ...normalResult.ordered];

@@ -11,7 +11,7 @@ import {
   Package,
   Users,
   UserPlus,
-  Settings,
+  BarChart3,
   Truck,
   LogOut,
   PanelLeftClose,
@@ -29,7 +29,7 @@ const adminLinks = [
   { href: "/dashboard/entregas", label: "Organizar Entregas", icon: Package },
   { href: "/dashboard/clientes", label: "Clientes", icon: Users },
   { href: "/dashboard/cadastros", label: "Cadastros", icon: UserPlus },
-  { href: "/configuracoes", label: "Configurações", icon: Settings },
+  { href: "/relatorios", label: "Relatórios", icon: BarChart3 },
 ];
 
 const vendedorLinks = [
