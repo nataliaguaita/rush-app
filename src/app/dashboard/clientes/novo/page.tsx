@@ -97,9 +97,12 @@ function EnderecoCard({
           <div className="relative">
             <Input
               value={end.cep}
+              maxLength={9}
               onChange={(e) => {
-                onUpdate(end.key, "cep", e.target.value);
-                fetchCep(e.target.value);
+                const digits = e.target.value.replace(/\D/g, "").slice(0, 8);
+                const formatted = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+                onUpdate(end.key, "cep", formatted);
+                fetchCep(formatted);
               }}
               placeholder="00000-000"
             />
