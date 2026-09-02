@@ -91,21 +91,25 @@ export function EntregaCard({
   const [mode, setMode] = usePersistedState<"idle" | "registrar" | "recusar">(`${sk}-mode`, "idle");
   const [loading, setLoading] = useState(false);
   const [fotoStatus, setFotoStatus] = usePersistedState<"idle" | "uploading" | "done" | "error">(`${sk}-foto`, "idle");
-  // On mount: check if photo already exists in DB (page may have been killed after upload)
   useEffect(() => {
     if (fotoStatus === "uploading") {
       setFotoStatus("idle");
     }
-    if (fotoStatus !== "done") {
-      createClient()
-        .from("entrega_fotos")
-        .select("id")
-        .eq("entrega_id", entrega.id)
-        .limit(1)
-        .then(({ data }) => {
-          if (data && data.length > 0) setFotoStatus("done");
-        });
-    }
+    const supabase = createClient();
+    supabase
+      .from("entrega_fotos")
+      .select("storage_path")
+      .eq("entrega_id", entrega.id)
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setFotoStatus("done");
+          if (!fotoPreview) {
+            const { data: urlData } = supabase.storage.from("entregas").getPublicUrl(data[0].storage_path);
+            if (urlData?.publicUrl) setFotoPreview(urlData.publicUrl);
+          }
+        }
+      });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [receiverName, setReceiverName] = usePersistedState(`${sk}-name`, "");
@@ -140,10 +144,10 @@ export function EntregaCard({
   async function handleRegistrar() {
     setLoading(true);
     try {
-      const role = receiverRole === "outro" ? customRole : receiverRole;
       await registrarEntrega(entrega.id, {
         receiver_name: receiverName,
-        receiver_role: role as any,
+        receiver_role: receiverRole,
+        custom_role: receiverRole === "outro" ? customRole : undefined,
         receiver_note: pendingNote.current,
       });
       clearPersistedState();

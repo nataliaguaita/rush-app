@@ -8,17 +8,25 @@ export async function iniciarEntrega(entregaId: string) {
   await supabase.from("entregas").update({ status: "em_rota" }).eq("id", entregaId);
 }
 
+const VALID_ROLES: ReceiverRole[] = ["secretaria", "porteiro", "morador_vizinho", "proprietario"];
+
 export async function registrarEntrega(
   entregaId: string,
-  dados: { receiver_name: string; receiver_role: ReceiverRole; receiver_note?: string },
+  dados: { receiver_name: string; receiver_role: string; custom_role?: string; receiver_note?: string },
 ) {
   const supabase = createClient();
+
+  const isValidRole = VALID_ROLES.includes(dados.receiver_role as ReceiverRole);
+  const note = [
+    dados.receiver_role === "outro" && dados.custom_role ? `Cargo: ${dados.custom_role}` : null,
+    dados.receiver_note || null,
+  ].filter(Boolean).join(" — ") || null;
 
   const { error } = await supabase.from("entregas").update({
     status: "entregue",
     receiver_name: dados.receiver_name,
-    receiver_role: dados.receiver_role,
-    receiver_note: dados.receiver_note || null,
+    receiver_role: isValidRole ? dados.receiver_role : null,
+    receiver_note: note,
     delivered_at: new Date().toISOString(),
   }).eq("id", entregaId);
 
