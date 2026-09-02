@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,12 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, ChevronLeft } from "lucide-react";
+import { AlertTriangle, ChevronLeft, MapPin } from "lucide-react";
 import Link from "next/link";
 import { createEntrega } from "../actions";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import type { ClienteWithEnderecos } from "@/types/database";
+import { useCep } from "@/lib/use-cep";
 
 export function NovaEntregaForm({
   clientes,
@@ -41,7 +42,15 @@ export function NovaEntregaForm({
   const [returnReminder, setReturnReminder] = useState(false);
   const [scheduledDate, setScheduledDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [valor, setValor] = useState("");
+  const [useCustomAddress, setUseCustomAddress] = useState(false);
+  const [customAddr, setCustomAddr] = useState({ cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", label: "" });
+  const [saveToCliente, setSaveToCliente] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleCepResult = useCallback((data: { rua: string; bairro: string; cidade: string }) => {
+    setCustomAddr((prev) => ({ ...prev, rua: data.rua, bairro: data.bairro, cidade: data.cidade }));
+  }, []);
+  const { fetchCep, loading: cepLoading } = useCep(handleCepResult);
 
   const selectedCliente = clientes.find((c) => c.id === selectedClienteId);
   const enderecos = selectedCliente?.enderecos ?? [];
@@ -163,28 +172,32 @@ export function NovaEntregaForm({
 
           {selectedCliente && (
             <div className="space-y-2">
-              <Label>Endereço de Entrega *</Label>
-              <Select
-                name="endereco_id"
-                value={selectedEnderecoId}
-                onValueChange={(v) => setSelectedEnderecoId(v ?? "")}
-                required
-                items={Object.fromEntries(enderecos.map((e) => [e.id, `${e.label ? `${e.label} — ` : ""}${e.rua}, ${e.numero}${e.bairro ? ` (${e.bairro})` : ""}`]))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Escolha o endereço" />
-                </SelectTrigger>
-                <SelectContent>
-                  {enderecos.map((e) => (
-                    <SelectItem key={e.id} value={e.id}>
-                      {e.label ? `${e.label} — ` : ""}
-                      {e.rua}, {e.numero}
-                      {e.bairro ? ` (${e.bairro})` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {enderecos.length === 0 && (
+              {!useCustomAddress && (
+                <>
+                  <Label>Endereço de Entrega *</Label>
+                  <Select
+                    name="endereco_id"
+                    value={selectedEnderecoId}
+                    onValueChange={(v) => setSelectedEnderecoId(v ?? "")}
+                    required
+                    items={Object.fromEntries(enderecos.map((e) => [e.id, `${e.label ? `${e.label} — ` : ""}${e.rua}, ${e.numero}${e.bairro ? ` (${e.bairro})` : ""}`]))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Escolha o endereço" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {enderecos.map((e) => (
+                        <SelectItem key={e.id} value={e.id}>
+                          {e.label ? `${e.label} — ` : ""}
+                          {e.rua}, {e.numero}
+                          {e.bairro ? ` (${e.bairro})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
+              {enderecos.length === 0 && !useCustomAddress && (
                 <p className="text-sm text-destructive">
                   Este cliente não possui endereços cadastrados.{" "}
                   <Link
@@ -194,6 +207,114 @@ export function NovaEntregaForm({
                     Adicionar endereço
                   </Link>
                 </p>
+              )}
+
+              <button
+                type="button"
+                className="flex items-center gap-1.5 text-sm text-primary hover:underline mt-1"
+                onClick={() => {
+                  setUseCustomAddress(!useCustomAddress);
+                  if (!useCustomAddress) setSelectedEnderecoId("");
+                }}
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                {useCustomAddress ? "Usar endereço cadastrado" : "Usar outro endereço para esta entrega"}
+              </button>
+
+              {useCustomAddress && (
+                <div className="space-y-3 rounded-md border p-3 bg-muted/30">
+                  <input type="hidden" name="custom_address" value="true" />
+                  <div className="grid grid-cols-[1fr_2fr] gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">CEP</Label>
+                      <Input
+                        name="custom_cep"
+                        value={customAddr.cep}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setCustomAddr((p) => ({ ...p, cep: v }));
+                          if (v.replace(/\D/g, "").length === 8) fetchCep(v);
+                        }}
+                        placeholder="00000-000"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Rua *</Label>
+                      <Input
+                        name="custom_rua"
+                        value={customAddr.rua}
+                        onChange={(e) => setCustomAddr((p) => ({ ...p, rua: e.target.value }))}
+                        required
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Número *</Label>
+                      <Input
+                        name="custom_numero"
+                        value={customAddr.numero}
+                        onChange={(e) => setCustomAddr((p) => ({ ...p, numero: e.target.value }))}
+                        required
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Complemento</Label>
+                      <Input
+                        name="custom_complemento"
+                        value={customAddr.complemento}
+                        onChange={(e) => setCustomAddr((p) => ({ ...p, complemento: e.target.value }))}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Bairro</Label>
+                      <Input
+                        name="custom_bairro"
+                        value={customAddr.bairro}
+                        onChange={(e) => setCustomAddr((p) => ({ ...p, bairro: e.target.value }))}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Cidade *</Label>
+                      <Input
+                        name="custom_cidade"
+                        value={customAddr.cidade}
+                        onChange={(e) => setCustomAddr((p) => ({ ...p, cidade: e.target.value }))}
+                        required
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Apelido</Label>
+                      <Input
+                        name="custom_label"
+                        value={customAddr.label}
+                        onChange={(e) => setCustomAddr((p) => ({ ...p, label: e.target.value }))}
+                        placeholder="Ex: Escritório"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <Checkbox
+                      id="save_to_cliente"
+                      name="save_to_cliente"
+                      checked={saveToCliente}
+                      onCheckedChange={(v) => setSaveToCliente(!!v)}
+                    />
+                    <Label htmlFor="save_to_cliente" className="text-sm font-normal">
+                      Salvar este endereço no cadastro do cliente
+                    </Label>
+                  </div>
+                </div>
               )}
             </div>
           )}
