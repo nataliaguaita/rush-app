@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
-import { RECEIVER_ROLE_LABELS } from "@/lib/status";
-import { Package, Truck, CheckCircle, Clock, MapPin, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { RECEIVER_ROLE_LABELS, formatOrderNumber, formatScheduledDate } from "@/lib/status";
+import { Package, Truck, CheckCircle, Clock, MapPin, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight, Plus, Calendar } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import Link from "next/link";
 import { PesquisarEntregaDialog } from "./entregas/pesquisar-entrega-dialog";
@@ -222,7 +222,10 @@ export default function DashboardPage() {
                                 {index + 1}
                               </div>
                               <div className="min-w-0 flex-1 space-y-1">
-                                <span className="truncate font-medium block">{entrega.cliente?.name ?? "Cliente"}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-mono text-muted-foreground">{formatOrderNumber(entrega.order_number)}</span>
+                                  <span className="truncate font-medium">{entrega.cliente?.name ?? "Cliente"}</span>
+                                </div>
                                 {entrega.endereco && (
                                   <p className="flex items-center gap-1 text-sm text-muted-foreground">
                                     <MapPin className="h-3 w-3 shrink-0" />
@@ -230,6 +233,12 @@ export default function DashboardPage() {
                                       {entrega.endereco.rua}, {entrega.endereco.numero}
                                       {entrega.endereco.bairro ? ` - ${entrega.endereco.bairro}` : ""}
                                     </span>
+                                  </p>
+                                )}
+                                {entrega.scheduled_date && (
+                                  <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Calendar className="h-3 w-3 shrink-0" />
+                                    {formatScheduledDate(entrega.scheduled_date)}
                                   </p>
                                 )}
                                 {entrega.status === "entregue" && entrega.delivered_at && (

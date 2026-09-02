@@ -74,10 +74,7 @@ export function EntregaCard({
   function openNavigation() {
     const address = `${endereco.rua}, ${endereco.numero}, ${endereco.cidade}`;
     const encoded = encodeURIComponent(address);
-    window.open(
-      `https://www.google.com/maps/dir/?api=1&destination=${encoded}`,
-      "_blank"
-    );
+    window.open(`geo:0,0?q=${encoded}`, "_self");
   }
 
   async function handleIniciar() {
@@ -207,7 +204,7 @@ export function EntregaCard({
         {mode === "idle" && (
           <div className="flex flex-col gap-2 sm:flex-row">
             {!isEmRota && isFirst ? (
-              <Button size="lg" className="flex-1 bg-[#0090FF] text-white font-bold hover:bg-[#0090FF]/80" onClick={handleIniciar}>
+              <Button size="lg" className="flex-1 min-h-12 bg-[#0090FF] text-white font-bold hover:bg-[#0090FF]/80" onClick={handleIniciar}>
                 <Navigation className="mr-2 h-4 w-4" />
                 Iniciar Entrega
               </Button>

@@ -30,14 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
   GripVertical,
@@ -47,9 +39,10 @@ import {
   Send,
   Sun,
   Sunset,
+  Calendar,
 } from "lucide-react";
 import { persistColumnState, releaseRoute } from "./actions";
-import { formatOrderNumber } from "@/lib/status";
+import { formatOrderNumber, formatScheduledDate } from "@/lib/status";
 import Link from "next/link";
 
 const UNASSIGNED = "unassigned";
@@ -68,35 +61,24 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function optimizeRoute(
+const START_LAT = -25.4284;
+const START_LNG = -49.2733;
+
+function nearestNeighborSort(
   ids: string[],
   map: Record<string, any>,
   startLat: number,
   startLng: number,
-  startId?: string,
-  lastId?: string,
-): string[] {
+): { ordered: string[]; lastLat: number; lastLng: number } {
   const ordered: string[] = [];
   let curLat = startLat;
   let curLng = startLng;
 
-  if (startId && ids.includes(startId)) {
-    ordered.push(startId);
-    const s = map[startId];
-    if (s?.endereco?.lat != null) {
-      curLat = s.endereco.lat;
-      curLng = s.endereco.lng;
-    }
-  }
-
-  const exclude = new Set(ordered);
-  if (lastId) exclude.add(lastId);
-
   const remaining = ids.filter(
-    (id) => !exclude.has(id) && map[id]?.endereco?.lat != null && map[id]?.endereco?.lng != null,
+    (id) => map[id]?.endereco?.lat != null && map[id]?.endereco?.lng != null,
   );
   const noCoords = ids.filter(
-    (id) => !exclude.has(id) && (map[id]?.endereco?.lat == null || map[id]?.endereco?.lng == null),
+    (id) => map[id]?.endereco?.lat == null || map[id]?.endereco?.lng == null,
   );
 
   while (remaining.length > 0) {
@@ -117,8 +99,20 @@ function optimizeRoute(
   }
 
   ordered.push(...noCoords);
-  if (lastId && ids.includes(lastId)) ordered.push(lastId);
-  return ordered;
+  return { ordered, lastLat: curLat, lastLng: curLng };
+}
+
+function optimizeRoute(ids: string[], map: Record<string, any>): string[] {
+  const urgent = ids.filter((id) => map[id]?.is_urgent);
+  const normal = ids.filter((id) => !map[id]?.is_urgent);
+
+  const urgentResult = nearestNeighborSort(urgent, map, START_LAT, START_LNG);
+  const normalStart = urgent.length > 0
+    ? { lat: urgentResult.lastLat, lng: urgentResult.lastLng }
+    : { lat: START_LAT, lng: START_LNG };
+  const normalResult = nearestNeighborSort(normal, map, normalStart.lat, normalStart.lng);
+
+  return [...urgentResult.ordered, ...normalResult.ordered];
 }
 
 // ---- Sortable card ----
@@ -186,9 +180,9 @@ function SortableCard({
                 </p>
               )}
               <div className="flex flex-wrap items-center gap-1.5">
-                {entrega.valor != null && (
-                  <span className="text-xs font-medium">
-                    R$ {Number(entrega.valor).toFixed(2)}
+                {entrega.scheduled_date && (
+                  <span className="text-xs font-semibold text-primary">
+                    {formatScheduledDate(entrega.scheduled_date)}
                   </span>
                 )}
                 {entrega.scheduled_period === "manha" && (
@@ -267,96 +261,26 @@ function OptimizeButton({
 }: {
   columnEntregaIds: string[];
   entregasMap: Record<string, any>;
-  onOptimize: (startLat: number, startLng: number, startId?: string, lastId?: string) => void;
+  onOptimize: () => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const [startId, setStartId] = useState("");
-  const [lastId, setLastId] = useState("__auto__");
+  const hasEnough = columnEntregaIds.filter(
+    (id) => entregasMap[id]?.endereco?.lat != null,
+  ).length >= 2;
 
-  const addressOptions = useMemo(() => {
-    return columnEntregaIds
-      .map((id) => entregasMap[id])
-      .filter((e) => e?.endereco?.lat != null && e?.endereco?.lng != null)
-      .map((e) => ({
-        id: e.id,
-        label: `${formatOrderNumber(e.order_number)} ${e.cliente?.name ?? "Cliente"} — ${e.endereco.rua}, ${e.endereco.numero}`,
-        lat: e.endereco.lat as number,
-        lng: e.endereco.lng as number,
-      }));
-  }, [columnEntregaIds, entregasMap]);
-
-  if (addressOptions.length < 2) return null;
-
-  function handleOptimize() {
-    const start = addressOptions.find((a) => a.id === startId);
-    if (!start) {
-      toast.error("Selecione o ponto de partida");
-      return;
-    }
-    const last = lastId !== "__auto__" ? lastId : undefined;
-    onOptimize(start.lat, start.lng, start.id, last);
-    setOpen(false);
-    toast.success("Rota otimizada!");
-  }
+  if (!hasEnough) return null;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={
-          <Button variant="ghost" size="icon" className="h-7 w-7" title="Otimizar rota">
-            <Route className="h-4 w-4" />
-          </Button>
-        }
-      />
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Otimizar Rota</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Ponto de partida</Label>
-            <Select value={startId} onValueChange={(v) => setStartId(v ?? "")} items={Object.fromEntries(addressOptions.map((a) => [a.id, a.label]))}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione o endereço..." />
-              </SelectTrigger>
-              <SelectContent>
-                {addressOptions.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    {a.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Último endereço (opcional)</Label>
-            <Select value={lastId} onValueChange={(v) => setLastId(v ?? "__auto__")} items={Object.fromEntries([["__auto__", "Automático"], ...addressOptions.filter((a) => a.id !== startId).map((a) => [a.id, a.label])])}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__auto__">Automático</SelectItem>
-                {addressOptions
-                  .filter((a) => a.id !== startId)
-                  .map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.label}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Selecione o endereço mais próximo do ponto de partida do motoboy. A rota será otimizada
-            por menor distância entre os pontos.
-          </p>
-          <Button onClick={handleOptimize} className="w-full">
-            <Route className="mr-2 h-4 w-4" />
-            Otimizar
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <button
+      type="button"
+      className="inline-flex h-7 items-center gap-1 rounded-md bg-[oklch(0.55_0.19_260)] px-2.5 text-xs font-medium text-white hover:opacity-80"
+      onClick={() => {
+        onOptimize();
+        toast.success("Rota otimizada!");
+      }}
+    >
+      <Route className="h-3.5 w-3.5" />
+      Otimizar
+    </button>
   );
 }
 
@@ -378,7 +302,7 @@ function KanbanColumn({
   entregasMap: Record<string, any>;
   entregadores: { id: string; name: string }[];
   onAssign: (entregaId: string, targetColumnId: string) => void;
-  onOptimize?: (columnId: string, startLat: number, startLng: number, startId?: string, lastId?: string) => void;
+  onOptimize?: (columnId: string) => void;
   onRelease?: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: columnId });
@@ -406,9 +330,7 @@ function KanbanColumn({
           <OptimizeButton
             columnEntregaIds={entregaIds}
             entregasMap={entregasMap}
-            onOptimize={(startLat, startLng, startId, lastId) =>
-              onOptimize(columnId, startLat, startLng, startId, lastId)
-            }
+            onOptimize={() => onOptimize(columnId)}
           />
         )}
       </div>
@@ -592,11 +514,11 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
   );
 
   const handleOptimize = useCallback(
-    (columnId: string, startLat: number, startLng: number, startId?: string, lastId?: string) => {
+    (columnId: string) => {
       setColumns((prev) => {
         const ids = prev[columnId];
         if (!ids) return prev;
-        const optimized = optimizeRoute(ids, entregasMap, startLat, startLng, startId, lastId);
+        const optimized = optimizeRoute(ids, entregasMap);
         persistColumnState(columnId === UNASSIGNED ? null : columnId, optimized);
         return { ...prev, [columnId]: optimized };
       });

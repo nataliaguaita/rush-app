@@ -44,6 +44,16 @@ export function formatOrderNumber(orderNumber: number): string {
   return `#${String(orderNumber).padStart(4, "0")}`;
 }
 
+export function formatScheduledDate(dateStr: string): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const date = new Date(dateStr + "T00:00:00");
+  const diff = Math.round((date.getTime() - today.getTime()) / 86400000);
+  if (diff === 0) return "Entregar Hoje";
+  if (diff === 1) return "Entregar Amanhã";
+  return `Entregar em ${date.toLocaleDateString("pt-BR")}`;
+}
+
 export const RECEIVER_ROLE_LABELS: Record<string, string> = {
   secretaria: "Secretária",
   porteiro: "Porteiro",

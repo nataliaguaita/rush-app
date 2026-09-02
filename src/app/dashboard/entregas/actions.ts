@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { geocode } from "@/lib/geocode";
 import type { DeliveryStatus } from "@/types/database";
 
 export async function createEntrega(formData: FormData) {
@@ -13,15 +14,20 @@ export async function createEntrega(formData: FormData) {
   const isCustomAddress = formData.get("custom_address") === "true";
 
   if (isCustomAddress) {
+    const rua = formData.get("custom_rua") as string;
+    const numero = (formData.get("custom_numero") as string) || "";
+    const cidade = (formData.get("custom_cidade") as string) || "";
+    const coords = await geocode(rua, numero, cidade);
     const addrData = {
       cliente_id: clienteId,
-      rua: formData.get("custom_rua") as string,
-      numero: (formData.get("custom_numero") as string) || "",
+      rua,
+      numero,
       complemento: (formData.get("custom_complemento") as string) || null,
       bairro: (formData.get("custom_bairro") as string) || null,
-      cidade: (formData.get("custom_cidade") as string) || "",
+      cidade,
       cep: (formData.get("custom_cep") as string) || null,
       label: (formData.get("custom_label") as string) || null,
+      ...coords,
     };
     const { data: newEndereco, error: addrError } = await supabase
       .from("enderecos")

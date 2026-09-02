@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { geocodeExistingAddresses } from "./actions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Phone, Users } from "lucide-react";
+import { Plus, Phone, Users, MapPin, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<any[]>([]);
+  const [semGps, setSemGps] = useState(0);
+  const [geocoding, setGeocoding] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -19,9 +23,27 @@ export default function ClientesPage() {
         .select("*, enderecos(*)")
         .order("name");
       setClientes(data ?? []);
+
+      const { count } = await supabase
+        .from("enderecos")
+        .select("id", { count: "exact", head: true })
+        .is("lat", null);
+      setSemGps(count ?? 0);
     }
     load();
   }, []);
+
+  async function handleGeocode() {
+    setGeocoding(true);
+    try {
+      const result = await geocodeExistingAddresses();
+      toast.success(`${result.updated} de ${result.total} endereços atualizados com GPS.`);
+      setSemGps((prev) => prev - result.updated);
+    } catch {
+      toast.error("Erro ao geocodificar endereços.");
+    }
+    setGeocoding(false);
+  }
 
   return (
     <div className="space-y-6">
@@ -30,12 +52,20 @@ export default function ClientesPage() {
           <h1 className="text-2xl font-bold">Clientes</h1>
           <p className="text-muted-foreground">{clientes.length} clientes cadastrados</p>
         </div>
-        <Link href="/dashboard/clientes/novo">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Cliente
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          {semGps > 0 && (
+            <Button variant="outline" onClick={handleGeocode} disabled={geocoding}>
+              {geocoding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MapPin className="mr-2 h-4 w-4" />}
+              {geocoding ? "Geocodificando..." : `Corrigir GPS (${semGps})`}
+            </Button>
+          )}
+          <Link href="/dashboard/clientes/novo">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Cliente
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {clientes.length === 0 ? (

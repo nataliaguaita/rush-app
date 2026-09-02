@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { geocode } from "@/lib/geocode";
 
 export async function createCliente(formData: FormData) {
   const supabase = createClient();
@@ -18,15 +19,19 @@ export async function createCliente(formData: FormData) {
 
   const rua = formData.get("rua") as string;
   if (rua) {
+    const numero = (formData.get("numero") as string) || "";
+    const cidade = (formData.get("cidade") as string) || "";
+    const coords = await geocode(rua, numero, cidade);
     await supabase.from("enderecos").insert({
       cliente_id: cliente.id,
       label: (formData.get("label") as string) || null,
       rua,
-      numero: (formData.get("numero") as string) || "",
+      numero,
       complemento: (formData.get("complemento") as string) || null,
       bairro: (formData.get("bairro") as string) || null,
-      cidade: (formData.get("cidade") as string) || "",
+      cidade,
       cep: (formData.get("cep") as string) || null,
+      ...coords,
     });
   }
 }
@@ -54,16 +59,22 @@ export async function createClienteMultiEnderecos(
   if (error) throw new Error(error.message);
 
   if (enderecos.length > 0) {
-    const rows = enderecos.map((end) => ({
-      cliente_id: cliente.id,
-      label: end.label || null,
-      rua: end.rua,
-      numero: end.numero || "",
-      complemento: end.complemento || null,
-      bairro: end.bairro || null,
-      cidade: end.cidade || "",
-      cep: end.cep || null,
-    }));
+    const rows = await Promise.all(
+      enderecos.map(async (end) => {
+        const coords = await geocode(end.rua, end.numero, end.cidade);
+        return {
+          cliente_id: cliente.id,
+          label: end.label || null,
+          rua: end.rua,
+          numero: end.numero || "",
+          complemento: end.complemento || null,
+          bairro: end.bairro || null,
+          cidade: end.cidade || "",
+          cep: end.cep || null,
+          ...coords,
+        };
+      })
+    );
 
     const { error: endError } = await supabase.from("enderecos").insert(rows);
     if (endError) throw new Error(endError.message);
@@ -82,20 +93,48 @@ export async function updateCliente(id: string, formData: FormData) {
 
 export async function addEndereco(clienteId: string, formData: FormData) {
   const supabase = createClient();
+  const rua = formData.get("rua") as string;
+  const numero = (formData.get("numero") as string) || "";
+  const cidade = (formData.get("cidade") as string) || "";
+  const coords = await geocode(rua, numero, cidade);
 
   await supabase.from("enderecos").insert({
     cliente_id: clienteId,
     label: (formData.get("label") as string) || null,
-    rua: formData.get("rua") as string,
-    numero: (formData.get("numero") as string) || "",
+    rua,
+    numero,
     complemento: (formData.get("complemento") as string) || null,
     bairro: (formData.get("bairro") as string) || null,
-    cidade: (formData.get("cidade") as string) || "",
+    cidade,
     cep: (formData.get("cep") as string) || null,
+    ...coords,
   });
 }
 
 export async function deleteEndereco(enderecoId: string) {
   const supabase = createClient();
   await supabase.from("enderecos").delete().eq("id", enderecoId);
+}
+
+export async function geocodeExistingAddresses(): Promise<{ total: number; updated: number }> {
+  const supabase = createClient();
+  const { data: enderecos } = await supabase
+    .from("enderecos")
+    .select("id, rua, numero, cidade")
+    .is("lat", null);
+
+  if (!enderecos || enderecos.length === 0) return { total: 0, updated: 0 };
+
+  let updated = 0;
+  for (const end of enderecos) {
+    const coords = await geocode(end.rua, end.numero || "", end.cidade || "");
+    if (coords) {
+      await supabase.from("enderecos").update(coords).eq("id", end.id);
+      updated++;
+    }
+    // ponytail: 1 req/s limit from Nominatim
+    await new Promise((r) => setTimeout(r, 1100));
+  }
+
+  return { total: enderecos.length, updated };
 }
