@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +62,23 @@ const receiverRoles = [
   { value: "outro", label: "Outro" },
 ];
 
+function usePersistedState<T>(key: string, initial: T): [T, (v: T | ((prev: T) => T)) => void] {
+  const [value, setValue] = useState<T>(() => {
+    try {
+      const saved = sessionStorage.getItem(key);
+      return saved ? JSON.parse(saved) : initial;
+    } catch { return initial; }
+  });
+  const set = useCallback((v: T | ((prev: T) => T)) => {
+    setValue((prev) => {
+      const next = typeof v === "function" ? (v as (p: T) => T)(prev) : v;
+      try { sessionStorage.setItem(key, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, [key]);
+  return [value, set];
+}
+
 export function EntregaCard({
   entrega,
   isFirst,
@@ -69,16 +86,29 @@ export function EntregaCard({
   entrega: any;
   isFirst: boolean;
 }) {
-  const [mode, setMode] = useState<"idle" | "registrar" | "recusar">("idle");
+  const sk = `entrega-reg-${entrega.id}`;
+  const [mode, setMode] = usePersistedState<"idle" | "registrar" | "recusar">(`${sk}-mode`, "idle");
   const [loading, setLoading] = useState(false);
-  const [fotoStatus, setFotoStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
+  const [fotoStatus, setFotoStatus] = usePersistedState<"idle" | "uploading" | "done" | "error">(`${sk}-foto`, "idle");
+  // If page was killed mid-upload, the upload is lost — reset to idle
+  useEffect(() => {
+    if (fotoStatus === "uploading") setFotoStatus("idle");
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
-  const [receiverName, setReceiverName] = useState("");
-  const [receiverRole, setReceiverRole] = useState("");
-  const [customRole, setCustomRole] = useState("");
+  const [receiverName, setReceiverName] = usePersistedState(`${sk}-name`, "");
+  const [receiverRole, setReceiverRole] = usePersistedState(`${sk}-role`, "");
+  const [customRole, setCustomRole] = usePersistedState(`${sk}-custom`, "");
   const [confirmType, setConfirmType] = useState<"entrega" | "recusa" | null>(null);
   const pendingFormData = useRef<FormData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function clearPersistedState() {
+    try {
+      for (const suffix of ["-mode", "-foto", "-name", "-role", "-custom"]) {
+        sessionStorage.removeItem(sk + suffix);
+      }
+    } catch {}
+  }
 
   const endereco = entrega.endereco;
   const isEmRota = entrega.status === "em_rota";
@@ -99,6 +129,7 @@ export function EntregaCard({
     if (!formData) return;
     setLoading(true);
     await registrarEntrega(entrega.id, formData);
+    clearPersistedState();
     toast.success("Entrega registrada!");
     setLoading(false);
   }
@@ -108,6 +139,7 @@ export function EntregaCard({
     if (!formData) return;
     setLoading(true);
     await registrarRecusa(entrega.id, formData);
+    clearPersistedState();
     toast.info("Recusa registrada.");
     setLoading(false);
   }
@@ -392,7 +424,7 @@ export function EntregaCard({
                 type="button"
                 size="lg"
                 variant="ghost"
-                onClick={() => setMode("idle")}
+                onClick={() => { clearPersistedState(); setMode("idle"); }}
               >
                 Cancelar
               </Button>
@@ -424,7 +456,7 @@ export function EntregaCard({
                 type="button"
                 size="lg"
                 variant="ghost"
-                onClick={() => setMode("idle")}
+                onClick={() => { clearPersistedState(); setMode("idle"); }}
               >
                 Cancelar
               </Button>
