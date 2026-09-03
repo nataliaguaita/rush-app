@@ -55,7 +55,8 @@ function EnderecoCard({
     },
     [end.key, onUpdate]
   );
-  const { fetchCep, loading: cepLoading } = useCep(handleCepResult);
+  const { fetchCep, loading: cepLoading, filled: cepFilled } = useCep(handleCepResult);
+  const cepHighlight = cepFilled ? "ring-2 ring-green-500/50 transition-shadow" : "transition-shadow";
 
   return (
     <Card className="mt-4">
@@ -119,6 +120,7 @@ function EnderecoCard({
               onChange={(e) => onUpdate(end.key, "rua", e.target.value)}
               required
               placeholder="Rua"
+              className={cepHighlight}
             />
           </div>
           <div className="space-y-2">
@@ -146,6 +148,7 @@ function EnderecoCard({
               value={end.bairro}
               onChange={(e) => onUpdate(end.key, "bairro", e.target.value)}
               placeholder="Bairro"
+              className={cepHighlight}
             />
           </div>
           <div className="space-y-2">
@@ -155,6 +158,7 @@ function EnderecoCard({
               onChange={(e) => onUpdate(end.key, "cidade", e.target.value)}
               required
               placeholder="Cidade"
+              className={cepHighlight}
             />
           </div>
         </div>

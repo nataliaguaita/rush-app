@@ -32,7 +32,8 @@ export function AddEnderecoForm({
     },
     []
   );
-  const { fetchCep, loading: cepLoading } = useCep(handleCepResult);
+  const { fetchCep, loading: cepLoading, filled: cepFilled } = useCep(handleCepResult);
+  const cepHighlight = cepFilled ? "ring-2 ring-green-500/50 transition-shadow" : "transition-shadow";
 
   if (!open) {
     return (
@@ -74,7 +75,7 @@ export function AddEnderecoForm({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="sm:col-span-2 space-y-2">
           <Label>Rua *</Label>
-          <Input name="rua" required value={rua} onChange={(e) => setRua(e.target.value)} />
+          <Input name="rua" required value={rua} onChange={(e) => setRua(e.target.value)} className={cepHighlight} />
         </div>
         <div className="space-y-2">
           <Label>Nº *</Label>
@@ -88,11 +89,11 @@ export function AddEnderecoForm({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>Bairro</Label>
-          <Input name="bairro" value={bairro} onChange={(e) => setBairro(e.target.value)} />
+          <Input name="bairro" value={bairro} onChange={(e) => setBairro(e.target.value)} className={cepHighlight} />
         </div>
         <div className="space-y-2">
           <Label>Cidade *</Label>
-          <Input name="cidade" required value={cidade} onChange={(e) => setCidade(e.target.value)} />
+          <Input name="cidade" required value={cidade} onChange={(e) => setCidade(e.target.value)} className={cepHighlight} />
         </div>
       </div>
       <div className="flex gap-2">

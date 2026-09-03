@@ -52,6 +52,8 @@ import {
   Calendar,
   Clock,
   Check,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { persistColumnState, releaseRoute, togglePostponed } from "./actions";
 import { formatOrderNumber, formatScheduledDate } from "@/lib/status";
@@ -135,6 +137,8 @@ function SortableCard({
   currentColumnId,
   onAssign,
   onTogglePostponed,
+  onMoveUp,
+  onMoveDown,
 }: {
   id: string;
   entrega: any;
@@ -142,6 +146,8 @@ function SortableCard({
   currentColumnId: string;
   onAssign: (entregaId: string, targetColumnId: string) => void;
   onTogglePostponed: (entregaId: string, postponed: boolean) => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id });
@@ -232,6 +238,28 @@ function SortableCard({
           </div>
 
           <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+            {(onMoveUp || onMoveDown) && (
+              <div className="flex shrink-0 gap-0.5 md:hidden">
+                <button
+                  type="button"
+                  disabled={!onMoveUp}
+                  className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-muted-foreground enabled:hover:bg-accent enabled:hover:text-foreground disabled:opacity-30"
+                  onClick={onMoveUp}
+                  aria-label="Mover para cima"
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  disabled={!onMoveDown}
+                  className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-muted-foreground enabled:hover:bg-accent enabled:hover:text-foreground disabled:opacity-30"
+                  onClick={onMoveDown}
+                  aria-label="Mover para baixo"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </div>
+            )}
             <Select value={currentColumnId} onValueChange={(v) => v && onAssign(id, v)} items={Object.fromEntries([[UNASSIGNED, "Sem entregador"], ...entregadores.map((ent) => [ent.id, ent.name])])}>
               <SelectTrigger className="h-7 w-full text-xs">
                 <SelectValue />
@@ -330,6 +358,7 @@ function KanbanColumn({
   onTogglePostponed,
   onOptimize,
   onRelease,
+  onMove,
 }: {
   columnId: string;
   title: string;
@@ -340,6 +369,7 @@ function KanbanColumn({
   onTogglePostponed: (entregaId: string, postponed: boolean) => void;
   onOptimize?: (columnId: string) => void;
   onRelease?: () => void;
+  onMove?: (columnId: string, entregaId: string, direction: -1 | 1) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: columnId });
   const isEntregador = columnId !== UNASSIGNED;
@@ -378,7 +408,7 @@ function KanbanColumn({
         }`}
       >
         <SortableContext items={entregaIds} strategy={verticalListSortingStrategy}>
-          {entregaIds.map((id) => (
+          {entregaIds.map((id, idx) => (
             <SortableCard
               key={id}
               id={id}
@@ -387,6 +417,8 @@ function KanbanColumn({
               currentColumnId={columnId}
               onAssign={onAssign}
               onTogglePostponed={onTogglePostponed}
+              onMoveUp={onMove && idx > 0 ? () => onMove(columnId, id, -1) : undefined}
+              onMoveDown={onMove && idx < entregaIds.length - 1 ? () => onMove(columnId, id, 1) : undefined}
             />
           ))}
         </SortableContext>
@@ -628,6 +660,23 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
     [entregasMap],
   );
 
+  const handleMove = useCallback(
+    (columnId: string, entregaId: string, direction: -1 | 1) => {
+      setColumns((prev) => {
+        const ids = prev[columnId];
+        if (!ids) return prev;
+        const idx = ids.indexOf(entregaId);
+        if (idx < 0) return prev;
+        const newIdx = idx + direction;
+        if (newIdx < 0 || newIdx >= ids.length) return prev;
+        const newIds = arrayMove(ids, idx, newIdx);
+        persistColumnState(columnId === UNASSIGNED ? null : columnId, newIds);
+        return { ...prev, [columnId]: newIds };
+      });
+    },
+    [setColumns],
+  );
+
   const columnOrder = [UNASSIGNED, ...entregadores.map((e) => e.id)];
 
   return (
@@ -653,6 +702,7 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
               onTogglePostponed={handleTogglePostponed}
               onOptimize={colId !== UNASSIGNED ? handleOptimize : undefined}
               onRelease={colId !== UNASSIGNED ? () => handleRelease(colId) : undefined}
+              onMove={handleMove}
             />
           );
         })}

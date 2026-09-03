@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 interface CepData {
   rua: string;
@@ -8,6 +8,8 @@ interface CepData {
 
 export function useCep(onResult: (data: CepData) => void) {
   const [loading, setLoading] = useState(false);
+  const [filled, setFilled] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const fetchCep = useCallback(
     async (raw: string) => {
@@ -24,6 +26,9 @@ export function useCep(onResult: (data: CepData) => void) {
           bairro: json.bairro || "",
           cidade: json.localidade || "",
         });
+        clearTimeout(timerRef.current);
+        setFilled(true);
+        timerRef.current = setTimeout(() => setFilled(false), 2000);
       } catch {
         // network error — user fills manually
       } finally {
@@ -33,5 +38,5 @@ export function useCep(onResult: (data: CepData) => void) {
     [onResult]
   );
 
-  return { fetchCep, loading };
+  return { fetchCep, loading, filled };
 }

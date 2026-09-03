@@ -50,7 +50,8 @@ export function NovaEntregaForm({
   const handleCepResult = useCallback((data: { rua: string; bairro: string; cidade: string }) => {
     setCustomAddr((prev) => ({ ...prev, rua: data.rua, bairro: data.bairro, cidade: data.cidade }));
   }, []);
-  const { fetchCep, loading: cepLoading } = useCep(handleCepResult);
+  const { fetchCep, loading: cepLoading, filled: cepFilled } = useCep(handleCepResult);
+  const cepHighlight = cepFilled ? "ring-2 ring-green-500/50 transition-shadow" : "transition-shadow";
 
   const selectedCliente = clientes.find((c) => c.id === selectedClienteId);
   const enderecos = (selectedCliente?.enderecos ?? []).filter((e) => e.active !== false);
@@ -246,7 +247,7 @@ export function NovaEntregaForm({
                         value={customAddr.rua}
                         onChange={(e) => setCustomAddr((p) => ({ ...p, rua: e.target.value }))}
                         required
-                        className="h-8 text-sm"
+                        className={`h-8 text-sm ${cepHighlight}`}
                       />
                     </div>
                   </div>
@@ -276,7 +277,7 @@ export function NovaEntregaForm({
                         name="custom_bairro"
                         value={customAddr.bairro}
                         onChange={(e) => setCustomAddr((p) => ({ ...p, bairro: e.target.value }))}
-                        className="h-8 text-sm"
+                        className={`h-8 text-sm ${cepHighlight}`}
                       />
                     </div>
                   </div>
@@ -288,7 +289,7 @@ export function NovaEntregaForm({
                         value={customAddr.cidade}
                         onChange={(e) => setCustomAddr((p) => ({ ...p, cidade: e.target.value }))}
                         required
-                        className="h-8 text-sm"
+                        className={`h-8 text-sm ${cepHighlight}`}
                       />
                     </div>
                     <div className="space-y-1">
