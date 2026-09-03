@@ -5,7 +5,7 @@ export type DeliveryStatus =
   | "em_rota"
   | "entregue"
   | "recusada";
-export type DeliveryAction = "entregar" | "receber" | "assinar_nota";
+export type DeliveryAction = "entregar" | "receber" | "assinar_nota" | "receber_e_assinar";
 export type DeliveryPeriod = "manha" | "tarde";
 export type ReceiverRole =
   | "secretaria"
@@ -72,6 +72,7 @@ export interface Entrega {
   receiver_role: ReceiverRole | null;
   receiver_note: string | null;
   delivered_at: string | null;
+  numero_sacolas: number;
   refusal_reason: string | null;
   created_at: string;
   updated_at: string;

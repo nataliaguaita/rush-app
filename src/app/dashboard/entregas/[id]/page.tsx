@@ -36,6 +36,7 @@ import {
   Calendar,
   Pencil,
   Share2,
+  Package,
 } from "lucide-react";
 import { formatOrderNumber } from "@/lib/status";
 import { format } from "date-fns";
@@ -48,6 +49,7 @@ const actionLabels: Record<string, string> = {
   entregar: "Entregar",
   receber: "Receber",
   assinar_nota: "Assinar Nota",
+  receber_e_assinar: "Receber e Assinar Nota",
 };
 
 export default function EntregaDetailPage() {
@@ -291,6 +293,14 @@ export default function EntregaDetailPage() {
               </div>
             </div>
           )}
+
+          <div className="flex items-start gap-3">
+            <Package className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" />
+            <div>
+              <p className="text-xs text-muted-foreground">Sacolas</p>
+              <p className="font-medium">{entrega.numero_sacolas ?? 1}</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -533,6 +543,8 @@ function EditEntregaView({
   });
   const [actionReceber, setActionReceber] = useState(entrega.actions?.includes("receber") ?? false);
   const [actionAssinar, setActionAssinar] = useState(entrega.actions?.includes("assinar_nota") ?? false);
+  const [actionReceberAssinar, setActionReceberAssinar] = useState(entrega.actions?.includes("receber_e_assinar") ?? false);
+  const [numeroSacolas, setNumeroSacolas] = useState(entrega.numero_sacolas ?? 1);
   const [scheduledDate, setScheduledDate] = useState(entrega.scheduled_date ?? format(new Date(), "yyyy-MM-dd"));
   const [scheduledPeriod, setScheduledPeriod] = useState(entrega.scheduled_period ?? "manha");
   const [isUrgent, setIsUrgent] = useState(entrega.is_urgent ?? false);
@@ -556,12 +568,17 @@ function EditEntregaView({
 
   function handleReceber(checked: boolean) {
     setActionReceber(checked);
-    if (checked) setActionAssinar(false);
+    if (checked) { setActionAssinar(false); setActionReceberAssinar(false); }
   }
 
   function handleAssinar(checked: boolean) {
     setActionAssinar(checked);
-    if (checked) setActionReceber(false);
+    if (checked) { setActionReceber(false); setActionReceberAssinar(false); }
+  }
+
+  function handleReceberAssinar(checked: boolean) {
+    setActionReceberAssinar(checked);
+    if (checked) { setActionReceber(false); setActionAssinar(false); }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -603,19 +620,33 @@ function EditEntregaView({
           <CardTitle className="text-lg">Detalhes da Entrega</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="valor">Valor</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="valor">Valor</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+                <Input
+                  id="valor"
+                  name="valor_display"
+                  value={valor}
+                  onChange={(e) => setValor(e.target.value.replace(/[^\d,]/g, ""))}
+                  onBlur={handleValorBlur}
+                  placeholder="0,00"
+                  className="pl-9"
+                  inputMode="decimal"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="numero_sacolas">Nº de Sacolas</Label>
               <Input
-                id="valor"
-                name="valor_display"
-                value={valor}
-                onChange={(e) => setValor(e.target.value.replace(/[^\d,]/g, ""))}
-                onBlur={handleValorBlur}
-                placeholder="0,00"
-                className="pl-9"
-                inputMode="decimal"
+                id="numero_sacolas"
+                name="numero_sacolas"
+                type="number"
+                min="1"
+                value={numeroSacolas}
+                onChange={(e) => setNumeroSacolas(parseInt(e.target.value, 10) || 1)}
+                inputMode="numeric"
               />
             </div>
           </div>
@@ -646,6 +677,16 @@ function EditEntregaView({
                   onCheckedChange={handleAssinar}
                 />
                 <Label htmlFor="action-assinar" className="text-sm font-normal">Assinar Nota</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="action-receber-assinar"
+                  name="actions"
+                  value="receber_e_assinar"
+                  checked={actionReceberAssinar}
+                  onCheckedChange={handleReceberAssinar}
+                />
+                <Label htmlFor="action-receber-assinar" className="text-sm font-normal">Receber e Assinar Nota</Label>
               </div>
             </div>
           </div>

@@ -39,6 +39,7 @@ export function NovaEntregaForm({
   const [showClienteDropdown, setShowClienteDropdown] = useState(false);
   const [actionReceber, setActionReceber] = useState(false);
   const [actionAssinar, setActionAssinar] = useState(false);
+  const [actionReceberAssinar, setActionReceberAssinar] = useState(false);
   const [returnReminder, setReturnReminder] = useState(false);
   const [scheduledDate, setScheduledDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [valor, setValor] = useState("");
@@ -74,12 +75,17 @@ export function NovaEntregaForm({
 
   function handleReceber(checked: boolean) {
     setActionReceber(checked);
-    if (checked) setActionAssinar(false);
+    if (checked) { setActionAssinar(false); setActionReceberAssinar(false); }
   }
 
   function handleAssinar(checked: boolean) {
     setActionAssinar(checked);
-    if (checked) setActionReceber(false);
+    if (checked) { setActionReceber(false); setActionReceberAssinar(false); }
+  }
+
+  function handleReceberAssinar(checked: boolean) {
+    setActionReceberAssinar(checked);
+    if (checked) { setActionReceber(false); setActionAssinar(false); }
   }
 
   function handleValorChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -328,19 +334,32 @@ export function NovaEntregaForm({
           <CardTitle className="text-lg">Detalhes da Entrega</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="valor">Valor</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="valor">Valor</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+                <Input
+                  id="valor"
+                  name="valor_display"
+                  value={valor}
+                  onChange={handleValorChange}
+                  onBlur={handleValorBlur}
+                  placeholder="0,00"
+                  className="pl-9"
+                  inputMode="decimal"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="numero_sacolas">Nº de Sacolas</Label>
               <Input
-                id="valor"
-                name="valor_display"
-                value={valor}
-                onChange={handleValorChange}
-                onBlur={handleValorBlur}
-                placeholder="0,00"
-                className="pl-9"
-                inputMode="decimal"
+                id="numero_sacolas"
+                name="numero_sacolas"
+                type="number"
+                min="1"
+                defaultValue="1"
+                inputMode="numeric"
               />
             </div>
           </div>
@@ -375,6 +394,16 @@ export function NovaEntregaForm({
                   onCheckedChange={handleAssinar}
                 />
                 <Label htmlFor="action-assinar" className="text-sm font-normal">Assinar Nota</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="action-receber-assinar"
+                  name="actions"
+                  value="receber_e_assinar"
+                  checked={actionReceberAssinar}
+                  onCheckedChange={handleReceberAssinar}
+                />
+                <Label htmlFor="action-receber-assinar" className="text-sm font-normal">Receber e Assinar Nota</Label>
               </div>
             </div>
           </div>

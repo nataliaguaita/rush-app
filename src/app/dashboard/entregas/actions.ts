@@ -48,6 +48,8 @@ export async function createEntrega(formData: FormData) {
   const notes = (formData.get("notes") as string) || null;
   const interestedName = (formData.get("interested_name") as string) || null;
   const actions = [...new Set(formData.getAll("actions") as string[])];
+  const rawSacolas = formData.get("numero_sacolas") as string;
+  const numeroSacolas = rawSacolas ? parseInt(rawSacolas, 10) : 1;
 
   const { error } = await supabase.from("entregas").insert({
     created_by: user.id,
@@ -63,6 +65,7 @@ export async function createEntrega(formData: FormData) {
     interested_name: interestedName,
     interested_note: returnReminder ? returnNotes : null,
     notes,
+    numero_sacolas: numeroSacolas || 1,
   });
 
   if (error) throw new Error(error.message);
@@ -91,6 +94,8 @@ export async function updateEntrega(entregaId: string, formData: FormData) {
   const notes = (formData.get("notes") as string) || null;
   const interestedName = (formData.get("interested_name") as string) || null;
   const actions = [...new Set(formData.getAll("actions") as string[])];
+  const rawSacolas = formData.get("numero_sacolas") as string;
+  const numeroSacolas = rawSacolas ? parseInt(rawSacolas, 10) : 1;
 
   const { error } = await supabase
     .from("entregas")
@@ -104,6 +109,7 @@ export async function updateEntrega(entregaId: string, formData: FormData) {
       interested_name: interestedName,
       interested_note: returnReminder ? returnNotes : null,
       notes,
+      numero_sacolas: numeroSacolas || 1,
     })
     .eq("id", entregaId);
 

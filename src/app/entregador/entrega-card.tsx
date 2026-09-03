@@ -54,6 +54,7 @@ const actionConfig: Record<string, { label: string; icon: typeof Package }> = {
   entregar: { label: "Entregar", icon: Package },
   receber: { label: "Receber", icon: Banknote },
   assinar_nota: { label: "Assinar Nota", icon: FileSignature },
+  receber_e_assinar: { label: "Receber e Assinar", icon: Banknote },
 };
 
 const receiverRoles = [
@@ -278,7 +279,7 @@ export function EntregaCard({
               <div className="flex flex-wrap gap-1.5">
                 {entrega.actions.filter((a: string) => {
                   if (a === "entregar") {
-                    const hasOther = entrega.actions.includes("receber") || entrega.actions.includes("assinar_nota");
+                    const hasOther = entrega.actions.includes("receber") || entrega.actions.includes("assinar_nota") || entrega.actions.includes("receber_e_assinar");
                     return !hasOther;
                   }
                   return true;
@@ -295,7 +296,15 @@ export function EntregaCard({
                 })}
               </div>
             )}
-            {entrega.valor && entrega.actions?.includes("receber") && (
+            {entrega.numero_sacolas > 1 && (
+              <p className="text-sm font-semibold text-primary">
+                {entrega.numero_sacolas} sacolas
+              </p>
+            )}
+            {entrega.numero_sacolas === 1 && (
+              <p className="text-sm text-muted-foreground">1 sacola</p>
+            )}
+            {entrega.valor && (entrega.actions?.includes("receber") || entrega.actions?.includes("receber_e_assinar")) && (
               <p className="text-sm font-medium text-emerald-600">R$ {Number(entrega.valor).toFixed(2)}</p>
             )}
             {entrega.notes && (
