@@ -136,6 +136,12 @@ export default function DashboardPage() {
             Atualizar
           </Button>
           <PesquisarEntregaDialog entregas={entregas} entregadores={entregadores} />
+          <Link href="/dashboard/entregas/nova-grupo">
+            <Button variant="outline">
+              <Users className="mr-2 h-4 w-4" />
+              Entrega em Grupo
+            </Button>
+          </Link>
           <Link href="/dashboard/entregas/nova">
             <Button className="bg-blue-500 text-white hover:bg-blue-600">
               <Plus className="mr-2 h-4 w-4" />

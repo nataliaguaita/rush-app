@@ -17,6 +17,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
+  Users as UsersIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -109,6 +110,18 @@ export function SidebarNav({
         >
           <Plus className="h-4 w-4 shrink-0" />
           {!collapsed && ctaLink.label}
+        </Link>
+        <Link
+          href="/dashboard/entregas/nova-grupo"
+          title={collapsed ? "Entrega em Grupo" : undefined}
+          onClick={onNavigate}
+          className={cn(
+            "flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted mt-2.5",
+            collapsed && "justify-center"
+          )}
+        >
+          <UsersIcon className="h-4 w-4 shrink-0" />
+          {!collapsed && "Entrega em Grupo"}
         </Link>
         <div className="my-2 border-b" />
         <div className="space-y-1">
