@@ -148,14 +148,28 @@ function optimizeVisualRoute(
   };
 
   const isUrgent = (vid: string) => itemsMap[vid]?.entregas[0]?.is_urgent;
+  const isManha = (vid: string) => itemsMap[vid]?.entregas[0]?.scheduled_period === "manha";
+
   const urgent = visualIds.filter(isUrgent);
   const normal = visualIds.filter((id) => !isUrgent(id));
 
-  const urgentResult = nearestNeighborSort(urgent, getCoords, ORIGIN_LAT, ORIGIN_LNG);
+  const sortGroup = (ids: string[], startLat: number, startLng: number) => {
+    const manha = ids.filter(isManha);
+    const tarde = ids.filter((id) => !isManha(id));
+    const manhaResult = nearestNeighborSort(manha, getCoords, startLat, startLng);
+    const tardeStart = manha.length > 0
+      ? { lat: manhaResult.lastLat, lng: manhaResult.lastLng }
+      : { lat: startLat, lng: startLng };
+    const tardeResult = nearestNeighborSort(tarde, getCoords, tardeStart.lat, tardeStart.lng);
+    const lastResult = tarde.length > 0 ? tardeResult : manhaResult;
+    return { ordered: [...manhaResult.ordered, ...tardeResult.ordered], lastLat: lastResult.lastLat, lastLng: lastResult.lastLng };
+  };
+
+  const urgentResult = sortGroup(urgent, ORIGIN_LAT, ORIGIN_LNG);
   const normalStart = urgent.length > 0
     ? { lat: urgentResult.lastLat, lng: urgentResult.lastLng }
     : { lat: ORIGIN_LAT, lng: ORIGIN_LNG };
-  const normalResult = nearestNeighborSort(normal, getCoords, normalStart.lat, normalStart.lng);
+  const normalResult = sortGroup(normal, normalStart.lat, normalStart.lng);
 
   return [...urgentResult.ordered, ...normalResult.ordered];
 }

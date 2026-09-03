@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import { updateEndereco } from "../actions";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ export function EditEnderecoForm({
   onSaved: () => void;
   onCancel: () => void;
 }) {
+  const [semNumero, setSemNumero] = useState(endereco.numero === "S/N");
   const [rua, setRua] = useState(endereco.rua ?? "");
   const [bairro, setBairro] = useState(endereco.bairro ?? "");
   const [cidade, setCidade] = useState(endereco.cidade ?? "");
@@ -73,7 +75,12 @@ export function EditEnderecoForm({
         </div>
         <div className="space-y-2">
           <Label>Nº *</Label>
-          <Input name="numero" required defaultValue={endereco.numero ?? ""} />
+          {semNumero && <input type="hidden" name="numero" value="S/N" />}
+          <Input name={semNumero ? undefined : "numero"} required={!semNumero} disabled={semNumero} placeholder={semNumero ? "S/N" : "Nº"} defaultValue={endereco.numero === "S/N" ? "" : (endereco.numero ?? "")} />
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={semNumero} onCheckedChange={(v) => setSemNumero(!!v)} />
+            Sem número
+          </label>
         </div>
       </div>
       <div className="space-y-2">

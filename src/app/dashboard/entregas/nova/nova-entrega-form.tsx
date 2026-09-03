@@ -270,11 +270,19 @@ export function NovaEntregaForm({
                       <Label className="text-xs">Número *</Label>
                       <Input
                         name="custom_numero"
-                        value={customAddr.numero}
+                        value={customAddr.numero === "S/N" ? "" : customAddr.numero}
                         onChange={(e) => setCustomAddr((p) => ({ ...p, numero: e.target.value }))}
-                        required
+                        required={customAddr.numero !== "S/N"}
+                        disabled={customAddr.numero === "S/N"}
                         className="h-8 text-sm"
                       />
+                      <label className="flex items-center gap-2 text-xs">
+                        <Checkbox
+                          checked={customAddr.numero === "S/N"}
+                          onCheckedChange={(checked) => setCustomAddr((p) => ({ ...p, numero: checked ? "S/N" : "" }))}
+                        />
+                        Sem número
+                      </label>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Complemento</Label>

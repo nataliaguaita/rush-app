@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCep } from "@/lib/use-cep";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import {
   Card,
@@ -126,11 +127,19 @@ function EnderecoCard({
           <div className="space-y-2">
             <Label>Número *</Label>
             <Input
-              value={end.numero}
+              value={end.numero === "S/N" ? "" : end.numero}
               onChange={(e) => onUpdate(end.key, "numero", e.target.value)}
-              required
+              required={end.numero !== "S/N"}
+              disabled={end.numero === "S/N"}
               placeholder="Nº"
             />
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={end.numero === "S/N"}
+                onCheckedChange={(checked) => onUpdate(end.key, "numero", checked ? "S/N" : "")}
+              />
+              Sem número
+            </label>
           </div>
         </div>
         <div className="space-y-2">

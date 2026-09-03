@@ -1,0 +1,3 @@
+nome,telefone,label_endereco,rua,numero,complemento,bairro,cidade,cep
+Exemplo Clínica ABC,(11) 99999-0000,Sede,Rua das Flores,123,Sala 4,Centro,São Paulo,01000-000
+Exemplo Clínica ABC,(11) 99999-0000,Filial,Av Brasil,456,,Jardim América,São Paulo,01400-000
