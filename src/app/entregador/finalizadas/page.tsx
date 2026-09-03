@@ -7,10 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle, XCircle, MapPin, Clock, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle, XCircle, MapPin, Clock, AlertTriangle, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import { format, addDays, subDays, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { RECEIVER_ROLE_LABELS } from "@/lib/status";
+import { RECEIVER_ROLE_LABELS, formatOrderNumber } from "@/lib/status";
 
 export default function EntregasFinalizadasPage() {
   const [entregas, setEntregas] = useState<any[]>([]);
@@ -46,14 +46,36 @@ export default function EntregasFinalizadasPage() {
       return;
     }
 
+    const list = data ?? [];
+    const fotoCache = new Map<string, string>();
     const entregasComFoto = await Promise.all(
-      (data ?? []).map(async (entrega: any) => {
+      list.map(async (entrega: any) => {
         const path = entrega.fotos?.[0]?.storage_path;
-        if (!path) return entrega;
-        const { data: signed } = await supabase.storage.from("entregas").createSignedUrl(path, 3600);
-        return { ...entrega, fotoUrl: signed?.signedUrl ?? null };
+        if (path) {
+          if (fotoCache.has(path)) {
+            return { ...entrega, fotoUrl: fotoCache.get(path) };
+          }
+          const { data: signed } = await supabase.storage.from("entregas").createSignedUrl(path, 3600);
+          const url = signed?.signedUrl ?? null;
+          if (url) fotoCache.set(path, url);
+          return { ...entrega, fotoUrl: url };
+        }
+        return entrega;
       })
     );
+
+    // Share photo URLs within groups
+    const groupPhotos = new Map<string, string>();
+    for (const e of entregasComFoto) {
+      if (e.group_id && e.fotoUrl && !groupPhotos.has(e.group_id)) {
+        groupPhotos.set(e.group_id, e.fotoUrl);
+      }
+    }
+    for (const e of entregasComFoto) {
+      if (e.group_id && !e.fotoUrl && groupPhotos.has(e.group_id)) {
+        e.fotoUrl = groupPhotos.get(e.group_id);
+      }
+    }
 
     setEntregas(entregasComFoto);
     setLoading(false);
@@ -138,7 +160,18 @@ export default function EntregasFinalizadasPage() {
                     )}
                     <CardContent className="flex-1 space-y-2">
                       <div className="flex flex-wrap items-start justify-between gap-2">
-                        <span className="text-base font-semibold">{entrega.cliente?.name}</span>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono text-muted-foreground">{formatOrderNumber(entrega.order_number)}</span>
+                            {entrega.group_id && (
+                              <Badge variant="outline" className="border-violet-500/50 bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400 text-[10px] px-1.5 py-0">
+                                <Users className="mr-0.5 h-2.5 w-2.5" />
+                                Grupo{entrega.endereco?.label ? `: ${entrega.endereco.label}` : ""}
+                              </Badge>
+                            )}
+                          </div>
+                          <span className="text-base font-semibold">{entrega.cliente?.name}</span>
+                        </div>
                         <Badge
                           variant="outline"
                           className={

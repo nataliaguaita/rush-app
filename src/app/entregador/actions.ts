@@ -124,3 +124,19 @@ export async function uploadFotoEntrega(entregaId: string, formData: FormData) {
 
   await supabase.from("entrega_fotos").insert({ entrega_id: entregaId, storage_path: path });
 }
+
+export async function copiarFotoParaEntregas(sourceEntregaId: string, targetEntregaIds: string[]) {
+  if (targetEntregaIds.length === 0) return;
+  const supabase = createClient();
+  const { data: fotos } = await supabase
+    .from("entrega_fotos")
+    .select("storage_path")
+    .eq("entrega_id", sourceEntregaId);
+
+  if (!fotos || fotos.length === 0) return;
+
+  const rows = targetEntregaIds.flatMap((id) =>
+    fotos.map((f) => ({ entrega_id: id, storage_path: f.storage_path }))
+  );
+  await supabase.from("entrega_fotos").insert(rows);
+}

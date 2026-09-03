@@ -44,6 +44,7 @@ import {
   registrarRecusa,
   uploadFotoEntrega,
   removerFotosEntrega,
+  copiarFotoParaEntregas,
 } from "./actions";
 import { toast } from "sonner";
 
@@ -171,6 +172,10 @@ export function EntregaGroupCard({
           custom_role: receiverRole === "outro" ? customRole : undefined,
           receiver_note: pendingNote.current,
         });
+      }
+      if (fotoEntregaId && ids.length > 1) {
+        const others = ids.filter((id) => id !== fotoEntregaId);
+        await copiarFotoParaEntregas(fotoEntregaId, others);
       }
       toast.success(`${ids.length} entrega${ids.length > 1 ? "s" : ""} registrada${ids.length > 1 ? "s" : ""}!`);
       setMode("idle");
