@@ -294,17 +294,13 @@ export function EntregaCard({
                     </Badge>
                   );
                 })}
+                <Badge variant="secondary" className="text-xs gap-1 border-emerald-500/30 bg-emerald-500/10 text-emerald-700">
+                  <Package className="h-3 w-3" />
+                  {entrega.numero_sacolas ?? 1} {(entrega.numero_sacolas ?? 1) === 1 ? "sacola" : "sacolas"}
+                </Badge>
               </div>
             )}
-            {entrega.numero_sacolas > 1 && (
-              <p className="text-sm font-semibold text-primary">
-                {entrega.numero_sacolas} sacolas
-              </p>
-            )}
-            {entrega.numero_sacolas === 1 && (
-              <p className="text-sm text-muted-foreground">1 sacola</p>
-            )}
-            {entrega.valor && (entrega.actions?.includes("receber") || entrega.actions?.includes("receber_e_assinar")) && (
+            {entrega.valor && entrega.actions?.includes("receber") && (
               <p className="text-sm font-medium text-emerald-600">R$ {Number(entrega.valor).toFixed(2)}</p>
             )}
             {entrega.notes && (
