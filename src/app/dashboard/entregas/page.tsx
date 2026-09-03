@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, AlertTriangle, RefreshCw, ChevronLeft, ChevronRight, Sun, Sunset } from "lucide-react";
+import { Plus, AlertTriangle, RefreshCw, ChevronLeft, ChevronRight, Sun, Sunset, Users } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import { KanbanBoard } from "./kanban-board";
 
@@ -170,6 +170,12 @@ export default function EntregasPage() {
             <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
             Atualizar
           </Button>
+          <Link href="/dashboard/entregas/nova-grupo">
+            <Button variant="outline">
+              <Users className="mr-2 h-4 w-4" />
+              Entrega em Grupo
+            </Button>
+          </Link>
           <Link href="/dashboard/entregas/nova">
             <Button className="bg-blue-500 text-white hover:bg-blue-600">
               <Plus className="mr-2 h-4 w-4" />

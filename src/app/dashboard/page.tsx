@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
 import { RECEIVER_ROLE_LABELS, formatOrderNumber, formatScheduledDate } from "@/lib/status";
-import { Package, Truck, CheckCircle, Clock, MapPin, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight, Plus, Calendar, Sun, Sunset } from "lucide-react";
+import { Package, Truck, CheckCircle, Clock, MapPin, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight, Plus, Calendar, Sun, Sunset, Users } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import Link from "next/link";
 import { PesquisarEntregaDialog } from "./entregas/pesquisar-entrega-dialog";
@@ -227,9 +227,7 @@ export default function DashboardPage() {
                                   </div>
                                   <div className="my-1.5 border-b" />
                                   <div className="space-y-2">
-                                    {section.items.map((entrega: any, index: number) => (
-                                      <EntregaRow key={entrega.id} entrega={entrega} index={index} />
-                                    ))}
+                                    <GroupedEntregaRows entregas={section.items} />
                                   </div>
                                 </div>
                               ));
@@ -297,6 +295,71 @@ function EntregaRow({ entrega, index }: { entrega: any; index: number }) {
         <StatusBadge status={entrega.status} className="text-xs" />
       </div>
     </Link>
+  );
+}
+
+function GroupedEntregaRows({ entregas }: { entregas: any[] }) {
+  const items: { key: string; type: "single" | "group"; entregas: any[] }[] = [];
+  const groups = new Map<string, any[]>();
+
+  for (const e of entregas) {
+    if (e.group_id) {
+      const list = groups.get(e.group_id) || [];
+      list.push(e);
+      groups.set(e.group_id, list);
+    }
+  }
+
+  const seen = new Set<string>();
+  let idx = 0;
+  for (const e of entregas) {
+    if (e.group_id) {
+      if (!seen.has(e.group_id)) {
+        seen.add(e.group_id);
+        items.push({ key: e.group_id, type: "group", entregas: groups.get(e.group_id)! });
+        idx++;
+      }
+    } else {
+      items.push({ key: e.id, type: "single", entregas: [e] });
+      idx++;
+    }
+  }
+
+  let globalIdx = 0;
+  return (
+    <>
+      {items.map((item) => {
+        const startIdx = globalIdx;
+        globalIdx += item.entregas.length;
+        if (item.type === "group") {
+          return <EntregaGroupRow key={item.key} entregas={item.entregas} startIndex={startIdx} />;
+        }
+        return <EntregaRow key={item.key} entrega={item.entregas[0]} index={startIdx} />;
+      })}
+    </>
+  );
+}
+
+function EntregaGroupRow({ entregas, startIndex }: { entregas: any[]; startIndex: number }) {
+  const endereco = entregas[0]?.endereco;
+  const allDone = entregas.every((e: any) => e.status === "entregue" || e.status === "recusada");
+  return (
+    <div className={`rounded-lg border border-violet-500/30 bg-violet-50/5 p-2 space-y-1.5 ${allDone ? "opacity-60" : ""}`}>
+      <div className="flex items-center gap-2 px-1">
+        <Users className="h-3.5 w-3.5 text-violet-500" />
+        <span className="text-xs font-semibold text-violet-600 dark:text-violet-400">Grupo · {entregas.length} entregas</span>
+        {endereco && (
+          <span className="text-xs text-muted-foreground truncate">
+            — {endereco.rua}, {endereco.numero}
+          </span>
+        )}
+      </div>
+      <div className="space-y-1">
+        {entregas.map((e: any, i: number) => (
+          <EntregaRow key={e.id} entrega={e} index={startIndex + i} />
+        ))}
+      </div>
+    </div>
   );
 }
 

@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { EntregaCard } from "./entrega-card";
+import { EntregaGroupCard } from "./entrega-group-card";
 
 export default function EntregadorPage() {
   const [entregas, setEntregas] = useState<any[]>([]);
@@ -141,12 +142,54 @@ export default function EntregadorPage() {
           )}
         </div>
       ) : (
-        <div className="space-y-3">
-          {entregas.map((entrega, index) => (
-            <EntregaCard key={entrega.id} entrega={entrega} isFirst={index === 0} />
-          ))}
-        </div>
+        <GroupedEntregaList entregas={entregas} />
       )}
+    </div>
+  );
+}
+
+function GroupedEntregaList({ entregas }: { entregas: any[] }) {
+  const items = useMemo(() => {
+    const result: { key: string; type: "single" | "group"; entregas: any[] }[] = [];
+    const grouped = new Map<string, any[]>();
+    const singles: any[] = [];
+
+    for (const e of entregas) {
+      if (e.group_id) {
+        const list = grouped.get(e.group_id) || [];
+        list.push(e);
+        grouped.set(e.group_id, list);
+      } else {
+        singles.push(e);
+      }
+    }
+
+    let globalIdx = 0;
+    for (const e of entregas) {
+      if (e.group_id) {
+        const group = grouped.get(e.group_id);
+        if (group && group[0].id === e.id) {
+          result.push({ key: e.group_id, type: "group", entregas: group });
+        }
+      } else {
+        result.push({ key: e.id, type: "single", entregas: [e] });
+      }
+    }
+
+    return result;
+  }, [entregas]);
+
+  let isFirst = true;
+  return (
+    <div className="space-y-3">
+      {items.map((item) => {
+        const first = isFirst;
+        isFirst = false;
+        if (item.type === "group") {
+          return <EntregaGroupCard key={item.key} entregas={item.entregas} isFirst={first} />;
+        }
+        return <EntregaCard key={item.key} entrega={item.entregas[0]} isFirst={first} />;
+      })}
     </div>
   );
 }

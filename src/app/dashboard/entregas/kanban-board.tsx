@@ -49,19 +49,42 @@ import {
   Send,
   Sun,
   Sunset,
-  Calendar,
   Clock,
   Check,
   ChevronUp,
   ChevronDown,
+  Users,
+  Package,
 } from "lucide-react";
 import { persistColumnState, releaseRoute, togglePostponed } from "./actions";
 import { formatOrderNumber, formatScheduledDate } from "@/lib/status";
 import Link from "next/link";
 
 const UNASSIGNED = "unassigned";
+const GROUP_PREFIX = "group:";
+
+function isGroupId(id: string) {
+  return id.startsWith(GROUP_PREFIX);
+}
+function toGroupId(groupId: string) {
+  return GROUP_PREFIX + groupId;
+}
+function fromGroupId(visualId: string) {
+  return visualId.slice(GROUP_PREFIX.length);
+}
+
+// ---- Types ----
+
+interface VisualItem {
+  visualId: string;
+  type: "single" | "group";
+  entregas: any[];
+  entregaIds: string[];
+}
 
 // ---- Route optimization ----
+
+import { ORIGIN_LAT, ORIGIN_LNG } from "@/lib/constants";
 
 function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371;
@@ -75,11 +98,9 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-import { ORIGIN_LAT, ORIGIN_LNG } from "@/lib/constants";
-
 function nearestNeighborSort(
   ids: string[],
-  map: Record<string, any>,
+  getCoords: (id: string) => { lat: number; lng: number } | null,
   startLat: number,
   startLng: number,
 ): { ordered: string[]; lastLat: number; lastLng: number } {
@@ -87,19 +108,15 @@ function nearestNeighborSort(
   let curLat = startLat;
   let curLng = startLng;
 
-  const remaining = ids.filter(
-    (id) => map[id]?.endereco?.lat != null && map[id]?.endereco?.lng != null,
-  );
-  const noCoords = ids.filter(
-    (id) => map[id]?.endereco?.lat == null || map[id]?.endereco?.lng == null,
-  );
+  const remaining = ids.filter((id) => getCoords(id) != null);
+  const noCoords = ids.filter((id) => getCoords(id) == null);
 
   while (remaining.length > 0) {
     let nearestIdx = 0;
     let nearestDist = Infinity;
     for (let i = 0; i < remaining.length; i++) {
-      const e = map[remaining[i]];
-      const d = haversine(curLat, curLng, e.endereco.lat, e.endereco.lng);
+      const c = getCoords(remaining[i])!;
+      const d = haversine(curLat, curLng, c.lat, c.lng);
       if (d < nearestDist) {
         nearestDist = d;
         nearestIdx = i;
@@ -107,32 +124,47 @@ function nearestNeighborSort(
     }
     const id = remaining.splice(nearestIdx, 1)[0];
     ordered.push(id);
-    curLat = map[id].endereco.lat;
-    curLng = map[id].endereco.lng;
+    const c = getCoords(id)!;
+    curLat = c.lat;
+    curLng = c.lng;
   }
 
   ordered.push(...noCoords);
   return { ordered, lastLat: curLat, lastLng: curLng };
 }
 
-function optimizeRoute(ids: string[], map: Record<string, any>): string[] {
-  const urgent = ids.filter((id) => map[id]?.is_urgent);
-  const normal = ids.filter((id) => !map[id]?.is_urgent);
+function optimizeVisualRoute(
+  visualIds: string[],
+  itemsMap: Record<string, VisualItem>,
+): string[] {
+  const getCoords = (vid: string) => {
+    const item = itemsMap[vid];
+    if (!item) return null;
+    const e = item.entregas[0];
+    if (e?.endereco?.lat != null && e?.endereco?.lng != null) {
+      return { lat: e.endereco.lat, lng: e.endereco.lng };
+    }
+    return null;
+  };
 
-  const urgentResult = nearestNeighborSort(urgent, map, ORIGIN_LAT, ORIGIN_LNG);
+  const isUrgent = (vid: string) => itemsMap[vid]?.entregas[0]?.is_urgent;
+  const urgent = visualIds.filter(isUrgent);
+  const normal = visualIds.filter((id) => !isUrgent(id));
+
+  const urgentResult = nearestNeighborSort(urgent, getCoords, ORIGIN_LAT, ORIGIN_LNG);
   const normalStart = urgent.length > 0
     ? { lat: urgentResult.lastLat, lng: urgentResult.lastLng }
     : { lat: ORIGIN_LAT, lng: ORIGIN_LNG };
-  const normalResult = nearestNeighborSort(normal, map, normalStart.lat, normalStart.lng);
+  const normalResult = nearestNeighborSort(normal, getCoords, normalStart.lat, normalStart.lng);
 
   return [...urgentResult.ordered, ...normalResult.ordered];
 }
 
-// ---- Sortable card ----
+// ---- Sortable single card ----
 
 function SortableCard({
-  id,
-  entrega,
+  visualId,
+  item,
   entregadores,
   currentColumnId,
   onAssign,
@@ -140,17 +172,17 @@ function SortableCard({
   onMoveUp,
   onMoveDown,
 }: {
-  id: string;
-  entrega: any;
+  visualId: string;
+  item: VisualItem;
   entregadores: { id: string; name: string }[];
   currentColumnId: string;
-  onAssign: (entregaId: string, targetColumnId: string) => void;
+  onAssign: (visualId: string, targetColumnId: string) => void;
   onTogglePostponed: (entregaId: string, postponed: boolean) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id });
+    useSortable({ id: visualId });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -158,6 +190,26 @@ function SortableCard({
     opacity: isDragging ? 0.3 : 1,
   };
 
+  if (item.type === "group") {
+    return (
+      <div ref={setNodeRef} style={style}>
+        <GroupCardContent
+          item={item}
+          isDragging={isDragging}
+          attributes={attributes}
+          listeners={listeners}
+          entregadores={entregadores}
+          currentColumnId={currentColumnId}
+          visualId={visualId}
+          onAssign={onAssign}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
+        />
+      </div>
+    );
+  }
+
+  const entrega = item.entregas[0];
   const isReleased = entrega.status === "rota_definida";
 
   return (
@@ -176,10 +228,7 @@ function SortableCard({
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono text-muted-foreground">{formatOrderNumber(entrega.order_number)}</span>
-                <Link
-                  href={`/dashboard/entregas/${entrega.id}`}
-                  className="truncate font-medium hover:underline"
-                >
+                <Link href={`/dashboard/entregas/${entrega.id}`} className="truncate font-medium hover:underline">
                   {entrega.cliente?.name ?? "Cliente"}
                 </Link>
                 {entrega.is_urgent && (
@@ -200,38 +249,30 @@ function SortableCard({
               )}
               <div className="flex flex-wrap items-center gap-1.5">
                 {entrega.scheduled_date && (
-                  <span className="text-xs font-semibold text-primary">
-                    {formatScheduledDate(entrega.scheduled_date)}
-                  </span>
+                  <span className="text-xs font-semibold text-primary">{formatScheduledDate(entrega.scheduled_date)}</span>
                 )}
                 {entrega.scheduled_period === "manha" && (
                   <Badge variant="outline" className="h-5 border-amber-500/50 bg-amber-50 px-1.5 text-[10px] text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                    <Sun className="mr-0.5 h-2.5 w-2.5" />
-                    Manhã
+                    <Sun className="mr-0.5 h-2.5 w-2.5" />Manhã
                   </Badge>
                 )}
                 {entrega.scheduled_period === "tarde" && (
                   <Badge variant="outline" className="h-5 border-blue-500/50 bg-blue-50 px-1.5 text-[10px] text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
-                    <Sunset className="mr-0.5 h-2.5 w-2.5" />
-                    Tarde
+                    <Sunset className="mr-0.5 h-2.5 w-2.5" />Tarde
                   </Badge>
                 )}
                 {isReleased && (
                   <Badge variant="outline" className="h-5 border-green-500/50 bg-green-50 px-1.5 text-[10px] text-green-700 dark:bg-green-500/10 dark:text-green-400">
-                    <Check className="mr-0.5 h-2.5 w-2.5" />
-                    Liberada
+                    <Check className="mr-0.5 h-2.5 w-2.5" />Liberada
                   </Badge>
                 )}
                 {entrega.is_postponed && (
                   <Badge variant="outline" className="h-5 border-red-500/50 bg-red-50 px-1.5 text-[10px] text-red-700 dark:bg-red-500/10 dark:text-red-400">
-                    <Clock className="mr-0.5 h-2.5 w-2.5" />
-                    Adiada
+                    <Clock className="mr-0.5 h-2.5 w-2.5" />Adiada
                   </Badge>
                 )}
                 {!entrega.endereco?.lat && (
-                  <span className="text-[10px] text-amber-500" title="Sem coordenadas GPS">
-                    sem GPS
-                  </span>
+                  <span className="text-[10px] text-amber-500" title="Sem coordenadas GPS">sem GPS</span>
                 )}
               </div>
             </div>
@@ -240,36 +281,22 @@ function SortableCard({
           <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
             {(onMoveUp || onMoveDown) && (
               <div className="flex shrink-0 gap-0.5 md:hidden">
-                <button
-                  type="button"
-                  disabled={!onMoveUp}
-                  className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-muted-foreground enabled:hover:bg-accent enabled:hover:text-foreground disabled:opacity-30"
-                  onClick={onMoveUp}
-                  aria-label="Mover para cima"
-                >
+                <button type="button" disabled={!onMoveUp} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-muted-foreground enabled:hover:bg-accent enabled:hover:text-foreground disabled:opacity-30" onClick={onMoveUp} aria-label="Mover para cima">
                   <ChevronUp className="h-4 w-4" />
                 </button>
-                <button
-                  type="button"
-                  disabled={!onMoveDown}
-                  className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-muted-foreground enabled:hover:bg-accent enabled:hover:text-foreground disabled:opacity-30"
-                  onClick={onMoveDown}
-                  aria-label="Mover para baixo"
-                >
+                <button type="button" disabled={!onMoveDown} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-muted-foreground enabled:hover:bg-accent enabled:hover:text-foreground disabled:opacity-30" onClick={onMoveDown} aria-label="Mover para baixo">
                   <ChevronDown className="h-4 w-4" />
                 </button>
               </div>
             )}
-            <Select value={currentColumnId} onValueChange={(v) => v && onAssign(id, v)} items={Object.fromEntries([[UNASSIGNED, "Sem entregador"], ...entregadores.map((ent) => [ent.id, ent.name])])}>
+            <Select value={currentColumnId} onValueChange={(v) => v && onAssign(visualId, v)} items={Object.fromEntries([[UNASSIGNED, "Sem entregador"], ...entregadores.map((ent) => [ent.id, ent.name])])}>
               <SelectTrigger className="h-7 w-full text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={UNASSIGNED}>Sem entregador</SelectItem>
                 {entregadores.map((ent) => (
-                  <SelectItem key={ent.id} value={ent.id}>
-                    {ent.name}
-                  </SelectItem>
+                  <SelectItem key={ent.id} value={ent.id}>{ent.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -282,7 +309,7 @@ function SortableCard({
                     ? "border-amber-500/50 bg-amber-50 text-amber-600 hover:bg-amber-100"
                     : "border-input text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
-                onClick={() => onTogglePostponed(id, !entrega.is_postponed)}
+                onClick={() => onTogglePostponed(entrega.id, !entrega.is_postponed)}
               >
                 <Clock className="h-3.5 w-3.5" />
               </button>
@@ -294,8 +321,164 @@ function SortableCard({
   );
 }
 
-function CardPreview({ entrega }: { entrega: any }) {
-  if (!entrega) return null;
+// ---- Group card content ----
+
+function GroupCardContent({
+  item,
+  isDragging,
+  attributes,
+  listeners,
+  entregadores,
+  currentColumnId,
+  visualId,
+  onAssign,
+  onMoveUp,
+  onMoveDown,
+}: {
+  item: VisualItem;
+  isDragging: boolean;
+  attributes: any;
+  listeners: any;
+  entregadores: { id: string; name: string }[];
+  currentColumnId: string;
+  visualId: string;
+  onAssign: (visualId: string, targetColumnId: string) => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+}) {
+  const entregas = item.entregas;
+  const endereco = entregas[0]?.endereco;
+  const label = endereco?.label;
+  const hasUrgent = entregas.some((e: any) => e.is_urgent);
+  const anyReleased = entregas.some((e: any) => e.status === "rota_definida");
+
+  return (
+    <Card className={`border-l-4 border-l-violet-500 ${isDragging ? "ring-2 ring-primary" : ""}`}>
+      {/* Group header */}
+      <div className="flex items-center gap-2 rounded-t-lg bg-violet-50 px-3 py-2 dark:bg-violet-500/10">
+        <div
+          className="flex cursor-grab items-center text-muted-foreground hover:text-foreground active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4" />
+        </div>
+        <Users className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+        <span className="text-xs font-semibold text-violet-700 dark:text-violet-300 truncate flex-1">
+          {label || "Entrega em Grupo"}
+        </span>
+        <Badge variant="outline" className="text-[10px] border-violet-500/50 text-violet-700 dark:text-violet-400">
+          {entregas.length}
+        </Badge>
+        {hasUrgent && (
+          <Badge variant="destructive" className="text-[10px]">
+            <AlertTriangle className="mr-0.5 h-2.5 w-2.5" />Urgente
+          </Badge>
+        )}
+        {anyReleased && (
+          <Badge variant="outline" className="h-5 border-green-500/50 bg-green-50 px-1.5 text-[10px] text-green-700 dark:bg-green-500/10 dark:text-green-400">
+            <Check className="mr-0.5 h-2.5 w-2.5" />Liberada
+          </Badge>
+        )}
+      </div>
+
+      <CardContent className="space-y-1.5 px-3 py-2">
+        {/* Address */}
+        {endereco && (
+          <p className="flex items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3 shrink-0" />
+            <span className="truncate">
+              {endereco.rua}, {endereco.numero}
+              {endereco.bairro ? ` - ${endereco.bairro}` : ""}
+            </span>
+          </p>
+        )}
+
+        {/* List of clients */}
+        <div className="space-y-0.5">
+          {entregas.map((e: any) => (
+            <div key={e.id} className="flex items-center gap-1.5 rounded px-1.5 py-0.5 text-xs bg-muted/40">
+              <span className="font-mono text-muted-foreground text-[10px]">{formatOrderNumber(e.order_number)}</span>
+              <Link href={`/dashboard/entregas/${e.id}`} className="truncate hover:underline flex-1">
+                {e.cliente?.name ?? "Cliente"}
+              </Link>
+              <span className="text-muted-foreground shrink-0">
+                <Package className="inline h-2.5 w-2.5 mr-0.5" />{e.numero_sacolas ?? 1}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Badges row */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {entregas[0]?.scheduled_date && (
+            <span className="text-xs font-semibold text-primary">{formatScheduledDate(entregas[0].scheduled_date)}</span>
+          )}
+          {entregas[0]?.scheduled_period === "manha" && (
+            <Badge variant="outline" className="h-5 border-amber-500/50 bg-amber-50 px-1.5 text-[10px] text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+              <Sun className="mr-0.5 h-2.5 w-2.5" />Manhã
+            </Badge>
+          )}
+          {entregas[0]?.scheduled_period === "tarde" && (
+            <Badge variant="outline" className="h-5 border-blue-500/50 bg-blue-50 px-1.5 text-[10px] text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
+              <Sunset className="mr-0.5 h-2.5 w-2.5" />Tarde
+            </Badge>
+          )}
+        </div>
+
+        {/* Controls */}
+        <div className="flex gap-1.5" onClick={(ev) => ev.stopPropagation()}>
+          {(onMoveUp || onMoveDown) && (
+            <div className="flex shrink-0 gap-0.5 md:hidden">
+              <button type="button" disabled={!onMoveUp} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-muted-foreground enabled:hover:bg-accent enabled:hover:text-foreground disabled:opacity-30" onClick={onMoveUp}>
+                <ChevronUp className="h-4 w-4" />
+              </button>
+              <button type="button" disabled={!onMoveDown} className="flex h-7 w-7 items-center justify-center rounded-md border border-input text-muted-foreground enabled:hover:bg-accent enabled:hover:text-foreground disabled:opacity-30" onClick={onMoveDown}>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+          <Select value={currentColumnId} onValueChange={(v) => v && onAssign(visualId, v)} items={Object.fromEntries([[UNASSIGNED, "Sem entregador"], ...entregadores.map((ent) => [ent.id, ent.name])])}>
+            <SelectTrigger className="h-7 w-full text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={UNASSIGNED}>Sem entregador</SelectItem>
+              {entregadores.map((ent) => (
+                <SelectItem key={ent.id} value={ent.id}>{ent.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---- Card Preview (drag overlay) ----
+
+function CardPreview({ item }: { item: VisualItem | null }) {
+  if (!item) return null;
+  if (item.type === "group") {
+    const endereco = item.entregas[0]?.endereco;
+    return (
+      <Card className="w-[300px] shadow-lg ring-2 ring-violet-500 border-l-4 border-l-violet-500">
+        <div className="flex items-center gap-2 bg-violet-50 px-3 py-2 dark:bg-violet-500/10 rounded-t-lg">
+          <Users className="h-3.5 w-3.5 text-violet-600" />
+          <span className="text-xs font-semibold text-violet-700 truncate">{endereco?.label || "Grupo"}</span>
+          <Badge variant="outline" className="text-[10px] border-violet-500/50 text-violet-700">{item.entregas.length}</Badge>
+        </div>
+        <CardContent className="px-3 py-2">
+          {endereco && (
+            <p className="truncate text-xs text-muted-foreground">
+              <MapPin className="mr-1 inline h-3 w-3" />{endereco.rua}, {endereco.numero}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+  const entrega = item.entregas[0];
   return (
     <Card className="w-[300px] shadow-lg ring-2 ring-primary">
       <CardContent className="px-3 py-3">
@@ -305,8 +488,7 @@ function CardPreview({ entrega }: { entrega: any }) {
         </p>
         {entrega.endereco && (
           <p className="truncate text-xs text-muted-foreground">
-            <MapPin className="mr-1 inline h-3 w-3" />
-            {entrega.endereco.rua}, {entrega.endereco.numero}
+            <MapPin className="mr-1 inline h-3 w-3" />{entrega.endereco.rua}, {entrega.endereco.numero}
           </p>
         )}
       </CardContent>
@@ -314,34 +496,17 @@ function CardPreview({ entrega }: { entrega: any }) {
   );
 }
 
-// ---- Optimize dialog ----
+// ---- Optimize button ----
 
-function OptimizeButton({
-  columnEntregaIds,
-  entregasMap,
-  onOptimize,
-}: {
-  columnEntregaIds: string[];
-  entregasMap: Record<string, any>;
-  onOptimize: () => void;
-}) {
-  const hasEnough = columnEntregaIds.filter(
-    (id) => entregasMap[id]?.endereco?.lat != null,
-  ).length >= 2;
-
-  if (!hasEnough) return null;
-
+function OptimizeButton({ onOptimize, enabled }: { onOptimize: () => void; enabled: boolean }) {
+  if (!enabled) return null;
   return (
     <button
       type="button"
       className="inline-flex h-7 items-center gap-1 rounded-md bg-[oklch(0.55_0.19_260)] px-2.5 text-xs font-medium text-white hover:opacity-80"
-      onClick={() => {
-        onOptimize();
-        toast.success("Rota otimizada!");
-      }}
+      onClick={() => { onOptimize(); toast.success("Rota otimizada!"); }}
     >
-      <Route className="h-3.5 w-3.5" />
-      Otimizar
+      <Route className="h-3.5 w-3.5" />Otimizar
     </button>
   );
 }
@@ -351,32 +516,37 @@ function OptimizeButton({
 function KanbanColumn({
   columnId,
   title,
-  entregaIds,
-  entregasMap,
+  visualIds,
+  itemsMap,
   entregadores,
   onAssign,
   onTogglePostponed,
   onOptimize,
   onRelease,
   onMove,
+  unreleasedCount,
+  totalEntregas,
 }: {
   columnId: string;
   title: string;
-  entregaIds: string[];
-  entregasMap: Record<string, any>;
+  visualIds: string[];
+  itemsMap: Record<string, VisualItem>;
   entregadores: { id: string; name: string }[];
-  onAssign: (entregaId: string, targetColumnId: string) => void;
+  onAssign: (visualId: string, targetColumnId: string) => void;
   onTogglePostponed: (entregaId: string, postponed: boolean) => void;
   onOptimize?: (columnId: string) => void;
   onRelease?: () => void;
-  onMove?: (columnId: string, entregaId: string, direction: -1 | 1) => void;
+  onMove?: (columnId: string, visualId: string, direction: -1 | 1) => void;
+  unreleasedCount: number;
+  totalEntregas: number;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: columnId });
   const isEntregador = columnId !== UNASSIGNED;
 
-  const unreleasedCount = entregaIds.filter(
-    (id) => entregasMap[id]?.status === "aguardando_atribuicao",
-  ).length;
+  const hasEnoughForOptimize = visualIds.filter((vid) => {
+    const e = itemsMap[vid]?.entregas[0];
+    return e?.endereco?.lat != null;
+  }).length >= 2;
 
   return (
     <div className="flex min-w-[280px] flex-1 flex-col">
@@ -388,16 +558,10 @@ function KanbanColumn({
             </div>
           )}
           <span className="text-sm font-semibold">{title}</span>
-          <Badge variant="secondary" className="text-xs">
-            {entregaIds.length}
-          </Badge>
+          <Badge variant="secondary" className="text-xs">{totalEntregas}</Badge>
         </div>
         {isEntregador && onOptimize && (
-          <OptimizeButton
-            columnEntregaIds={entregaIds}
-            entregasMap={entregasMap}
-            onOptimize={() => onOptimize(columnId)}
-          />
+          <OptimizeButton onOptimize={() => onOptimize(columnId)} enabled={hasEnoughForOptimize} />
         )}
       </div>
 
@@ -407,23 +571,23 @@ function KanbanColumn({
           isOver ? "border-primary/50 bg-primary/5" : "border-transparent"
         }`}
       >
-        <SortableContext items={entregaIds} strategy={verticalListSortingStrategy}>
-          {entregaIds.map((id, idx) => (
+        <SortableContext items={visualIds} strategy={verticalListSortingStrategy}>
+          {visualIds.map((vid, idx) => (
             <SortableCard
-              key={id}
-              id={id}
-              entrega={entregasMap[id]}
+              key={vid}
+              visualId={vid}
+              item={itemsMap[vid]}
               entregadores={entregadores}
               currentColumnId={columnId}
               onAssign={onAssign}
               onTogglePostponed={onTogglePostponed}
-              onMoveUp={onMove && idx > 0 ? () => onMove(columnId, id, -1) : undefined}
-              onMoveDown={onMove && idx < entregaIds.length - 1 ? () => onMove(columnId, id, 1) : undefined}
+              onMoveUp={onMove && idx > 0 ? () => onMove(columnId, vid, -1) : undefined}
+              onMoveDown={onMove && idx < visualIds.length - 1 ? () => onMove(columnId, vid, 1) : undefined}
             />
           ))}
         </SortableContext>
 
-        {entregaIds.length === 0 && (
+        {visualIds.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">
             {isEntregador ? "Arraste entregas para cá" : "Todas atribuídas"}
           </p>
@@ -449,9 +613,11 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
   const [columns, _setColumns] = useState<Record<string, string[]>>({});
+  const [itemsMap, setItemsMap] = useState<Record<string, VisualItem>>({});
   const [entregasMap, setEntregasMap] = useState<Record<string, any>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const columnsRef = useRef<Record<string, string[]>>({});
+  const itemsMapRef = useRef<Record<string, VisualItem>>({});
   const dragSourceRef = useRef<string | null>(null);
   const [pendingDrag, setPendingDrag] = useState<{
     execute: () => void;
@@ -473,10 +639,23 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
+  // Expand visual ids to real entrega ids for persistence
+  function expandToEntregaIds(visualIds: string[]): string[] {
+    const result: string[] = [];
+    for (const vid of visualIds) {
+      const item = itemsMapRef.current[vid];
+      if (item) {
+        result.push(...item.entregaIds);
+      }
+    }
+    return result;
+  }
+
+  // Build visual items from raw entregas
   useEffect(() => {
-    const map: Record<string, any> = {};
-    const cols: Record<string, string[]> = { [UNASSIGNED]: [] };
-    for (const ent of entregadores) cols[ent.id] = [];
+    const eMap: Record<string, any> = {};
+    const groups: Record<string, any[]> = {};
+    const singles: any[] = [];
 
     const sorted = [...entregas].sort((a, b) => {
       if (a.route_order != null && b.route_order != null) return a.route_order - b.route_order;
@@ -486,17 +665,64 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
     });
 
     for (const e of sorted) {
-      map[e.id] = e;
-      if (e.entregador_id && cols[e.entregador_id]) {
-        cols[e.entregador_id].push(e.id);
+      eMap[e.id] = e;
+      if (e.group_id) {
+        if (!groups[e.group_id]) groups[e.group_id] = [];
+        groups[e.group_id].push(e);
       } else {
-        cols[UNASSIGNED].push(e.id);
+        singles.push(e);
+      }
+    }
+
+    // Build items map
+    const iMap: Record<string, VisualItem> = {};
+    for (const [gid, gEntregas] of Object.entries(groups)) {
+      const vid = toGroupId(gid);
+      iMap[vid] = {
+        visualId: vid,
+        type: "group",
+        entregas: gEntregas,
+        entregaIds: gEntregas.map((e) => e.id),
+      };
+    }
+    for (const e of singles) {
+      iMap[e.id] = {
+        visualId: e.id,
+        type: "single",
+        entregas: [e],
+        entregaIds: [e.id],
+      };
+    }
+
+    // Build columns using visual ids
+    // For groups, use the first entrega's assignment to determine column
+    const cols: Record<string, string[]> = { [UNASSIGNED]: [] };
+    for (const ent of entregadores) cols[ent.id] = [];
+
+    const placed = new Set<string>();
+
+    for (const e of sorted) {
+      let vid: string;
+      if (e.group_id) {
+        vid = toGroupId(e.group_id);
+      } else {
+        vid = e.id;
+      }
+      if (placed.has(vid)) continue;
+      placed.add(vid);
+
+      if (e.entregador_id && cols[e.entregador_id]) {
+        cols[e.entregador_id].push(vid);
+      } else {
+        cols[UNASSIGNED].push(vid);
       }
     }
 
     columnsRef.current = cols;
+    itemsMapRef.current = iMap;
     _setColumns(cols);
-    setEntregasMap(map);
+    setItemsMap(iMap);
+    setEntregasMap(eMap);
   }, [entregas, entregadores]);
 
   function handleDragStart(event: DragStartEvent) {
@@ -554,16 +780,16 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
         if (oldIdx !== newIdx && newIdx >= 0) {
           const newItems = arrayMove(items, oldIdx, newIdx);
           setColumns(() => ({ ...cols, [currentCol]: newItems }));
-          persistColumnState(currentCol === UNASSIGNED ? null : currentCol, newItems);
+          persistColumnState(currentCol === UNASSIGNED ? null : currentCol, expandToEntregaIds(newItems));
         }
       } else if (originalCol) {
         persistColumnState(
           originalCol === UNASSIGNED ? null : originalCol,
-          cols[originalCol],
+          expandToEntregaIds(cols[originalCol]),
         );
         persistColumnState(
           currentCol === UNASSIGNED ? null : currentCol,
-          cols[currentCol],
+          expandToEntregaIds(cols[currentCol]),
         );
       }
     };
@@ -573,11 +799,11 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
       columnsRef.current = snapshotCols;
     };
 
-    // Check if any involved entrega is already released
-    const involvedIds = currentCol === originalCol
+    const allVisualIds = currentCol === originalCol
       ? cols[currentCol]
       : [...(originalCol ? cols[originalCol] : []), ...cols[currentCol]];
-    const hasReleased = involvedIds.some(
+    const allEntregaIds = expandToEntregaIds(allVisualIds);
+    const hasReleased = allEntregaIds.some(
       (id) => entregasMap[id]?.status === "rota_definida",
     );
 
@@ -589,19 +815,19 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
   }
 
   const handleAssign = useCallback(
-    (entregaId: string, targetColumnId: string) => {
+    (visualId: string, targetColumnId: string) => {
       setColumns((prev) => {
-        const srcCol = Object.keys(prev).find((col) => prev[col].includes(entregaId));
+        const srcCol = Object.keys(prev).find((col) => prev[col].includes(visualId));
         if (!srcCol || srcCol === targetColumnId) return prev;
         if (!prev[targetColumnId]) return prev;
 
-        const srcItems = prev[srcCol].filter((id) => id !== entregaId);
-        const dstItems = [...prev[targetColumnId], entregaId];
+        const srcItems = prev[srcCol].filter((id) => id !== visualId);
+        const dstItems = [...prev[targetColumnId], visualId];
 
-        persistColumnState(srcCol === UNASSIGNED ? null : srcCol, srcItems);
+        persistColumnState(srcCol === UNASSIGNED ? null : srcCol, expandToEntregaIds(srcItems));
         persistColumnState(
           targetColumnId === UNASSIGNED ? null : targetColumnId,
-          dstItems,
+          expandToEntregaIds(dstItems),
         );
 
         return { ...prev, [srcCol]: srcItems, [targetColumnId]: dstItems };
@@ -626,33 +852,37 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
   const handleOptimize = useCallback(
     (columnId: string) => {
       setColumns((prev) => {
-        const ids = prev[columnId];
-        if (!ids) return prev;
-        const optimized = optimizeRoute(ids, entregasMap);
-        persistColumnState(columnId === UNASSIGNED ? null : columnId, optimized);
+        const vids = prev[columnId];
+        if (!vids) return prev;
+        const optimized = optimizeVisualRoute(vids, itemsMapRef.current);
+        persistColumnState(columnId === UNASSIGNED ? null : columnId, expandToEntregaIds(optimized));
         return { ...prev, [columnId]: optimized };
       });
     },
-    [entregasMap, setColumns],
+    [setColumns],
   );
 
   const handleRelease = useCallback(
     (columnId: string) => {
       const cols = columnsRef.current;
-      const ids = cols[columnId]?.filter(
+      const vids = cols[columnId];
+      if (!vids) return;
+
+      const entregaIds = expandToEntregaIds(vids);
+      const unreleased = entregaIds.filter(
         (id) => entregasMap[id]?.status === "aguardando_atribuicao",
       );
-      if (!ids?.length) return;
+      if (!unreleased.length) return;
 
-      releaseRoute(ids)
+      releaseRoute(unreleased)
         .then(() => {
           setEntregasMap((prev) => {
             const next = { ...prev };
-            for (const id of ids) next[id] = { ...next[id], status: "rota_definida" };
+            for (const id of unreleased) next[id] = { ...next[id], status: "rota_definida" };
             return next;
           });
           toast.success(
-            `${ids.length} entrega${ids.length > 1 ? "s" : ""} liberada${ids.length > 1 ? "s" : ""}!`,
+            `${unreleased.length} entrega${unreleased.length > 1 ? "s" : ""} liberada${unreleased.length > 1 ? "s" : ""}!`,
           );
         })
         .catch(() => toast.error("Erro ao liberar rota"));
@@ -661,16 +891,16 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
   );
 
   const handleMove = useCallback(
-    (columnId: string, entregaId: string, direction: -1 | 1) => {
+    (columnId: string, visualId: string, direction: -1 | 1) => {
       setColumns((prev) => {
         const ids = prev[columnId];
         if (!ids) return prev;
-        const idx = ids.indexOf(entregaId);
+        const idx = ids.indexOf(visualId);
         if (idx < 0) return prev;
         const newIdx = idx + direction;
         if (newIdx < 0 || newIdx >= ids.length) return prev;
         const newIds = arrayMove(ids, idx, newIdx);
-        persistColumnState(columnId === UNASSIGNED ? null : columnId, newIds);
+        persistColumnState(columnId === UNASSIGNED ? null : columnId, expandToEntregaIds(newIds));
         return { ...prev, [columnId]: newIds };
       });
     },
@@ -690,26 +920,33 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
       <div className="flex gap-4 overflow-x-auto pb-4">
         {columnOrder.map((colId) => {
           const entregador = entregadores.find((e) => e.id === colId);
+          const vids = columns[colId] ?? [];
+          const totalEntregas = vids.reduce((sum, vid) => sum + (itemsMap[vid]?.entregaIds.length ?? 0), 0);
+          const unreleasedCount = expandToEntregaIds(vids).filter(
+            (id) => entregasMap[id]?.status === "aguardando_atribuicao",
+          ).length;
           return (
             <KanbanColumn
               key={colId}
               columnId={colId}
               title={colId === UNASSIGNED ? "Sem Entregador" : (entregador?.name ?? "Entregador")}
-              entregaIds={columns[colId] ?? []}
-              entregasMap={entregasMap}
+              visualIds={vids}
+              itemsMap={itemsMap}
               entregadores={entregadores}
               onAssign={handleAssign}
               onTogglePostponed={handleTogglePostponed}
               onOptimize={colId !== UNASSIGNED ? handleOptimize : undefined}
               onRelease={colId !== UNASSIGNED ? () => handleRelease(colId) : undefined}
               onMove={handleMove}
+              unreleasedCount={unreleasedCount}
+              totalEntregas={totalEntregas}
             />
           );
         })}
       </div>
 
       <DragOverlay>
-        {activeId ? <CardPreview entrega={entregasMap[activeId]} /> : null}
+        {activeId ? <CardPreview item={itemsMap[activeId] ?? null} /> : null}
       </DragOverlay>
 
       <AlertDialog
@@ -729,20 +966,10 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                pendingDrag?.rollback();
-                setPendingDrag(null);
-              }}
-            >
+            <AlertDialogCancel onClick={() => { pendingDrag?.rollback(); setPendingDrag(null); }}>
               Cancelar
             </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                pendingDrag?.execute();
-                setPendingDrag(null);
-              }}
-            >
+            <AlertDialogAction onClick={() => { pendingDrag?.execute(); setPendingDrag(null); }}>
               Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>

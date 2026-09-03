@@ -50,6 +50,7 @@ export async function createEntrega(formData: FormData) {
   const actions = [...new Set(formData.getAll("actions") as string[])];
   const rawSacolas = formData.get("numero_sacolas") as string;
   const numeroSacolas = rawSacolas ? parseInt(rawSacolas, 10) : 1;
+  const groupId = (formData.get("group_id") as string) || null;
 
   const { error } = await supabase.from("entregas").insert({
     created_by: user.id,
@@ -66,6 +67,7 @@ export async function createEntrega(formData: FormData) {
     interested_note: returnReminder ? returnNotes : null,
     notes,
     numero_sacolas: numeroSacolas || 1,
+    group_id: groupId,
   });
 
   if (error) throw new Error(error.message);

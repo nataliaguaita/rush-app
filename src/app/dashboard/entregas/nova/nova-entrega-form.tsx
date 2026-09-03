@@ -20,19 +20,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, ChevronLeft, MapPin } from "lucide-react";
+import { AlertTriangle, ChevronLeft, MapPin, Users } from "lucide-react";
 import Link from "next/link";
 import { createEntrega } from "../actions";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import type { ClienteWithEnderecos } from "@/types/database";
 import { useCep } from "@/lib/use-cep";
+import type { OpenGroup } from "./page";
 
 export function NovaEntregaForm({
   clientes,
+  openGroups = [],
 }: {
   clientes: ClienteWithEnderecos[];
+  openGroups?: OpenGroup[];
 }) {
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("none");
   const [selectedClienteId, setSelectedClienteId] = useState<string>("");
   const [selectedEnderecoId, setSelectedEnderecoId] = useState<string>("");
   const [clienteSearch, setClienteSearch] = useState("");
@@ -177,7 +181,11 @@ export function NovaEntregaForm({
             )}
           </div>
 
-          {selectedCliente && (
+          {selectedGroupId !== "none" && (
+            <input type="hidden" name="endereco_id" value={openGroups.find((g) => g.groupId === selectedGroupId)?.enderecoId ?? ""} />
+          )}
+
+          {selectedCliente && selectedGroupId === "none" && (
             <div className="space-y-2">
               {!useCustomAddress && (
                 <>
@@ -493,6 +501,44 @@ export function NovaEntregaForm({
           />
         </CardContent>
       </Card>
+
+      {/* Vincular a grupo */}
+      {openGroups.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-violet-600" />
+              Vincular a um Grupo
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Opcional — adicione esta entrega a um grupo existente do dia.</p>
+          </CardHeader>
+          <CardContent>
+            <select
+              className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+              value={selectedGroupId}
+              onChange={(e) => {
+                const v = e.target.value;
+                setSelectedGroupId(v);
+                if (v && v !== "none") {
+                  const group = openGroups.find((g) => g.groupId === v);
+                  if (group) {
+                    setSelectedEnderecoId(group.enderecoId);
+                    setUseCustomAddress(false);
+                  }
+                }
+              }}
+            >
+              <option value="none">Nenhum grupo (entrega individual)</option>
+              {openGroups.map((g) => (
+                <option key={g.groupId} value={g.groupId}>{g.label}</option>
+              ))}
+            </select>
+            {selectedGroupId !== "none" && (
+              <input type="hidden" name="group_id" value={selectedGroupId} />
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex justify-end gap-3 pb-8">
         <Link href="/dashboard/entregas">

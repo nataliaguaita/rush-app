@@ -73,9 +73,25 @@ export interface Entrega {
   receiver_note: string | null;
   delivered_at: string | null;
   numero_sacolas: number;
+  group_id: string | null;
   refusal_reason: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface LocalFrequente {
+  id: string;
+  name: string;
+  rua: string;
+  numero: string;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string;
+  cep: string | null;
+  lat: number | null;
+  lng: number | null;
+  active: boolean;
+  created_at: string;
 }
 
 export interface EntregaFoto {
@@ -142,6 +158,11 @@ export type Database = {
         Row: RotaDiaria;
         Insert: Omit<RotaDiaria, "id" | "created_at"> & { id?: string };
         Update: Partial<Omit<RotaDiaria, "id" | "created_at">>;
+      };
+      locais_frequentes: {
+        Row: LocalFrequente;
+        Insert: Omit<LocalFrequente, "id" | "created_at"> & { id?: string };
+        Update: Partial<Omit<LocalFrequente, "id" | "created_at">>;
       };
     };
   };
