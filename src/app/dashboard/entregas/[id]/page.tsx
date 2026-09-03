@@ -542,11 +542,11 @@ function EditEntregaView({
   const [notes, setNotes] = useState(entrega.notes ?? "");
   const [saving, setSaving] = useState(false);
 
-  function formatCurrency(raw: string) {
-    const digits = raw.replace(/\D/g, "");
-    if (!digits) return "";
-    const num = parseInt(digits, 10) / 100;
-    return num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function handleValorBlur() {
+    if (!valor) return;
+    const num = parseFloat(valor.replace(",", "."));
+    if (isNaN(num)) { setValor(""); return; }
+    setValor(num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
   }
 
   function parseValor(formatted: string): string {
@@ -611,10 +611,11 @@ function EditEntregaView({
                 id="valor"
                 name="valor_display"
                 value={valor}
-                onChange={(e) => setValor(formatCurrency(e.target.value))}
+                onChange={(e) => setValor(e.target.value.replace(/[^\d,]/g, ""))}
+                onBlur={handleValorBlur}
                 placeholder="0,00"
                 className="pl-9"
-                inputMode="numeric"
+                inputMode="decimal"
               />
             </div>
           </div>

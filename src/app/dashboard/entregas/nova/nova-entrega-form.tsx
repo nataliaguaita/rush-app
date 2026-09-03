@@ -81,15 +81,15 @@ export function NovaEntregaForm({
     if (checked) setActionReceber(false);
   }
 
-  function formatCurrency(raw: string) {
-    const digits = raw.replace(/\D/g, "");
-    if (!digits) return "";
-    const num = parseInt(digits, 10) / 100;
-    return num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function handleValorChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setValor(e.target.value.replace(/[^\d,]/g, ""));
   }
 
-  function handleValorChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setValor(formatCurrency(e.target.value));
+  function handleValorBlur() {
+    if (!valor) return;
+    const num = parseFloat(valor.replace(",", "."));
+    if (isNaN(num)) { setValor(""); return; }
+    setValor(num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
   }
 
   function parseValor(formatted: string): string {
@@ -336,9 +336,10 @@ export function NovaEntregaForm({
                 name="valor_display"
                 value={valor}
                 onChange={handleValorChange}
+                onBlur={handleValorBlur}
                 placeholder="0,00"
                 className="pl-9"
-                inputMode="numeric"
+                inputMode="decimal"
               />
             </div>
           </div>
