@@ -541,16 +541,8 @@ export function NovaEntregaGrupoForm({
       {/* Destinatários */}
       <Card className="overflow-visible">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">Destinatários</CardTitle>
-              <p className="text-sm text-muted-foreground">{destinatarios.length} destinatário{destinatarios.length !== 1 ? "s" : ""}</p>
-            </div>
-            <Button type="button" variant="outline" size="sm" onClick={addDestinatario}>
-              <Plus className="mr-1 h-4 w-4" />
-              Adicionar
-            </Button>
-          </div>
+          <CardTitle className="text-lg">Destinatários</CardTitle>
+          <p className="text-sm text-muted-foreground">{destinatarios.length} destinatário{destinatarios.length !== 1 ? "s" : ""}</p>
         </CardHeader>
         <CardContent className="space-y-4">
           {destinatarios.map((dest, idx) => (
@@ -565,6 +557,10 @@ export function NovaEntregaGrupoForm({
               formatValor={formatValor}
             />
           ))}
+          <Button type="button" onClick={addDestinatario} className="w-full bg-blue-500 text-white hover:bg-blue-600">
+            <Plus className="mr-1 h-4 w-4" />
+            Adicionar Destinatário
+          </Button>
         </CardContent>
       </Card>
 
