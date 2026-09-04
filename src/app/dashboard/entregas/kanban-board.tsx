@@ -1134,26 +1134,43 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
 
                 try {
                   if (type === "endereco_alterado") {
-                    await Promise.all(
+                    // Aplicar mudança de endereço e obter os novos endereços com coordenadas
+                    const newEnderecos = await Promise.all(
                       dialog.entregaIds.map((id) => applyAddressChange(id, routeChangeAddr, note))
                     );
+
+                    // Atualizar o estado local com os novos endereços incluindo coordenadas GPS
+                    setEntregasMap((prev) => {
+                      const next = { ...prev };
+                      dialog.entregaIds.forEach((id, index) => {
+                        next[id] = {
+                          ...next[id],
+                          endereco_id: newEnderecos[index].id,
+                          endereco: newEnderecos[index], // Atualizar com o novo endereço completo (inclui lat/lng)
+                          route_change_type: type,
+                          route_change_note: note || `Novo: ${routeChangeAddr.rua}, ${routeChangeAddr.numero}`,
+                        };
+                      });
+                      return next;
+                    });
                   } else {
                     await Promise.all(
                       dialog.entregaIds.map((id) => applyRouteChange(id, type, note))
                     );
+
+                    setEntregasMap((prev) => {
+                      const next = { ...prev };
+                      for (const id of dialog.entregaIds) {
+                        next[id] = {
+                          ...next[id],
+                          route_change_type: type,
+                          route_change_note: note || null,
+                          ...(type === "cancelada" ? { status: "retornada" } : {}),
+                        };
+                      }
+                      return next;
+                    });
                   }
-                  setEntregasMap((prev) => {
-                    const next = { ...prev };
-                    for (const id of dialog.entregaIds) {
-                      next[id] = {
-                        ...next[id],
-                        route_change_type: type,
-                        route_change_note: note || (type === "endereco_alterado" ? `Novo: ${routeChangeAddr.rua}, ${routeChangeAddr.numero}` : null),
-                        ...(type === "cancelada" ? { status: "retornada" } : {}),
-                      };
-                    }
-                    return next;
-                  });
                   toast.success(
                     type === "adiada"
                       ? "Entrega(s) marcada(s) como adiada(s)"

@@ -191,20 +191,32 @@ export async function applyAddressChange(
 ) {
   const supabase = createClient();
   const coords = await geocode(address.rua, address.numero, address.cidade);
+
+  // Buscar o cliente_id da entrega
+  const { data: entregaData } = await supabase
+    .from("entregas")
+    .select("cliente_id")
+    .eq("id", entregaId)
+    .single();
+
+  if (!entregaData) throw new Error("Entrega não encontrada");
+
+  // Criar novo endereço com coordenadas
   const { data: newEndereco, error: addrError } = await supabase
     .from("enderecos")
     .insert({
-      cliente_id: (await supabase.from("entregas").select("cliente_id").eq("id", entregaId).single()).data!.cliente_id,
+      cliente_id: entregaData.cliente_id,
       rua: address.rua,
       numero: address.numero,
       bairro: address.bairro || null,
       cidade: address.cidade,
       ...coords,
     })
-    .select("id")
+    .select("*")
     .single();
   if (addrError) throw addrError;
 
+  // Atualizar entrega com novo endereço
   const { error } = await supabase
     .from("entregas")
     .update({
@@ -214,6 +226,9 @@ export async function applyAddressChange(
     })
     .eq("id", entregaId);
   if (error) throw error;
+
+  // Retornar o novo endereço completo para atualização no estado local
+  return newEndereco;
 }
 
 export async function confirmarRetorno(entregaId: string) {

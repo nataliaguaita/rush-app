@@ -36,6 +36,14 @@ export function NovaEntregaForm({
   clientes: ClienteWithEnderecos[];
   openGroups?: OpenGroup[];
 }) {
+  // Função para detectar automaticamente o período baseado no horário atual
+  const getAutoPeriod = (): "manha" | "tarde" => {
+    const now = new Date();
+    const hour = now.getHours();
+    // 6h às 11h = manhã, 11h às 18h = tarde
+    return hour >= 6 && hour < 11 ? "manha" : "tarde";
+  };
+
   const [selectedGroupId, setSelectedGroupId] = useState<string>("none");
   const [selectedClienteId, setSelectedClienteId] = useState<string>("");
   const [selectedEnderecoId, setSelectedEnderecoId] = useState<string>("");
@@ -46,6 +54,7 @@ export function NovaEntregaForm({
   const [actionReceberAssinar, setActionReceberAssinar] = useState(false);
   const [returnReminder, setReturnReminder] = useState(false);
   const [scheduledDate, setScheduledDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [scheduledPeriod, setScheduledPeriod] = useState<"manha" | "tarde">(getAutoPeriod());
   const [valor, setValor] = useState("");
   const [useCustomAddress, setUseCustomAddress] = useState(false);
   const [customAddr, setCustomAddr] = useState({ cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", label: "" });
@@ -438,7 +447,7 @@ export function NovaEntregaForm({
                 onChange={(e) => setScheduledDate(e.target.value)}
                 className="flex-1"
               />
-              <Select name="scheduled_period" defaultValue="manha" items={{ manha: "Manhã", tarde: "Tarde" }}>
+              <Select name="scheduled_period" value={scheduledPeriod} onValueChange={(value) => setScheduledPeriod(value as "manha" | "tarde")}>
                 <SelectTrigger className="w-28">
                   <SelectValue />
                 </SelectTrigger>

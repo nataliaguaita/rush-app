@@ -63,6 +63,14 @@ export function NovaEntregaGrupoForm({
   clientes: ClienteWithEnderecos[];
   locaisFrequentes?: LocalFrequente[];
 }) {
+  // Função para detectar automaticamente o período baseado no horário atual
+  const getAutoPeriod = (): "manha" | "tarde" => {
+    const now = new Date();
+    const hour = now.getHours();
+    // 6h às 11h = manhã, 11h às 18h = tarde
+    return hour >= 6 && hour < 11 ? "manha" : "tarde";
+  };
+
   // Address state (shared for all deliveries in the group)
   const [addressMode, setAddressMode] = useState<"cliente" | "custom">("custom");
   const [addressClienteId, setAddressClienteId] = useState("");
@@ -82,6 +90,7 @@ export function NovaEntregaGrupoForm({
 
   // Scheduling (shared)
   const [scheduledDate, setScheduledDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [scheduledPeriod, setScheduledPeriod] = useState<"manha" | "tarde">(getAutoPeriod());
 
   // Destinatários
   const [destinatarios, setDestinatarios] = useState<Destinatario[]>([emptyDestinatario()]);
@@ -440,7 +449,7 @@ export function NovaEntregaGrupoForm({
               onChange={(e) => setScheduledDate(e.target.value)}
               className="flex-1"
             />
-            <Select name="scheduled_period" defaultValue="manha">
+            <Select name="scheduled_period" value={scheduledPeriod} onValueChange={(value) => setScheduledPeriod(value as "manha" | "tarde")}>
               <SelectTrigger className="w-28">
                 <SelectValue />
               </SelectTrigger>
