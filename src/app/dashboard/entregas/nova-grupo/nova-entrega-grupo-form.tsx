@@ -79,8 +79,11 @@ export function NovaEntregaGrupoForm({
   const [selectedEnderecoId, setSelectedEnderecoId] = useState("");
   const [customAddr, setCustomAddr] = useState({ cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", label: "" });
   const [selectedLocalId, setSelectedLocalId] = useState("");
+  const [localSearch, setLocalSearch] = useState("");
+  const [showLocalDropdown, setShowLocalDropdown] = useState(false);
   const [saveLocal, setSaveLocal] = useState(false);
   const addressDropdownRef = useRef<HTMLDivElement>(null);
+  const localDropdownRef = useRef<HTMLDivElement>(null);
 
   const handleCepResult = useCallback((data: { rua: string; bairro: string; cidade: string }) => {
     setCustomAddr((prev) => ({ ...prev, rua: data.rua, bairro: data.bairro, cidade: data.cidade }));
@@ -98,6 +101,7 @@ export function NovaEntregaGrupoForm({
 
   const addressCliente = clientes.find((c) => c.id === addressClienteId);
   const enderecos = (addressCliente?.enderecos ?? []).filter((e) => e.active !== false);
+  const selectedLocal = locaisFrequentes.find((l) => l.id === selectedLocalId);
 
   const filteredAddressClientes = useMemo(() => {
     if (!addressClienteSearch.trim()) return clientes;
@@ -105,10 +109,19 @@ export function NovaEntregaGrupoForm({
     return clientes.filter((c) => c.name.toLowerCase().includes(q));
   }, [clientes, addressClienteSearch]);
 
+  const filteredLocais = useMemo(() => {
+    if (!localSearch.trim()) return locaisFrequentes;
+    const q = localSearch.toLowerCase();
+    return locaisFrequentes.filter((l) => l.name.toLowerCase().includes(q));
+  }, [locaisFrequentes, localSearch]);
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (addressDropdownRef.current && !addressDropdownRef.current.contains(e.target as Node)) {
         setShowAddressClienteDropdown(false);
+      }
+      if (localDropdownRef.current && !localDropdownRef.current.contains(e.target as Node)) {
+        setShowLocalDropdown(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -136,6 +149,7 @@ export function NovaEntregaGrupoForm({
   function startCustomAddress() {
     setAddressMode("custom");
     setSelectedLocalId("");
+    setLocalSearch("");
     setSaveLocal(false);
     setCustomAddr({ cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", label: "" });
   }
@@ -338,25 +352,37 @@ export function NovaEntregaGrupoForm({
               </div>
               {locaisFrequentes.length > 0 ? (
                 <>
-                  <Select
-                    value={selectedLocalId}
-                    onValueChange={(v) => selectLocal(v ?? "")}
-                    items={Object.fromEntries(locaisFrequentes.map((l) => [
-                      l.id,
-                      `${l.name} — ${l.rua}, ${l.numero}${l.bairro ? ` (${l.bairro})` : ""}`,
-                    ]))}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Escolha o endereço salvo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {locaisFrequentes.map((l) => (
-                        <SelectItem key={l.id} value={l.id}>
-                          {l.name} — {l.rua}, {l.numero}{l.bairro ? ` (${l.bairro})` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="relative" ref={localDropdownRef}>
+                    <Input
+                      placeholder="Digite ou selecione um endereço salvo..."
+                      value={selectedLocal ? selectedLocal.name : localSearch}
+                      onChange={(e) => {
+                        setLocalSearch(e.target.value);
+                        setSelectedLocalId("");
+                        setShowLocalDropdown(true);
+                      }}
+                      onFocus={() => setShowLocalDropdown(true)}
+                      autoComplete="off"
+                    />
+                    {showLocalDropdown && filteredLocais.length > 0 && !selectedLocal && (
+                      <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-md border bg-popover shadow-md">
+                        {filteredLocais.map((l) => (
+                          <button
+                            key={l.id}
+                            type="button"
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors"
+                            onClick={() => {
+                              selectLocal(l.id);
+                              setLocalSearch(l.name);
+                              setShowLocalDropdown(false);
+                            }}
+                          >
+                            {l.name} — {l.rua}, {l.numero}{l.bairro ? ` (${l.bairro})` : ""}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   {selectedLocalId && customAddr.rua && (
                     <div className="flex items-start gap-1.5 rounded-md border bg-muted/30 p-2.5 text-sm">
                       <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -483,6 +509,17 @@ export function NovaEntregaGrupoForm({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
+            <Label>Turno:</Label>
+            <Select name="scheduled_period" value={scheduledPeriod} onValueChange={(value) => setScheduledPeriod(value as "manha" | "tarde")}>
+              <SelectTrigger className="w-28">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Manhã">Manhã</SelectItem>
+                <SelectItem value="Tarde">Tarde</SelectItem>
+              </SelectContent>
+            </Select>
+            <Label>Data:</Label>
             <Input
               type="date"
               name="scheduled_date"
@@ -490,15 +527,6 @@ export function NovaEntregaGrupoForm({
               onChange={(e) => setScheduledDate(e.target.value)}
               className="flex-1"
             />
-            <Select name="scheduled_period" value={scheduledPeriod} onValueChange={(value) => setScheduledPeriod(value as "manha" | "tarde")}>
-              <SelectTrigger className="w-28">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="manha">Manhã</SelectItem>
-                <SelectItem value="tarde">Tarde</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
           <div className="flex items-center gap-2">
             <Checkbox id="is_urgent" name="is_urgent" />
