@@ -571,6 +571,17 @@ function KanbanColumn({
   const { setNodeRef, isOver } = useDroppable({ id: columnId });
   const isEntregador = columnId !== UNASSIGNED;
 
+  const isItemReleased = (vid: string) => {
+    const item = itemsMap[vid];
+    if (!item) return false;
+    return item.entregaIds.every((id) => entregasMap[id]?.status === "rota_definida");
+  };
+  // Em rota primeiro, novas (não liberadas) depois — ordem real de cada
+  // grupo é preservada; a lista persistida (visualIds) não é reordenada aqui.
+  const releasedIds = visualIds.filter(isItemReleased);
+  const newIds = visualIds.filter((vid) => !isItemReleased(vid));
+  const displayIds = [...releasedIds, ...newIds];
+
   const hasEnoughForOptimize = visualIds.filter((vid) => {
     const e = itemsMap[vid]?.entregas[0];
     return e?.endereco?.lat != null;
@@ -605,19 +616,52 @@ function KanbanColumn({
           isOver ? "border-primary/50 bg-primary/5" : "border-transparent"
         }`}
       >
-        <SortableContext items={visualIds} strategy={verticalListSortingStrategy}>
-          {visualIds.map((vid, idx) => (
-            <SortableCard
-              key={vid}
-              visualId={vid}
-              item={itemsMap[vid]}
-              entregadores={entregadores}
-              currentColumnId={columnId}
-              onAssign={onAssign}
-              onMoveUp={onMove && idx > 0 ? () => onMove(columnId, vid, -1) : undefined}
-              onMoveDown={onMove && idx < visualIds.length - 1 ? () => onMove(columnId, vid, 1) : undefined}
-            />
-          ))}
+        <SortableContext items={displayIds} strategy={verticalListSortingStrategy}>
+          {releasedIds.length > 0 && (
+            <p className="px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Em rota
+            </p>
+          )}
+          {releasedIds.map((vid) => {
+            const idx = visualIds.indexOf(vid);
+            return (
+              <SortableCard
+                key={vid}
+                visualId={vid}
+                item={itemsMap[vid]}
+                entregadores={entregadores}
+                currentColumnId={columnId}
+                onAssign={onAssign}
+                onMoveUp={onMove && idx > 0 ? () => onMove(columnId, vid, -1) : undefined}
+                onMoveDown={onMove && idx < visualIds.length - 1 ? () => onMove(columnId, vid, 1) : undefined}
+              />
+            );
+          })}
+
+          {releasedIds.length > 0 && newIds.length > 0 && (
+            <div className="my-1 border-t border-dashed" />
+          )}
+
+          {newIds.length > 0 && releasedIds.length > 0 && (
+            <p className="px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Novas entregas
+            </p>
+          )}
+          {newIds.map((vid) => {
+            const idx = visualIds.indexOf(vid);
+            return (
+              <SortableCard
+                key={vid}
+                visualId={vid}
+                item={itemsMap[vid]}
+                entregadores={entregadores}
+                currentColumnId={columnId}
+                onAssign={onAssign}
+                onMoveUp={onMove && idx > 0 ? () => onMove(columnId, vid, -1) : undefined}
+                onMoveDown={onMove && idx < visualIds.length - 1 ? () => onMove(columnId, vid, 1) : undefined}
+              />
+            );
+          })}
         </SortableContext>
 
         {visualIds.length === 0 && (
@@ -841,17 +885,16 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
       columnsRef.current = snapshotCols;
     };
 
-    const allVisualIds = currentCol === originalCol
-      ? cols[currentCol]
-      : [...(originalCol ? cols[originalCol] : []), ...cols[currentCol]];
-    const allEntregaIds = expandToEntregaIds(allVisualIds);
-    const hasReleased = allEntregaIds.some(
+    // Só pede confirmação de "alteração de rota" quando o card arrastado
+    // já estava liberado — mover entregas novas para uma coluna que já tem
+    // rota liberada (ex.: organizando a tarde) não deve contar como alteração.
+    const draggedItem = itemsMapRef.current[aid];
+    const draggedEntregaIds = draggedItem ? draggedItem.entregaIds : [aid];
+    const isDraggedReleased = draggedEntregaIds.some(
       (id) => entregasMap[id]?.status === "rota_definida",
     );
 
-    if (hasReleased) {
-      const draggedItem = itemsMapRef.current[aid];
-      const draggedEntregaIds = draggedItem ? draggedItem.entregaIds : [aid];
+    if (isDraggedReleased) {
       setPendingDrag({ execute: persist, rollback, affectedEntregaIds: draggedEntregaIds });
     } else {
       persist();
