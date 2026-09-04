@@ -13,7 +13,7 @@ interface DestinatarioData {
 }
 
 interface CreateEntregaGrupoParams {
-  addressMode: "cliente" | "custom";
+  addressMode: "cliente" | "custom" | "local";
   addressClienteId?: string;
   enderecoId?: string;
   customAddress?: {

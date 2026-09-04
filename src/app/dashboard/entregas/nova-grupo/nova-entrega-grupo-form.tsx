@@ -72,7 +72,7 @@ export function NovaEntregaGrupoForm({
   };
 
   // Address state (shared for all deliveries in the group)
-  const [addressMode, setAddressMode] = useState<"cliente" | "custom">("custom");
+  const [addressMode, setAddressMode] = useState<"cliente" | "custom" | "local">("custom");
   const [addressClienteId, setAddressClienteId] = useState("");
   const [addressClienteSearch, setAddressClienteSearch] = useState("");
   const [showAddressClienteDropdown, setShowAddressClienteDropdown] = useState(false);
@@ -133,6 +133,13 @@ export function NovaEntregaGrupoForm({
     }
   }
 
+  function startCustomAddress() {
+    setAddressMode("custom");
+    setSelectedLocalId("");
+    setSaveLocal(false);
+    setCustomAddr({ cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", label: "" });
+  }
+
   function addDestinatario() {
     setDestinatarios((prev) => [...prev, emptyDestinatario()]);
   }
@@ -183,7 +190,7 @@ export function NovaEntregaGrupoForm({
         addressMode,
         addressClienteId: addressMode === "cliente" ? addressClienteId : undefined,
         enderecoId: addressMode === "cliente" ? selectedEnderecoId : undefined,
-        customAddress: addressMode === "custom" ? {
+        customAddress: (addressMode === "custom" || addressMode === "local") ? {
           cep: customAddr.cep || null,
           rua: customAddr.rua,
           numero: customAddr.numero,
@@ -209,6 +216,8 @@ export function NovaEntregaGrupoForm({
 
   const hasValidAddress = addressMode === "cliente"
     ? !!selectedEnderecoId
+    : addressMode === "local"
+    ? !!selectedLocalId
     : !!(customAddr.rua && customAddr.numero && customAddr.cidade);
 
   const allDestinatariosValid = destinatarios.every((d) => !!d.clienteId);
@@ -235,12 +244,21 @@ export function NovaEntregaGrupoForm({
           <p className="text-sm text-muted-foreground">Todas as entregas do grupo serão enviadas para este endereço.</p>
         </CardHeader>
         <CardContent className="space-y-4 overflow-visible">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant={addressMode === "local" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setAddressMode("local")}
+            >
+              <Bookmark className="mr-1.5 h-3.5 w-3.5" />
+              Endereços salvos
+            </Button>
             <Button
               type="button"
               variant={addressMode === "custom" ? "default" : "outline"}
               size="sm"
-              onClick={() => setAddressMode("custom")}
+              onClick={startCustomAddress}
             >
               Digitar endereço
             </Button>
@@ -310,37 +328,53 @@ export function NovaEntregaGrupoForm({
             </div>
           )}
 
-          {addressMode === "custom" && (
-            <div className="space-y-1.5">
+          {addressMode === "local" && (
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-xs flex items-center gap-1.5">
-                  <Bookmark className="h-3.5 w-3.5" />
-                  Locais salvos
-                </Label>
+                <Label>Endereço fixo *</Label>
                 <Link href="/dashboard/locais" target="_blank" className="text-xs text-muted-foreground underline-offset-2 hover:underline">
                   Gerenciar
                 </Link>
               </div>
               {locaisFrequentes.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {locaisFrequentes.map((l) => (
-                    <button
-                      key={l.id}
-                      type="button"
-                      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors ${
-                        selectedLocalId === l.id
-                          ? "border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300"
-                          : "border-input hover:bg-accent hover:text-accent-foreground"
-                      }`}
-                      onClick={() => selectLocal(l.id)}
-                    >
-                      <MapPin className="h-3 w-3" />
-                      {l.name}
-                    </button>
-                  ))}
-                </div>
+                <>
+                  <Select
+                    value={selectedLocalId}
+                    onValueChange={(v) => selectLocal(v ?? "")}
+                    items={Object.fromEntries(locaisFrequentes.map((l) => [
+                      l.id,
+                      `${l.name} — ${l.rua}, ${l.numero}${l.bairro ? ` (${l.bairro})` : ""}`,
+                    ]))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Escolha o endereço salvo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locaisFrequentes.map((l) => (
+                        <SelectItem key={l.id} value={l.id}>
+                          {l.name} — {l.rua}, {l.numero}{l.bairro ? ` (${l.bairro})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedLocalId && customAddr.rua && (
+                    <div className="flex items-start gap-1.5 rounded-md border bg-muted/30 p-2.5 text-sm">
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        {customAddr.rua}, {customAddr.numero}
+                        {customAddr.complemento ? ` - ${customAddr.complemento}` : ""}
+                        {customAddr.bairro ? ` — ${customAddr.bairro}` : ""}, {customAddr.cidade}
+                      </p>
+                    </div>
+                  )}
+                </>
               ) : (
-                <p className="text-xs text-muted-foreground">Nenhum local salvo ainda.</p>
+                <p className="text-sm text-muted-foreground">
+                  Nenhum endereço fixo cadastrado ainda.{" "}
+                  <Link href="/dashboard/locais" target="_blank" className="underline underline-offset-2">
+                    Cadastrar um
+                  </Link>
+                </p>
               )}
             </div>
           )}
@@ -426,19 +460,17 @@ export function NovaEntregaGrupoForm({
                   />
                 </div>
               </div>
-              {!selectedLocalId && (
-                <div className="flex items-center gap-2 pt-1">
-                  <Checkbox
-                    id="save_local"
-                    checked={saveLocal}
-                    onCheckedChange={(v) => setSaveLocal(!!v)}
-                  />
-                  <Label htmlFor="save_local" className="text-xs font-normal flex items-center gap-1.5">
-                    <Bookmark className="h-3.5 w-3.5" />
-                    Salvar este local para uso futuro
-                  </Label>
-                </div>
-              )}
+              <div className="flex items-center gap-2 pt-1">
+                <Checkbox
+                  id="save_local"
+                  checked={saveLocal}
+                  onCheckedChange={(v) => setSaveLocal(!!v)}
+                />
+                <Label htmlFor="save_local" className="text-xs font-normal flex items-center gap-1.5">
+                  <Bookmark className="h-3.5 w-3.5" />
+                  Salvar este local para uso futuro
+                </Label>
+              </div>
             </div>
           )}
         </CardContent>
