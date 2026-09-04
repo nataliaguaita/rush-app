@@ -1,0 +1,1 @@
+ALTER TABLE entregas ADD COLUMN IF NOT EXISTS route_started_at TIMESTAMPTZ;

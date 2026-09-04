@@ -104,6 +104,9 @@ CREATE TABLE entregas (
   -- Ordem na rota (definida pelo despachante ou otimizador)
   route_order INTEGER,
 
+  -- Início da rota (quando o entregador clica em iniciar)
+  route_started_at TIMESTAMPTZ,
+
   -- Registro de entrega (preenchido pelo motoboy)
   receiver_name TEXT,
   receiver_role receiver_role,

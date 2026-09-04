@@ -473,6 +473,17 @@ export default function EntregaDetailPage() {
               </div>
             )}
 
+            {entrega.route_started_at && (
+              <div>
+                <p className="text-xs text-muted-foreground">Rota iniciada em</p>
+                <p className="text-sm">
+                  {format(new Date(entrega.route_started_at), "dd/MM/yyyy 'às' HH:mm", {
+                    locale: ptBR,
+                  })}
+                </p>
+              </div>
+            )}
+
             {entrega.delivered_at && (
               <div>
                 <p className="text-xs text-muted-foreground">

@@ -6,7 +6,7 @@ import type { ReceiverRole } from "@/types/database";
 
 export async function iniciarEntrega(entregaId: string) {
   const supabase = createClient();
-  await supabase.from("entregas").update({ status: "em_rota" }).eq("id", entregaId);
+  await supabase.from("entregas").update({ status: "em_rota", route_started_at: new Date().toISOString() }).eq("id", entregaId);
 }
 
 const VALID_ROLES: ReceiverRole[] = ["secretaria", "porteiro", "morador_vizinho", "proprietario"];
