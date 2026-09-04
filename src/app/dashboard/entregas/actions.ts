@@ -118,6 +118,27 @@ export async function updateEntrega(entregaId: string, formData: FormData) {
   if (error) throw new Error(error.message);
 }
 
+export async function cancelEntrega(entregaId: string, reason: string) {
+  const supabase = createClient();
+
+  const { data: entrega } = await supabase
+    .from("entregas")
+    .select("status")
+    .eq("id", entregaId)
+    .single();
+
+  if (!entrega || entrega.status !== "aguardando_atribuicao") {
+    throw new Error("Entrega não pode mais ser cancelada");
+  }
+
+  const { error } = await supabase
+    .from("entregas")
+    .update({ status: "cancelada" as DeliveryStatus, cancel_reason: reason || null })
+    .eq("id", entregaId);
+
+  if (error) throw new Error(error.message);
+}
+
 export async function assignEntregador(entregaId: string, entregadorId: string) {
   const supabase = createClient();
   await supabase

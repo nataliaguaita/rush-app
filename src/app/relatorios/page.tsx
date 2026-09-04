@@ -104,6 +104,7 @@ export default function RelatoriosPage() {
   const stats = useMemo(() => {
     const entregues = entregas.filter((e) => e.status === "entregue");
     const recusadas = entregas.filter((e) => e.status === "recusada");
+    const canceladas = entregas.filter((e) => e.status === "cancelada");
     const manha = entregas.filter((e) => e.scheduled_period === "manha");
     const tarde = entregas.filter((e) => e.scheduled_period === "tarde");
 
@@ -165,6 +166,7 @@ export default function RelatoriosPage() {
       total: entregas.length,
       entregues: entregues.length,
       recusadas: recusadas.length,
+      canceladas: canceladas.length,
       manha: manha.length,
       tarde: tarde.length,
       valorTotal,
@@ -267,7 +269,7 @@ export default function RelatoriosPage() {
           <>
             {/* KPI cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              <KpiCard icon={Package} label="Total de Entregas" value={String(stats.total)} sub={`${stats.entregues} entregues`} />
+              <KpiCard icon={Package} label="Total de Entregas" value={String(stats.total)} sub={`${stats.entregues} entregues${stats.canceladas > 0 ? ` · ${stats.canceladas} cancelada${stats.canceladas !== 1 ? "s" : ""}` : ""}`} />
               <KpiCard icon={DollarSign} label="Valor Total" value={brl.format(stats.valorTotal)} sub={`Ticket médio: ${brl.format(stats.ticketMedio)}`} />
               <KpiCard icon={XCircle} label="Taxa de Recusa" value={`${stats.taxaRecusa.toFixed(1)}%`} sub={`${stats.recusadas} recusada${stats.recusadas !== 1 ? "s" : ""}`} />
               <KpiCard icon={Sun} label="Manhã / Tarde" value={`${stats.manha} / ${stats.tarde}`} sub={<span className="flex items-center gap-2"><Sun className="h-3 w-3 text-amber-500" /> Manhã <Sunset className="h-3 w-3 text-blue-500" /> Tarde</span>} />

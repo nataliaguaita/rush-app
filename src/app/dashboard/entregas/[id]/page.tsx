@@ -12,6 +12,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { StatusBadge } from "@/components/status-badge";
 import { RECEIVER_ROLE_LABELS } from "@/lib/status";
 import {
@@ -37,11 +47,12 @@ import {
   Pencil,
   Share2,
   Package,
+  Trash2,
 } from "lucide-react";
 import { formatOrderNumber } from "@/lib/status";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { updateEntrega } from "../actions";
+import { updateEntrega, cancelEntrega } from "../actions";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -429,6 +440,33 @@ export default function EntregaDetailPage() {
         </CardContent>
       </Card>
 
+      {/* Informações do cancelamento */}
+      {entrega.status === "cancelada" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Informações do Cancelamento</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {entrega.cancel_reason && (
+              <div>
+                <p className="text-xs text-muted-foreground">Motivo</p>
+                <p className="text-sm text-destructive whitespace-pre-wrap">
+                  {entrega.cancel_reason}
+                </p>
+              </div>
+            )}
+            <div>
+              <p className="text-xs text-muted-foreground">Cancelada em</p>
+              <p className="text-sm">
+                {format(new Date(entrega.updated_at), "dd/MM/yyyy 'às' HH:mm", {
+                  locale: ptBR,
+                })}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Informações da entrega (quando finalizada) */}
       {(entrega.status === "entregue" || entrega.status === "recusada") && (
         <Card>
@@ -561,6 +599,9 @@ function EditEntregaView({
   const [interestedName, setInterestedName] = useState(entrega.interested_name ?? "");
   const [notes, setNotes] = useState(entrega.notes ?? "");
   const [saving, setSaving] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   function handleValorBlur() {
     if (!valor) return;
@@ -602,6 +643,20 @@ function EditEntregaView({
       toast.error("Erro ao atualizar entrega", { description: err.message });
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleCancelEntrega() {
+    setCancelling(true);
+    try {
+      await cancelEntrega(entrega.id, cancelReason);
+      toast.success("Entrega cancelada.");
+      onSaved();
+    } catch (err: any) {
+      toast.error("Erro ao cancelar entrega", { description: err.message });
+    } finally {
+      setCancelling(false);
+      setConfirmingCancel(false);
     }
   }
 
@@ -803,14 +858,51 @@ function EditEntregaView({
         </CardContent>
       </Card>
 
-      <div className="flex justify-end gap-3 pb-8">
-        <Button variant="outline" type="button" onClick={onCancel}>
-          Cancelar
+      <div className="flex items-center justify-between gap-3 pb-8">
+        <Button
+          variant="destructive"
+          type="button"
+          onClick={() => setConfirmingCancel(true)}
+        >
+          <Trash2 className="mr-1 h-4 w-4" />
+          Excluir Entrega
         </Button>
-        <Button type="submit" disabled={saving}>
-          {saving ? "Salvando..." : "Salvar Alterações"}
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" type="button" onClick={onCancel}>
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={saving}>
+            {saving ? "Salvando..." : "Salvar Alterações"}
+          </Button>
+        </div>
       </div>
+
+      <AlertDialog open={confirmingCancel} onOpenChange={(open) => !open && setConfirmingCancel(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir esta entrega?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A entrega {formatOrderNumber(entrega.order_number)} não será mais entregue. Ela fica registrada como cancelada no histórico e nos relatórios, mas não pode ser desfeito.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 px-1">
+            <Label htmlFor="cancel_reason">Motivo (opcional)</Label>
+            <Textarea
+              id="cancel_reason"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Ex: pedido duplicado, cliente cancelou..."
+              rows={2}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" disabled={cancelling} onClick={handleCancelEntrega}>
+              Excluir Entrega
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   );
 }

@@ -5,7 +5,8 @@ export type DeliveryStatus =
   | "em_rota"
   | "entregue"
   | "recusada"
-  | "retornada";
+  | "retornada"
+  | "cancelada";
 export type RouteChangeType = "adiada" | "cancelada" | "endereco_alterado";
 export type DeliveryAction = "entregar" | "receber" | "assinar_nota" | "receber_e_assinar";
 export type DeliveryPeriod = "manha" | "tarde";
@@ -81,6 +82,7 @@ export interface Entrega {
   numero_sacolas: number;
   group_id: string | null;
   refusal_reason: string | null;
+  cancel_reason: string | null;
   created_at: string;
   updated_at: string;
 }
