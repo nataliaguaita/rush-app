@@ -143,8 +143,8 @@ export function PesquisarEntregaDialog({
       <DialogTrigger
         render={
           <Button variant="outline">
-            <Search className="mr-2 h-4 w-4" />
-            Pesquisar Entrega
+            <Search className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Pesquisar Entrega</span>
           </Button>
         }
       />

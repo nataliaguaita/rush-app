@@ -73,7 +73,7 @@ export default function ClientesPage() {
   }, [busca, filtro]);
 
   return (
-    <div className="mx-auto w-full max-w-[50vw] space-y-4">
+    <div className="mx-auto w-full max-w-full space-y-4 lg:max-w-[50vw]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Clientes</h1>
         <Link href="/dashboard/clientes/novo">

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
 import { RECEIVER_ROLE_LABELS, formatOrderNumber, formatScheduledDate } from "@/lib/status";
-import { Package, Truck, CheckCircle, Clock, MapPin, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight, Plus, Calendar, Sun, Sunset, Users } from "lucide-react";
+import { Package, Truck, CheckCircle, Clock, MapPin, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight, ChevronDown, Plus, Calendar, Sun, Sunset, Users } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import Link from "next/link";
 import { PesquisarEntregaDialog } from "./entregas/pesquisar-entrega-dialog";
@@ -102,7 +102,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold">Torre de Controle</h1>
           <p className="text-muted-foreground">Visão geral das entregas</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="icon"
@@ -132,20 +132,20 @@ export default function DashboardPage() {
             onClick={() => loadData({ silent: true })}
             disabled={refreshing}
           >
-            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            Atualizar
+            <RefreshCw className={`h-4 w-4 sm:mr-2 ${refreshing ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Atualizar</span>
           </Button>
           <PesquisarEntregaDialog entregas={entregas} entregadores={entregadores} />
           <Link href="/dashboard/entregas/nova-grupo">
             <Button variant="outline">
-              <Users className="mr-2 h-4 w-4" />
-              Entrega em Grupo
+              <Users className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Entrega em Grupo</span>
             </Button>
           </Link>
           <Link href="/dashboard/entregas/nova">
             <Button className="bg-blue-500 text-white hover:bg-blue-600">
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Entrega
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Nova Entrega</span>
             </Button>
           </Link>
         </div>
@@ -166,7 +166,7 @@ export default function DashboardPage() {
         <DashboardSkeleton />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {cards.map((m) => {
               const Icon = m.icon;
               return (
@@ -224,18 +224,19 @@ export default function DashboardPage() {
                               if (semPeriodo.length > 0) sections.push({ label: "Sem período", icon: null, color: "text-muted-foreground", items: semPeriodo });
 
                               return sections.map((section, si) => (
-                                <div key={section.label}>
+                                <details key={section.label} className="group" open>
                                   {si > 0 && <div className="my-2" />}
-                                  <div className={`flex items-center gap-1.5 text-xs font-semibold ${section.color}`}>
+                                  <summary className={`flex cursor-pointer list-none items-center gap-1.5 text-xs font-semibold [&::-webkit-details-marker]:hidden ${section.color}`}>
                                     {section.icon}
                                     {section.label}
                                     <span className="text-muted-foreground font-normal">({section.items.length})</span>
-                                  </div>
+                                    <ChevronDown className="ml-auto h-3.5 w-3.5 text-muted-foreground transition-transform group-open:rotate-180" />
+                                  </summary>
                                   <div className="my-1.5 border-b" />
                                   <div className="space-y-2">
                                     <GroupedEntregaRows entregas={section.items} />
                                   </div>
-                                </div>
+                                </details>
                               ));
                             })()}
                           </>

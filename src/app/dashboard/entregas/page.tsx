@@ -168,19 +168,19 @@ export default function EntregasPage() {
             onClick={() => load({ silent: true })}
             disabled={refreshing}
           >
-            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            Atualizar
+            <RefreshCw className={`h-4 w-4 sm:mr-2 ${refreshing ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Atualizar</span>
           </Button>
           <Link href="/dashboard/entregas/nova-grupo">
             <Button variant="outline">
-              <Users className="mr-2 h-4 w-4" />
-              Entrega em Grupo
+              <Users className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Entrega em Grupo</span>
             </Button>
           </Link>
           <Link href="/dashboard/entregas/nova">
             <Button className="bg-blue-500 text-white hover:bg-blue-600">
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Entrega
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Nova Entrega</span>
             </Button>
           </Link>
         </div>

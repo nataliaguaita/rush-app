@@ -23,8 +23,8 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen flex-col md:flex-row">
-      <header className="flex items-center justify-between border-b bg-card px-4 py-3 md:hidden">
+    <div className="flex h-screen flex-col md:flex-row print:block print:h-auto">
+      <header className="flex items-center justify-between border-b bg-card px-4 py-3 md:hidden print:hidden">
         <Image src="/logo.svg" alt="Rush" width={100} height={23} />
         <div className="flex items-center gap-1">
           <ThemeToggle collapsed />
@@ -39,7 +39,7 @@ export function AppShell({
         </div>
       </header>
 
-      <div className="hidden md:flex">
+      <div className="hidden md:flex print:hidden">
         <SidebarNav profile={profile} />
       </div>
 
@@ -54,7 +54,7 @@ export function AppShell({
         </SheetContent>
       </Sheet>
 
-      <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-6">
+      <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-6 print:overflow-visible print:bg-white print:p-0">
         {children}
       </main>
     </div>

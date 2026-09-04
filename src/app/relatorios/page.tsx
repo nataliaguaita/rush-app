@@ -280,13 +280,17 @@ export default function RelatoriosPage() {
     <AppShell profile={profile}>
       <style>{`
         @media print {
+          @page { size: A4; margin: 12mm; }
           .no-print { display: none !important; }
           .print-break { page-break-before: always; }
           body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+          [data-slot="card"], table tr { break-inside: avoid; }
+          .overflow-x-auto { overflow: visible !important; }
+          table { font-size: 11px; }
         }
       `}</style>
 
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="mx-auto max-w-6xl space-y-6 print:max-w-none">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 no-print">
           <div>
