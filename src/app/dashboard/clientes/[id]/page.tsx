@@ -145,11 +145,6 @@ export default function ClienteDetailPage() {
               <span className="text-muted-foreground">Nome:</span>{" "}
               <span className="uppercase">{cliente.name}</span>
             </div>
-            {cliente.phone && (
-              <div>
-                <span className="text-muted-foreground">Telefone:</span> {cliente.phone}
-              </div>
-            )}
             <div>
               <span className="text-muted-foreground">Status:</span>{" "}
               {cliente.active ? "Ativo" : "Inativo"}

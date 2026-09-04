@@ -155,6 +155,7 @@ export function EntregaCard({
         receiver_note: pendingNote.current,
       });
       clearPersistedState();
+      setMode("idle");
       toast.success("Entrega registrada!");
     } catch {
       toast.error("Falha ao registrar entrega. Tente novamente.");
@@ -167,6 +168,7 @@ export function EntregaCard({
     try {
       await registrarRecusa(entrega.id, pendingNote.current || "");
       clearPersistedState();
+      setMode("idle");
       toast.info("Recusa registrada.");
     } catch {
       toast.error("Falha ao registrar recusa. Tente novamente.");

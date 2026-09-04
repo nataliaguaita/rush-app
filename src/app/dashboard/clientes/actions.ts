@@ -7,11 +7,10 @@ export async function createCliente(formData: FormData) {
   const supabase = createClient();
 
   const name = formData.get("name") as string;
-  const phone = (formData.get("phone") as string) || null;
 
   const { data: cliente, error } = await supabase
     .from("clientes")
-    .insert({ name, phone, active: true })
+    .insert({ name, active: true })
     .select()
     .single();
 
@@ -37,7 +36,7 @@ export async function createCliente(formData: FormData) {
 }
 
 export async function createClienteMultiEnderecos(
-  clienteData: { name: string; phone: string | null },
+  clienteData: { name: string },
   enderecos: {
     label: string;
     rua: string;
@@ -52,7 +51,7 @@ export async function createClienteMultiEnderecos(
 
   const { data: cliente, error } = await supabase
     .from("clientes")
-    .insert({ name: clienteData.name, phone: clienteData.phone, active: true })
+    .insert({ name: clienteData.name, active: true })
     .select()
     .single();
 
@@ -85,10 +84,9 @@ export async function updateCliente(id: string, formData: FormData) {
   const supabase = createClient();
 
   const name = formData.get("name") as string;
-  const phone = (formData.get("phone") as string) || null;
   const active = formData.get("active") === "true";
 
-  await supabase.from("clientes").update({ name, phone, active }).eq("id", id);
+  await supabase.from("clientes").update({ name, active }).eq("id", id);
 }
 
 export async function addEndereco(clienteId: string, formData: FormData) {

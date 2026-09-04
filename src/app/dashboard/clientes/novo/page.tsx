@@ -200,12 +200,11 @@ export default function NovoClientePage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
-    const phone = (formData.get("phone") as string) || null;
 
     setLoading(true);
     try {
       await createClienteMultiEnderecos(
-        { name, phone },
+        { name },
         enderecos
           .filter((end) => end.rua.trim() !== "")
           .map(({ key: _key, ...rest }) => rest)
@@ -241,25 +240,6 @@ export default function NovoClientePage() {
             <div className="space-y-2">
               <Label htmlFor="name">Nome *</Label>
               <Input id="name" name="name" required placeholder="Nome do cliente" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefone</Label>
-              <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                placeholder="(00) 00000-0000"
-                maxLength={15}
-                onChange={(e) => {
-                  const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
-                  let formatted = digits;
-                  if (digits.length > 2) formatted = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-                  else if (digits.length > 0) formatted = `(${digits}`;
-                  if (digits.length > 7) formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-                  else if (digits.length > 6 && digits.length <= 10) formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-                  e.target.value = formatted;
-                }}
-              />
             </div>
           </CardContent>
         </Card>

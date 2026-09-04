@@ -278,9 +278,6 @@ export default function EntregaDetailPage() {
             <User className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" />
             <div>
               <p className="font-medium">{entrega.cliente?.name ?? "—"}</p>
-              {entrega.cliente?.phone && (
-                <p className="text-sm text-muted-foreground">{entrega.cliente.phone}</p>
-              )}
             </div>
           </div>
 
