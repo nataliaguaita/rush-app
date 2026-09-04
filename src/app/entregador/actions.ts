@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { calcRouteDistanceKm } from "@/lib/route-distance";
+import { toTitleCase } from "@/lib/utils";
 import type { ReceiverRole } from "@/types/database";
 
 export async function iniciarEntrega(entregaId: string) {
@@ -25,7 +26,7 @@ export async function registrarEntrega(
 
   const { error } = await supabase.from("entregas").update({
     status: "entregue",
-    receiver_name: dados.receiver_name,
+    receiver_name: toTitleCase(dados.receiver_name),
     receiver_role: isValidRole ? dados.receiver_role : null,
     receiver_note: note,
     delivered_at: new Date().toISOString(),

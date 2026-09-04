@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { isValidUsername, normalizeUsername, usernameToSyntheticEmail } from "@/lib/username";
+import { toTitleCase } from "@/lib/utils";
 
 function getAdminClient() {
   return createClient(
@@ -35,11 +36,13 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { id, name, username: rawUsername, password, role, phone, active } = body;
+  const { id, name: rawName, username: rawUsername, password, role, phone, active } = body;
 
-  if (!id || !name || !rawUsername || !role) {
+  if (!id || !rawName || !rawUsername || !role) {
     return NextResponse.json({ error: "Campos obrigatórios faltando" }, { status: 400 });
   }
+
+  const name = toTitleCase(rawName);
 
   const username = normalizeUsername(rawUsername);
   if (!isValidUsername(username)) {

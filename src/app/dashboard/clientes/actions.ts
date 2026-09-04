@@ -2,11 +2,12 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { geocode } from "@/lib/geocode";
+import { toTitleCase } from "@/lib/utils";
 
 export async function createCliente(formData: FormData) {
   const supabase = createClient();
 
-  const name = formData.get("name") as string;
+  const name = toTitleCase(formData.get("name") as string);
 
   const { data: cliente, error } = await supabase
     .from("clientes")
@@ -23,12 +24,12 @@ export async function createCliente(formData: FormData) {
     const coords = await geocode(rua, numero, cidade);
     await supabase.from("enderecos").insert({
       cliente_id: cliente.id,
-      label: (formData.get("label") as string) || null,
-      rua,
+      label: formData.get("label") ? toTitleCase(formData.get("label") as string) : null,
+      rua: toTitleCase(rua),
       numero,
-      complemento: (formData.get("complemento") as string) || null,
-      bairro: (formData.get("bairro") as string) || null,
-      cidade,
+      complemento: formData.get("complemento") ? toTitleCase(formData.get("complemento") as string) : null,
+      bairro: formData.get("bairro") ? toTitleCase(formData.get("bairro") as string) : null,
+      cidade: toTitleCase(cidade),
       cep: (formData.get("cep") as string) || null,
       ...coords,
     });
@@ -51,7 +52,7 @@ export async function createClienteMultiEnderecos(
 
   const { data: cliente, error } = await supabase
     .from("clientes")
-    .insert({ name: clienteData.name, active: true })
+    .insert({ name: toTitleCase(clienteData.name), active: true })
     .select()
     .single();
 
@@ -63,12 +64,12 @@ export async function createClienteMultiEnderecos(
         const coords = await geocode(end.rua, end.numero, end.cidade);
         return {
           cliente_id: cliente.id,
-          label: end.label || null,
-          rua: end.rua,
+          label: end.label ? toTitleCase(end.label) : null,
+          rua: toTitleCase(end.rua),
           numero: end.numero || "",
-          complemento: end.complemento || null,
-          bairro: end.bairro || null,
-          cidade: end.cidade || "",
+          complemento: end.complemento ? toTitleCase(end.complemento) : null,
+          bairro: end.bairro ? toTitleCase(end.bairro) : null,
+          cidade: toTitleCase(end.cidade || ""),
           cep: end.cep || null,
           ...coords,
         };
@@ -83,7 +84,7 @@ export async function createClienteMultiEnderecos(
 export async function updateCliente(id: string, formData: FormData) {
   const supabase = createClient();
 
-  const name = formData.get("name") as string;
+  const name = toTitleCase(formData.get("name") as string);
   const active = formData.get("active") === "true";
 
   await supabase.from("clientes").update({ name, active }).eq("id", id);
@@ -98,12 +99,12 @@ export async function addEndereco(clienteId: string, formData: FormData) {
 
   await supabase.from("enderecos").insert({
     cliente_id: clienteId,
-    label: (formData.get("label") as string) || null,
-    rua,
+    label: formData.get("label") ? toTitleCase(formData.get("label") as string) : null,
+    rua: toTitleCase(rua),
     numero,
-    complemento: (formData.get("complemento") as string) || null,
-    bairro: (formData.get("bairro") as string) || null,
-    cidade,
+    complemento: formData.get("complemento") ? toTitleCase(formData.get("complemento") as string) : null,
+    bairro: formData.get("bairro") ? toTitleCase(formData.get("bairro") as string) : null,
+    cidade: toTitleCase(cidade),
     cep: (formData.get("cep") as string) || null,
     ...coords,
   });
@@ -117,12 +118,12 @@ export async function updateEndereco(enderecoId: string, formData: FormData) {
   const coords = await geocode(rua, numero, cidade);
 
   await supabase.from("enderecos").update({
-    label: (formData.get("label") as string) || null,
-    rua,
+    label: formData.get("label") ? toTitleCase(formData.get("label") as string) : null,
+    rua: toTitleCase(rua),
     numero,
-    complemento: (formData.get("complemento") as string) || null,
-    bairro: (formData.get("bairro") as string) || null,
-    cidade,
+    complemento: formData.get("complemento") ? toTitleCase(formData.get("complemento") as string) : null,
+    bairro: formData.get("bairro") ? toTitleCase(formData.get("bairro") as string) : null,
+    cidade: toTitleCase(cidade),
     cep: (formData.get("cep") as string) || null,
     ...coords,
   }).eq("id", enderecoId);

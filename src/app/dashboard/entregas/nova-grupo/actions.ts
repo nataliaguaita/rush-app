@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { geocode } from "@/lib/geocode";
+import { toTitleCase } from "@/lib/utils";
 
 interface DestinatarioData {
   clienteId: string;
@@ -53,13 +54,13 @@ export async function createEntregaGrupo(params: CreateEntregaGrupoParams) {
       .from("enderecos")
       .insert({
         cliente_id: null,
-        rua: addr.rua,
+        rua: toTitleCase(addr.rua),
         numero: addr.numero,
-        complemento: addr.complemento,
-        bairro: addr.bairro,
-        cidade: addr.cidade,
+        complemento: addr.complemento ? toTitleCase(addr.complemento) : null,
+        bairro: addr.bairro ? toTitleCase(addr.bairro) : null,
+        cidade: toTitleCase(addr.cidade),
         cep: addr.cep,
-        label: addr.label,
+        label: addr.label ? toTitleCase(addr.label) : null,
         ...coords,
       })
       .select("id")
@@ -84,7 +85,7 @@ export async function createEntregaGrupo(params: CreateEntregaGrupoParams) {
     scheduled_date: params.scheduledDate,
     is_urgent: params.isUrgent,
     return_reminder: false,
-    interested_name: d.interestedName,
+    interested_name: d.interestedName ? toTitleCase(d.interestedName) : null,
     interested_note: null,
     notes: d.notes,
     numero_sacolas: d.numeroSacolas || 1,
@@ -97,12 +98,12 @@ export async function createEntregaGrupo(params: CreateEntregaGrupoParams) {
   if (params.saveLocal && params.customAddress) {
     const addr = params.customAddress;
     await supabase.from("locais_frequentes").insert({
-      name: addr.label || `${addr.rua}, ${addr.numero}`,
-      rua: addr.rua,
+      name: toTitleCase(addr.label || `${addr.rua}, ${addr.numero}`),
+      rua: toTitleCase(addr.rua),
       numero: addr.numero,
-      complemento: addr.complemento,
-      bairro: addr.bairro,
-      cidade: addr.cidade,
+      complemento: addr.complemento ? toTitleCase(addr.complemento) : null,
+      bairro: addr.bairro ? toTitleCase(addr.bairro) : null,
+      cidade: toTitleCase(addr.cidade),
       cep: addr.cep,
     });
   }

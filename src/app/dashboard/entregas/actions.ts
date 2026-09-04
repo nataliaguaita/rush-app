@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { geocode } from "@/lib/geocode";
+import { toTitleCase } from "@/lib/utils";
 import type { DeliveryStatus, RouteChangeType } from "@/types/database";
 
 export async function createEntrega(formData: FormData) {
@@ -20,13 +21,13 @@ export async function createEntrega(formData: FormData) {
     const coords = await geocode(rua, numero, cidade);
     const addrData = {
       cliente_id: clienteId,
-      rua,
+      rua: toTitleCase(rua),
       numero,
-      complemento: (formData.get("custom_complemento") as string) || null,
-      bairro: (formData.get("custom_bairro") as string) || null,
-      cidade,
+      complemento: formData.get("custom_complemento") ? toTitleCase(formData.get("custom_complemento") as string) : null,
+      bairro: formData.get("custom_bairro") ? toTitleCase(formData.get("custom_bairro") as string) : null,
+      cidade: toTitleCase(cidade),
       cep: (formData.get("custom_cep") as string) || null,
-      label: (formData.get("custom_label") as string) || null,
+      label: formData.get("custom_label") ? toTitleCase(formData.get("custom_label") as string) : null,
       ...coords,
     };
     const { data: newEndereco, error: addrError } = await supabase
@@ -46,7 +47,8 @@ export async function createEntrega(formData: FormData) {
   const returnReminder = formData.get("return_reminder") === "on";
   const returnNotes = (formData.get("return_notes") as string) || null;
   const notes = (formData.get("notes") as string) || null;
-  const interestedName = (formData.get("interested_name") as string) || null;
+  const rawInterestedName = formData.get("interested_name") as string;
+  const interestedName = rawInterestedName ? toTitleCase(rawInterestedName) : null;
   const actions = [...new Set(formData.getAll("actions") as string[])];
   const rawSacolas = formData.get("numero_sacolas") as string;
   const numeroSacolas = rawSacolas ? parseInt(rawSacolas, 10) : 1;
@@ -94,7 +96,8 @@ export async function updateEntrega(entregaId: string, formData: FormData) {
   const returnReminder = formData.get("return_reminder") === "on";
   const returnNotes = (formData.get("return_notes") as string) || null;
   const notes = (formData.get("notes") as string) || null;
-  const interestedName = (formData.get("interested_name") as string) || null;
+  const rawInterestedName = formData.get("interested_name") as string;
+  const interestedName = rawInterestedName ? toTitleCase(rawInterestedName) : null;
   const actions = [...new Set(formData.getAll("actions") as string[])];
   const rawSacolas = formData.get("numero_sacolas") as string;
   const numeroSacolas = rawSacolas ? parseInt(rawSacolas, 10) : 1;
@@ -227,10 +230,10 @@ export async function applyAddressChange(
     .from("enderecos")
     .insert({
       cliente_id: entregaData.cliente_id,
-      rua: address.rua,
+      rua: toTitleCase(address.rua),
       numero: address.numero,
-      bairro: address.bairro || null,
-      cidade: address.cidade,
+      bairro: address.bairro ? toTitleCase(address.bairro) : null,
+      cidade: toTitleCase(address.cidade),
       ...coords,
     })
     .select("*")

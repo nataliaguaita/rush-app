@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { createClienteMultiEnderecos } from "../actions";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -218,17 +218,18 @@ export default function NovoClientePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/clientes">
-          <Button variant="ghost" size="icon" aria-label="Voltar">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
+    <div className="w-[50vw] min-w-[340px] mx-auto space-y-4">
+      <div className="flex items-center justify-between mb-6">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold">Novo Cliente</h1>
           <p className="text-muted-foreground">Cadastre um novo cliente com endereço(s)</p>
         </div>
+        <Link href="/dashboard/clientes">
+          <Button variant="outline" size="sm" type="button">
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            Voltar
+          </Button>
+        </Link>
       </div>
 
       <form onSubmit={handleSubmit}>
