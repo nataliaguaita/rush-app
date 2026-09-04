@@ -14,9 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MapPin, Search } from "lucide-react";
-import { toast } from "sonner";
 import { LocalDialog } from "./local-dialog";
-import { setLocalActive } from "./actions";
 import type { LocalFrequente } from "@/types/database";
 
 export default function LocaisPage() {
@@ -37,16 +35,6 @@ export default function LocaisPage() {
     const q = busca.toLowerCase();
     return locais.filter((l) => l.name.toLowerCase().includes(q));
   }, [locais, busca]);
-
-  async function handleToggleActive(local: LocalFrequente) {
-    try {
-      await setLocalActive(local.id, !local.active);
-      toast.success(local.active ? "Local desativado" : "Local reativado");
-      load();
-    } catch (err: any) {
-      toast.error("Erro ao atualizar local", { description: err.message });
-    }
-  }
 
   return (
     <div className="mx-auto w-full max-w-[50vw] space-y-4">
@@ -71,13 +59,13 @@ export default function LocaisPage() {
       </div>
 
       <div className="rounded-md border">
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
+              <TableHead className="w-[180px]">Nome</TableHead>
               <TableHead>Endereço</TableHead>
               <TableHead className="w-[100px] text-right">Status</TableHead>
-              <TableHead className="w-[140px]" />
+              <TableHead className="w-[80px]" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -91,12 +79,15 @@ export default function LocaisPage() {
               filtrados.map((local) => (
                 <TableRow key={local.id}>
                   <TableCell className="font-medium">
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                      {local.name}
+                    <div className="flex items-center gap-1.5 truncate">
+                      <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{local.name}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell
+                    className="truncate text-muted-foreground"
+                    title={`${local.rua}, ${local.numero}${local.bairro ? ` (${local.bairro})` : ""}`}
+                  >
                     {local.rua}, {local.numero}
                     {local.bairro ? ` (${local.bairro})` : ""}
                   </TableCell>
@@ -106,11 +97,8 @@ export default function LocaisPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex justify-end gap-1.5">
+                    <div className="flex justify-end">
                       <LocalDialog local={local} onSaved={load} />
-                      <Button variant="outline" size="sm" onClick={() => handleToggleActive(local)}>
-                        {local.active ? "Desativar" : "Reativar"}
-                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

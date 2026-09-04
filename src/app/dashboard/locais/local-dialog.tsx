@@ -33,6 +33,7 @@ export function LocalDialog({
   const [rua, setRua] = useState(local?.rua ?? "");
   const [bairro, setBairro] = useState(local?.bairro ?? "");
   const [cidade, setCidade] = useState(local?.cidade ?? "");
+  const [active, setActive] = useState(local?.active ?? true);
 
   const handleCepResult = useCallback((data: { rua: string; bairro: string; cidade: string }) => {
     setRua(data.rua);
@@ -137,6 +138,15 @@ export function LocalDialog({
               <Input name="cidade" required value={cidade} onChange={(e) => setCidade(e.target.value)} className={cepHighlight} />
             </div>
           </div>
+          {isEdit && (
+            <div className="space-y-2">
+              <input type="hidden" name="active" value={String(active)} />
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox checked={active} onCheckedChange={(v) => setActive(!!v)} />
+                Ativo
+              </label>
+            </div>
+          )}
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancelar

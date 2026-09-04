@@ -438,8 +438,19 @@ export function NovaEntregaForm({
           <Separator />
 
           <div className="space-y-2">
-            <Label>Programar Entrega</Label>
+            <Label>Programar Entrega:</Label>
             <div className="flex gap-2">
+              <Label>Turno:</Label>
+              <Select name="scheduled_period" value={scheduledPeriod} onValueChange={(value) => setScheduledPeriod(value as "manha" | "tarde")}>
+                <SelectTrigger className="w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Manhã">Manhã</SelectItem>
+                  <SelectItem value="Tarde">Tarde</SelectItem>
+                </SelectContent>
+              </Select>
+              <Label>Data:</Label>
               <Input
                 type="date"
                 name="scheduled_date"
@@ -447,15 +458,6 @@ export function NovaEntregaForm({
                 onChange={(e) => setScheduledDate(e.target.value)}
                 className="flex-1"
               />
-              <Select name="scheduled_period" value={scheduledPeriod} onValueChange={(value) => setScheduledPeriod(value as "manha" | "tarde")}>
-                <SelectTrigger className="w-28">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="manha">Manhã</SelectItem>
-                  <SelectItem value="tarde">Tarde</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
 

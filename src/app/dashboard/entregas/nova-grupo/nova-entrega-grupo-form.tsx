@@ -274,7 +274,7 @@ export function NovaEntregaGrupoForm({
 
           {addressMode === "cliente" && (
             <div className="space-y-3">
-              <div className="relative" ref={addressDropdownRef}>
+              <div className="relative space-y-2" ref={addressDropdownRef}>
                 <Label>Cliente (dono do endereço)</Label>
                 <Input
                   placeholder="Digite o nome do cliente..."

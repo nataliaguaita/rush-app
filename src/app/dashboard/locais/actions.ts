@@ -11,6 +11,7 @@ interface LocalFormData {
   complemento: string;
   bairro: string;
   cidade: string;
+  active: boolean;
 }
 
 function readLocalForm(formData: FormData): LocalFormData {
@@ -22,6 +23,7 @@ function readLocalForm(formData: FormData): LocalFormData {
     complemento: (formData.get("complemento") as string) || "",
     bairro: (formData.get("bairro") as string) || "",
     cidade: (formData.get("cidade") as string) || "",
+    active: formData.get("active") === "true",
   };
 }
 
@@ -59,14 +61,9 @@ export async function updateLocal(id: string, formData: FormData) {
       bairro: data.bairro || null,
       cidade: data.cidade,
       cep: data.cep || null,
+      active: data.active,
       ...coords,
     })
     .eq("id", id);
-  if (error) throw new Error(error.message);
-}
-
-export async function setLocalActive(id: string, active: boolean) {
-  const supabase = createClient();
-  const { error } = await supabase.from("locais_frequentes").update({ active }).eq("id", id);
   if (error) throw new Error(error.message);
 }
