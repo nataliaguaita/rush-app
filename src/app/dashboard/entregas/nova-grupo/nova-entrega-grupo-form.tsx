@@ -310,29 +310,38 @@ export function NovaEntregaGrupoForm({
             </div>
           )}
 
-          {addressMode === "custom" && locaisFrequentes.length > 0 && (
+          {addressMode === "custom" && (
             <div className="space-y-1.5">
-              <Label className="text-xs flex items-center gap-1.5">
-                <Bookmark className="h-3.5 w-3.5" />
-                Locais salvos
-              </Label>
-              <div className="flex flex-wrap gap-1.5">
-                {locaisFrequentes.map((l) => (
-                  <button
-                    key={l.id}
-                    type="button"
-                    className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors ${
-                      selectedLocalId === l.id
-                        ? "border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300"
-                        : "border-input hover:bg-accent hover:text-accent-foreground"
-                    }`}
-                    onClick={() => selectLocal(l.id)}
-                  >
-                    <MapPin className="h-3 w-3" />
-                    {l.name}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between">
+                <Label className="text-xs flex items-center gap-1.5">
+                  <Bookmark className="h-3.5 w-3.5" />
+                  Locais salvos
+                </Label>
+                <Link href="/dashboard/locais" target="_blank" className="text-xs text-muted-foreground underline-offset-2 hover:underline">
+                  Gerenciar
+                </Link>
               </div>
+              {locaisFrequentes.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {locaisFrequentes.map((l) => (
+                    <button
+                      key={l.id}
+                      type="button"
+                      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors ${
+                        selectedLocalId === l.id
+                          ? "border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300"
+                          : "border-input hover:bg-accent hover:text-accent-foreground"
+                      }`}
+                      onClick={() => selectLocal(l.id)}
+                    >
+                      <MapPin className="h-3 w-3" />
+                      {l.name}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Nenhum local salvo ainda.</p>
+              )}
             </div>
           )}
 

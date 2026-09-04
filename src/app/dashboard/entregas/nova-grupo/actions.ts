@@ -48,12 +48,11 @@ export async function createEntregaGrupo(params: CreateEntregaGrupoParams) {
     const addr = params.customAddress;
     const coords = await geocode(addr.rua, addr.numero, addr.cidade);
 
-    // Create the address without linking to a specific cliente
-    // We'll use the first destinatário's clienteId as the address owner
+    // Endereço compartilhado pelo grupo — não pertence a nenhum cliente específico
     const { data: newEndereco, error: addrError } = await supabase
       .from("enderecos")
       .insert({
-        cliente_id: params.destinatarios[0].clienteId,
+        cliente_id: null,
         rua: addr.rua,
         numero: addr.numero,
         complemento: addr.complemento,

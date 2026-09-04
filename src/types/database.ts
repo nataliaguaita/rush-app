@@ -37,7 +37,7 @@ export interface Cliente {
 
 export interface Endereco {
   id: string;
-  cliente_id: string;
+  cliente_id: string | null;
   label: string | null;
   rua: string;
   numero: string;

@@ -18,6 +18,7 @@ import {
   PanelLeftOpen,
   Plus,
   Users as UsersIcon,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -29,6 +30,7 @@ const adminLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/entregas", label: "Organizar Entregas", icon: Package },
   { href: "/dashboard/clientes", label: "Clientes", icon: Users },
+  { href: "/dashboard/locais", label: "Endereços Fixos", icon: MapPin },
   { href: "/dashboard/cadastros", label: "Cadastros", icon: UserPlus },
   { href: "/relatorios", label: "Relatórios", icon: BarChart3 },
 ];
@@ -37,6 +39,7 @@ const vendedorLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/entregas", label: "Organizar Entregas", icon: Package },
   { href: "/dashboard/clientes", label: "Clientes", icon: Users },
+  { href: "/dashboard/locais", label: "Endereços Fixos", icon: MapPin },
 ];
 
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
