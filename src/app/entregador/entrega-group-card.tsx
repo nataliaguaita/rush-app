@@ -80,7 +80,7 @@ export function EntregaGroupCard({
   const endereco = firstEntrega?.endereco;
   const allEmRota = entregas.every((e) => e.status === "em_rota");
   const anyEmRota = entregas.some((e) => e.status === "em_rota");
-  const pendingEntregas = entregas.filter((e) => e.status !== "entregue" && e.status !== "recusada");
+  const pendingEntregas = entregas.filter((e) => e.status !== "entregue" && e.status !== "recusada" && e.status !== "retornada");
 
   function toggleSelected(id: string) {
     setSelectedIds((prev) => {
@@ -248,7 +248,7 @@ export function EntregaGroupCard({
         {/* Destinatários list */}
         <div className="space-y-1.5">
           {entregas.map((e) => {
-            const isDone = e.status === "entregue" || e.status === "recusada";
+            const isDone = e.status === "entregue" || e.status === "recusada" || e.status === "retornada";
             return (
               <div
                 key={e.id}
@@ -271,7 +271,7 @@ export function EntregaGroupCard({
                 </Badge>
                 {isDone && (
                   <Badge variant={e.status === "entregue" ? "default" : "destructive"} className="text-xs shrink-0">
-                    {e.status === "entregue" ? "Entregue" : "Recusada"}
+                    {e.status === "entregue" ? "Entregue" : e.status === "retornada" ? "Retornada" : "Recusada"}
                   </Badge>
                 )}
               </div>

@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { geocode } from "@/lib/geocode";
-import type { DeliveryStatus } from "@/types/database";
+import type { DeliveryStatus, RouteChangeType } from "@/types/database";
 
 export async function createEntrega(formData: FormData) {
   const supabase = createClient();
@@ -154,10 +154,6 @@ export async function persistColumnState(
   );
 }
 
-export async function togglePostponed(entregaId: string, postponed: boolean) {
-  const supabase = createClient();
-  await supabase.from("entregas").update({ is_postponed: postponed }).eq("id", entregaId);
-}
 
 export async function releaseRoute(entregaIds: string[]) {
   const supabase = createClient();
@@ -165,5 +161,66 @@ export async function releaseRoute(entregaIds: string[]) {
     .from("entregas")
     .update({ status: "rota_definida" as DeliveryStatus })
     .in("id", entregaIds);
+  if (error) throw error;
+}
+
+export async function applyRouteChange(
+  entregaId: string,
+  type: RouteChangeType,
+  note: string,
+) {
+  const supabase = createClient();
+  const updates: Record<string, unknown> = {
+    route_change_type: type,
+    route_change_note: note || null,
+  };
+  if (type === "cancelada") {
+    updates.status = "retornada" as DeliveryStatus;
+  }
+  const { error } = await supabase
+    .from("entregas")
+    .update(updates)
+    .eq("id", entregaId);
+  if (error) throw error;
+}
+
+export async function applyAddressChange(
+  entregaId: string,
+  address: { rua: string; numero: string; bairro: string; cidade: string },
+  note: string,
+) {
+  const supabase = createClient();
+  const coords = await geocode(address.rua, address.numero, address.cidade);
+  const { data: newEndereco, error: addrError } = await supabase
+    .from("enderecos")
+    .insert({
+      cliente_id: (await supabase.from("entregas").select("cliente_id").eq("id", entregaId).single()).data!.cliente_id,
+      rua: address.rua,
+      numero: address.numero,
+      bairro: address.bairro || null,
+      cidade: address.cidade,
+      ...coords,
+    })
+    .select("id")
+    .single();
+  if (addrError) throw addrError;
+
+  const { error } = await supabase
+    .from("entregas")
+    .update({
+      endereco_id: newEndereco.id,
+      route_change_type: "endereco_alterado" as RouteChangeType,
+      route_change_note: note || null,
+    })
+    .eq("id", entregaId);
+  if (error) throw error;
+}
+
+export async function confirmarRetorno(entregaId: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("entregas")
+    .update({ status: "retornada" as DeliveryStatus })
+    .eq("id", entregaId);
   if (error) throw error;
 }

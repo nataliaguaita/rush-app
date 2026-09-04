@@ -56,7 +56,7 @@ async function tryCalculateRouteDistance(
     .eq("entregador_id", entrega.entregador_id)
     .eq("scheduled_date", entrega.scheduled_date)
     .eq("scheduled_period", entrega.scheduled_period)
-    .not("status", "in", '("entregue","recusada")');
+    .not("status", "in", '("entregue","recusada","retornada")');
 
   if ((count ?? 0) > 0) return;
 
@@ -94,6 +94,15 @@ export async function registrarRecusa(entregaId: string, motivo: string) {
     refusal_reason: motivo,
   }).eq("id", entregaId);
 
+  if (error) throw new Error(error.message);
+}
+
+export async function confirmarRetornoEntrega(entregaId: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("entregas")
+    .update({ return_confirmed: true, return_confirmed_at: new Date().toISOString() })
+    .eq("id", entregaId);
   if (error) throw new Error(error.message);
 }
 

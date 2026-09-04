@@ -56,7 +56,19 @@ import {
   Users,
   Package,
 } from "lucide-react";
-import { persistColumnState, releaseRoute, togglePostponed } from "./actions";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { persistColumnState, releaseRoute, applyRouteChange, applyAddressChange } from "./actions";
+import type { RouteChangeType } from "@/types/database";
 import { formatOrderNumber, formatScheduledDate } from "@/lib/status";
 import Link from "next/link";
 
@@ -182,7 +194,6 @@ function SortableCard({
   entregadores,
   currentColumnId,
   onAssign,
-  onTogglePostponed,
   onMoveUp,
   onMoveDown,
 }: {
@@ -191,7 +202,6 @@ function SortableCard({
   entregadores: { id: string; name: string }[];
   currentColumnId: string;
   onAssign: (visualId: string, targetColumnId: string) => void;
-  onTogglePostponed: (entregaId: string, postponed: boolean) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
 }) {
@@ -225,10 +235,18 @@ function SortableCard({
 
   const entrega = item.entregas[0];
   const isReleased = entrega.status === "rota_definida";
+  const changeType = entrega.route_change_type as RouteChangeType | null;
+  const cardBorder = changeType === "cancelada"
+    ? "border-l-4 border-l-red-500 bg-red-50/50 dark:bg-red-500/5"
+    : changeType === "adiada"
+      ? "border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-amber-500/5"
+      : changeType === "endereco_alterado"
+        ? "border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-500/5"
+        : "";
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className={isDragging ? "ring-2 ring-primary" : ""}>
+      <Card className={`${isDragging ? "ring-2 ring-primary" : ""} ${cardBorder}`}>
         <CardContent className="space-y-2 px-3 py-3">
           <div className="flex gap-2">
             <div
@@ -280,9 +298,19 @@ function SortableCard({
                     <Check className="mr-0.5 h-2.5 w-2.5" />Liberada
                   </Badge>
                 )}
-                {entrega.is_postponed && (
-                  <Badge variant="outline" className="h-5 border-red-500/50 bg-red-50 px-1.5 text-[10px] text-red-700 dark:bg-red-500/10 dark:text-red-400">
-                    <Clock className="mr-0.5 h-2.5 w-2.5" />Adiada
+                {changeType === "adiada" && (
+                  <Badge variant="outline" className="h-5 border-amber-500/50 bg-amber-100 px-1.5 text-[10px] text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                    Rota alterada
+                  </Badge>
+                )}
+                {changeType === "cancelada" && (
+                  <Badge variant="outline" className="h-5 border-red-500/50 bg-red-100 px-1.5 text-[10px] text-red-700 dark:bg-red-500/10 dark:text-red-400">
+                    Cancelada
+                  </Badge>
+                )}
+                {changeType === "endereco_alterado" && (
+                  <Badge variant="outline" className="h-5 border-blue-500/50 bg-blue-100 px-1.5 text-[10px] text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
+                    <MapPin className="mr-0.5 h-2.5 w-2.5" />Endereço alterado
                   </Badge>
                 )}
                 {!entrega.endereco?.lat && (
@@ -314,20 +342,6 @@ function SortableCard({
                 ))}
               </SelectContent>
             </Select>
-            {currentColumnId !== UNASSIGNED && (
-              <button
-                type="button"
-                title={entrega.is_postponed ? "Remover adiamento" : "Marcar como adiada"}
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md border text-xs transition-colors ${
-                  entrega.is_postponed
-                    ? "border-amber-500/50 bg-amber-50 text-amber-600 hover:bg-amber-100"
-                    : "border-input text-muted-foreground hover:bg-accent hover:text-foreground"
-                }`}
-                onClick={() => onTogglePostponed(entrega.id, !entrega.is_postponed)}
-              >
-                <Clock className="h-3.5 w-3.5" />
-              </button>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -532,9 +546,9 @@ function KanbanColumn({
   title,
   visualIds,
   itemsMap,
+  entregasMap,
   entregadores,
   onAssign,
-  onTogglePostponed,
   onOptimize,
   onRelease,
   onMove,
@@ -545,9 +559,9 @@ function KanbanColumn({
   title: string;
   visualIds: string[];
   itemsMap: Record<string, VisualItem>;
+  entregasMap: Record<string, any>;
   entregadores: { id: string; name: string }[];
   onAssign: (visualId: string, targetColumnId: string) => void;
-  onTogglePostponed: (entregaId: string, postponed: boolean) => void;
   onOptimize?: (columnId: string) => void;
   onRelease?: () => void;
   onMove?: (columnId: string, visualId: string, direction: -1 | 1) => void;
@@ -562,6 +576,12 @@ function KanbanColumn({
     return e?.endereco?.lat != null;
   }).length >= 2;
 
+  const allReleased = visualIds.length > 0 && visualIds.every((vid) => {
+    const item = itemsMap[vid];
+    if (!item) return false;
+    return item.entregaIds.every((id) => entregasMap[id]?.status === "rota_definida");
+  });
+
   return (
     <div className="flex min-w-[280px] flex-1 flex-col">
       <div className="mb-2 flex items-center justify-between gap-2 rounded-t-lg bg-muted/50 px-3 py-2">
@@ -575,7 +595,7 @@ function KanbanColumn({
           <Badge variant="secondary" className="text-xs">{totalEntregas}</Badge>
         </div>
         {isEntregador && onOptimize && (
-          <OptimizeButton onOptimize={() => onOptimize(columnId)} enabled={hasEnoughForOptimize} />
+          <OptimizeButton onOptimize={() => onOptimize(columnId)} enabled={hasEnoughForOptimize && !allReleased} />
         )}
       </div>
 
@@ -594,7 +614,6 @@ function KanbanColumn({
               entregadores={entregadores}
               currentColumnId={columnId}
               onAssign={onAssign}
-              onTogglePostponed={onTogglePostponed}
               onMoveUp={onMove && idx > 0 ? () => onMove(columnId, vid, -1) : undefined}
               onMoveDown={onMove && idx < visualIds.length - 1 ? () => onMove(columnId, vid, 1) : undefined}
             />
@@ -636,7 +655,16 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
   const [pendingDrag, setPendingDrag] = useState<{
     execute: () => void;
     rollback: () => void;
+    affectedEntregaIds: string[];
   } | null>(null);
+  const [routeChangeDialog, setRouteChangeDialog] = useState<{
+    entregaIds: string[];
+    execute: () => void;
+    rollback: () => void;
+  } | null>(null);
+  const [routeChangeType, setRouteChangeType] = useState<RouteChangeType | null>(null);
+  const [routeChangeNote, setRouteChangeNote] = useState("");
+  const [routeChangeAddr, setRouteChangeAddr] = useState({ rua: "", numero: "", bairro: "", cidade: "" });
 
   const setColumns = useCallback(
     (fn: (prev: Record<string, string[]>) => Record<string, string[]>) => {
@@ -822,7 +850,9 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
     );
 
     if (hasReleased) {
-      setPendingDrag({ execute: persist, rollback });
+      const draggedItem = itemsMapRef.current[aid];
+      const draggedEntregaIds = draggedItem ? draggedItem.entregaIds : [aid];
+      setPendingDrag({ execute: persist, rollback, affectedEntregaIds: draggedEntregaIds });
     } else {
       persist();
     }
@@ -850,18 +880,6 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
     [setColumns],
   );
 
-  const handleTogglePostponed = useCallback(
-    (entregaId: string, postponed: boolean) => {
-      setEntregasMap((prev) => ({
-        ...prev,
-        [entregaId]: { ...prev[entregaId], is_postponed: postponed },
-      }));
-      togglePostponed(entregaId, postponed)
-        .then(() => toast.success(postponed ? "Entrega marcada como adiada" : "Adiamento removido"))
-        .catch(() => toast.error("Erro ao atualizar"));
-    },
-    [],
-  );
 
   const handleOptimize = useCallback(
     (columnId: string) => {
@@ -946,9 +964,9 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
               title={colId === UNASSIGNED ? "Sem Entregador" : (entregador?.name ?? "Entregador")}
               visualIds={vids}
               itemsMap={itemsMap}
+              entregasMap={entregasMap}
               entregadores={entregadores}
               onAssign={handleAssign}
-              onTogglePostponed={handleTogglePostponed}
               onOptimize={colId !== UNASSIGNED ? handleOptimize : undefined}
               onRelease={colId !== UNASSIGNED ? () => handleRelease(colId) : undefined}
               onMove={handleMove}
@@ -963,6 +981,7 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
         {activeId ? <CardPreview item={itemsMap[activeId] ?? null} /> : null}
       </DragOverlay>
 
+      {/* Step 1: Confirm route change */}
       <AlertDialog
         open={pendingDrag !== null}
         onOpenChange={(open) => {
@@ -983,12 +1002,177 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
             <AlertDialogCancel onClick={() => { pendingDrag?.rollback(); setPendingDrag(null); }}>
               Cancelar
             </AlertDialogCancel>
-            <AlertDialogAction onClick={() => { pendingDrag?.execute(); setPendingDrag(null); }}>
+            <AlertDialogAction onClick={() => {
+              const drag = pendingDrag!;
+              setPendingDrag(null);
+              setRouteChangeType(null);
+              setRouteChangeNote("");
+              setRouteChangeAddr({ rua: "", numero: "", bairro: "", cidade: "" });
+              setRouteChangeDialog({
+                entregaIds: drag.affectedEntregaIds,
+                execute: drag.execute,
+                rollback: drag.rollback,
+              });
+            }}>
               Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Step 2: Route change reason */}
+      <Dialog
+        open={routeChangeDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            routeChangeDialog?.rollback();
+            setRouteChangeDialog(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Motivo da alteração</DialogTitle>
+            <DialogDescription>
+              Informe o motivo da mudança na rota. O motoboy será notificado.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={routeChangeType === "adiada" ? "default" : "outline"}
+                className={routeChangeType === "adiada" ? "flex-1 bg-amber-500 hover:bg-amber-600 text-white" : "flex-1"}
+                onClick={() => setRouteChangeType("adiada")}
+              >
+                <Clock className="mr-2 h-4 w-4" />
+                Adiada
+              </Button>
+              <Button
+                type="button"
+                variant={routeChangeType === "cancelada" ? "destructive" : "outline"}
+                className="flex-1"
+                onClick={() => setRouteChangeType("cancelada")}
+              >
+                <AlertTriangle className="mr-2 h-4 w-4" />
+                Cancelada
+              </Button>
+              <Button
+                type="button"
+                variant={routeChangeType === "endereco_alterado" ? "default" : "outline"}
+                className={routeChangeType === "endereco_alterado" ? "flex-1 bg-blue-500 hover:bg-blue-600 text-white" : "flex-1"}
+                onClick={() => setRouteChangeType("endereco_alterado")}
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                Endereço
+              </Button>
+            </div>
+            {routeChangeType && (
+              <p className="text-xs text-muted-foreground">
+                {routeChangeType === "adiada"
+                  ? "A entrega será entregue em outra ordem. O motoboy verá a nova posição na rota."
+                  : routeChangeType === "cancelada"
+                    ? "A entrega será cancelada e o motoboy será instruído a retornar com ela à Dental."
+                    : "O endereço da entrega será alterado. O motoboy verá o novo endereço na rota."}
+              </p>
+            )}
+            {routeChangeType === "endereco_alterado" && (
+              <div className="space-y-2 rounded-md border p-3">
+                <p className="text-xs font-medium">Novo endereço</p>
+                <div className="grid grid-cols-[1fr_80px] gap-2">
+                  <Input
+                    placeholder="Rua *"
+                    value={routeChangeAddr.rua}
+                    onChange={(e) => setRouteChangeAddr((p) => ({ ...p, rua: e.target.value }))}
+                  />
+                  <Input
+                    placeholder="Nº"
+                    value={routeChangeAddr.numero}
+                    onChange={(e) => setRouteChangeAddr((p) => ({ ...p, numero: e.target.value }))}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    placeholder="Bairro"
+                    value={routeChangeAddr.bairro}
+                    onChange={(e) => setRouteChangeAddr((p) => ({ ...p, bairro: e.target.value }))}
+                  />
+                  <Input
+                    placeholder="Cidade *"
+                    value={routeChangeAddr.cidade}
+                    onChange={(e) => setRouteChangeAddr((p) => ({ ...p, cidade: e.target.value }))}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Observação para o motoboy {routeChangeType !== "endereco_alterado" ? "*" : ""}</Label>
+              <Textarea
+                value={routeChangeNote}
+                onChange={(e) => setRouteChangeNote(e.target.value)}
+                placeholder="Ex: Cliente não está no local, entregar amanhã..."
+                rows={2}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { routeChangeDialog?.rollback(); setRouteChangeDialog(null); }}>
+              Cancelar
+            </Button>
+            <Button
+              disabled={
+                !routeChangeType
+                || (routeChangeType !== "endereco_alterado" && !routeChangeNote.trim())
+                || (routeChangeType === "endereco_alterado" && (!routeChangeAddr.rua.trim() || !routeChangeAddr.cidade.trim()))
+              }
+              onClick={async () => {
+                const dialog = routeChangeDialog!;
+                const type = routeChangeType!;
+                const note = routeChangeNote.trim();
+
+                dialog.execute();
+
+                try {
+                  if (type === "endereco_alterado") {
+                    await Promise.all(
+                      dialog.entregaIds.map((id) => applyAddressChange(id, routeChangeAddr, note))
+                    );
+                  } else {
+                    await Promise.all(
+                      dialog.entregaIds.map((id) => applyRouteChange(id, type, note))
+                    );
+                  }
+                  setEntregasMap((prev) => {
+                    const next = { ...prev };
+                    for (const id of dialog.entregaIds) {
+                      next[id] = {
+                        ...next[id],
+                        route_change_type: type,
+                        route_change_note: note || (type === "endereco_alterado" ? `Novo: ${routeChangeAddr.rua}, ${routeChangeAddr.numero}` : null),
+                        ...(type === "cancelada" ? { status: "retornada" } : {}),
+                      };
+                    }
+                    return next;
+                  });
+                  toast.success(
+                    type === "adiada"
+                      ? "Entrega(s) marcada(s) como adiada(s)"
+                      : type === "cancelada"
+                        ? "Entrega(s) cancelada(s) — motoboy será notificado"
+                        : "Endereço alterado — motoboy será notificado"
+                  );
+                } catch {
+                  toast.error("Erro ao registrar alteração de rota");
+                }
+
+                setRouteChangeDialog(null);
+              }}
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DndContext>
   );
 }

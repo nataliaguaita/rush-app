@@ -4,7 +4,9 @@ export type DeliveryStatus =
   | "rota_definida"
   | "em_rota"
   | "entregue"
-  | "recusada";
+  | "recusada"
+  | "retornada";
+export type RouteChangeType = "adiada" | "cancelada" | "endereco_alterado";
 export type DeliveryAction = "entregar" | "receber" | "assinar_nota" | "receber_e_assinar";
 export type DeliveryPeriod = "manha" | "tarde";
 export type ReceiverRole =
@@ -67,6 +69,10 @@ export interface Entrega {
   interested_note: string | null;
   notes: string | null;
   is_postponed: boolean;
+  route_change_type: RouteChangeType | null;
+  route_change_note: string | null;
+  return_confirmed: boolean;
+  return_confirmed_at: string | null;
   route_order: number | null;
   receiver_name: string | null;
   receiver_role: ReceiverRole | null;

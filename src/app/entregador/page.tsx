@@ -46,7 +46,8 @@ export default function EntregadorPage() {
       .from("entregas")
       .select("*, cliente:clientes(*), endereco:enderecos(*)")
       .eq("entregador_id", user.id)
-      .in("status", ["rota_definida", "em_rota"])
+      .in("status", ["rota_definida", "em_rota", "retornada"])
+      .or("return_confirmed.is.null,return_confirmed.eq.false")
       .order("is_urgent", { ascending: false })
       .order("route_order", { ascending: true })
       .order("created_at", { ascending: true });

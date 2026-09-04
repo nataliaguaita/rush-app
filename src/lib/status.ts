@@ -3,7 +3,8 @@ export type EntregaStatus =
   | "rota_definida"
   | "em_rota"
   | "entregue"
-  | "recusada";
+  | "recusada"
+  | "retornada";
 
 export const STATUS_META: Record<
   EntregaStatus,
@@ -28,6 +29,10 @@ export const STATUS_META: Record<
   recusada: {
     label: "Recusada",
     className: "bg-destructive/10 text-destructive",
+  },
+  retornada: {
+    label: "Retornada",
+    className: "bg-orange-500/10 text-orange-600",
   },
 };
 

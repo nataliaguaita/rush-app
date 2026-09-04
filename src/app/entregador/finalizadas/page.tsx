@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle, XCircle, MapPin, Clock, AlertTriangle, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { CheckCircle, XCircle, MapPin, Clock, AlertTriangle, ChevronLeft, ChevronRight, Users, PackageX } from "lucide-react";
 import { format, addDays, subDays, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { RECEIVER_ROLE_LABELS, formatOrderNumber } from "@/lib/status";
@@ -35,7 +35,7 @@ export default function EntregasFinalizadasPage() {
       .from("entregas")
       .select("*, cliente:clientes(*), endereco:enderecos(*), fotos:entrega_fotos(storage_path)")
       .eq("entregador_id", user.id)
-      .in("status", ["entregue", "recusada"])
+      .in("status", ["entregue", "recusada", "retornada"])
       .gte("updated_at", dayStart)
       .lte("updated_at", dayEnd)
       .order("updated_at", { ascending: false });
@@ -147,17 +147,23 @@ export default function EntregasFinalizadasPage() {
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
-          {entregas.map((entrega) => (
-              <Card key={entrega.id} className="overflow-hidden">
+          {entregas.map((entrega) => {
+              const isRetornada = entrega.status === "retornada";
+              return (
+              <Card key={entrega.id} className={`overflow-hidden ${isRetornada ? "border-l-4 border-l-orange-500" : ""}`}>
                   <div className="flex">
-                    {entrega.fotoUrl && (
+                    {isRetornada ? (
+                      <div className="flex w-24 shrink-0 items-center justify-center bg-orange-50 dark:bg-orange-500/10 -my-(--card-spacing)">
+                        <PackageX className="h-8 w-8 text-orange-400" />
+                      </div>
+                    ) : entrega.fotoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={entrega.fotoUrl}
                         alt="Foto da entrega"
                         className="w-24 shrink-0 object-cover -my-(--card-spacing)"
                       />
-                    )}
+                    ) : null}
                     <CardContent className="flex-1 space-y-2">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -177,11 +183,15 @@ export default function EntregasFinalizadasPage() {
                           className={
                             entrega.status === "entregue"
                               ? "border-transparent bg-status-success/10 text-status-success"
-                              : "border-transparent bg-destructive/10 text-destructive"
+                              : isRetornada
+                                ? "border-transparent bg-orange-500/10 text-orange-600"
+                                : "border-transparent bg-destructive/10 text-destructive"
                           }
                         >
                           {entrega.status === "entregue" ? (
                             <><CheckCircle className="mr-1 h-3 w-3" />Entregue</>
+                          ) : isRetornada ? (
+                            <><PackageX className="mr-1 h-3 w-3" />Retornada</>
                           ) : (
                             <><XCircle className="mr-1 h-3 w-3" />Recusada</>
                           )}
@@ -194,7 +204,16 @@ export default function EntregasFinalizadasPage() {
                         </p>
                       )}
                       <div className="text-xs text-muted-foreground space-y-0.5">
-                        {entrega.delivered_at && (
+                        {isRetornada && entrega.return_confirmed_at && (
+                          <p className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            Retorno confirmado em {format(new Date(entrega.return_confirmed_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          </p>
+                        )}
+                        {isRetornada && entrega.route_change_note && (
+                          <p className="text-orange-600">Motivo: {entrega.route_change_note}</p>
+                        )}
+                        {entrega.delivered_at && !isRetornada && (
                           <p className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {format(new Date(entrega.delivered_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
@@ -212,7 +231,8 @@ export default function EntregasFinalizadasPage() {
                     </CardContent>
                   </div>
                 </Card>
-          ))}
+              );
+          })}
         </div>
       )}
     </div>

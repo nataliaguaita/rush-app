@@ -47,6 +47,7 @@ import {
   registrarRecusa,
   uploadFotoEntrega,
   removerFotosEntrega,
+  confirmarRetornoEntrega,
 } from "./actions";
 import { toast } from "sonner";
 
@@ -131,6 +132,7 @@ export function EntregaCard({
 
   const endereco = entrega.endereco;
   const isEmRota = entrega.status === "em_rota";
+  const isRetornada = entrega.status === "retornada";
 
   function openNavigation() {
     const address = `${endereco.rua}, ${endereco.numero}, ${endereco.cidade}`;
@@ -227,13 +229,68 @@ export function EntregaCard({
     }
   }
 
+  if (isRetornada) {
+    return (
+      <Card className="relative overflow-hidden border-l-4 border-l-red-500 bg-red-50 dark:bg-red-500/10">
+        <CardContent className="space-y-3">
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-mono text-muted-foreground">{formatOrderNumber(entrega.order_number)}</span>
+              <span className="text-base font-semibold">{entrega.cliente?.name}</span>
+              <Badge variant="outline" className="border-red-500/50 bg-red-100 text-xs text-red-700 dark:bg-red-500/10 dark:text-red-400">
+                <XCircle className="mr-1 h-3 w-3" />
+                Retornar à Dental
+              </Badge>
+            </div>
+            {endereco && (
+              <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                <MapPin className="h-3 w-3" />
+                {endereco.rua}, {endereco.numero}
+                {endereco.bairro ? ` - ${endereco.bairro}` : ""}
+              </p>
+            )}
+            {entrega.route_change_note && (
+              <div className="rounded-md bg-red-100 p-2 text-sm text-red-800 dark:bg-red-500/20 dark:text-red-200">
+                <span className="font-medium">Obs:</span> {entrega.route_change_note}
+              </div>
+            )}
+          </div>
+          <Button
+            size="lg"
+            variant="destructive"
+            className="w-full"
+            disabled={loading}
+            onClick={async () => {
+              setLoading(true);
+              try {
+                await confirmarRetornoEntrega(entrega.id);
+                toast.info("Retorno confirmado.");
+              } catch {
+                toast.error("Falha ao confirmar retorno.");
+              }
+              setLoading(false);
+            }}
+          >
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+            Confirmar Retorno
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const changeType = entrega.route_change_type;
+  const cardColor = changeType === "adiada"
+    ? "border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-amber-500/5"
+    : changeType === "endereco_alterado"
+      ? "border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-500/5"
+      : isFirst && !isEmRota
+        ? "border-l-4 border-l-primary bg-primary/5"
+        : "";
+
   return (
     <Card
-      className={`relative overflow-hidden ${
-        isFirst && !isEmRota
-          ? "border-l-4 border-l-primary bg-primary/5"
-          : ""
-      }`}
+      className={`relative overflow-hidden ${cardColor}`}
     >
       {isEmRota && (
         <div className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-status-active/20">
@@ -264,6 +321,18 @@ export function EntregaCard({
                 <Badge variant="outline" className="border-amber-500/50 text-xs text-amber-600">
                   <Clock className="mr-1 h-3 w-3" />
                   Adiada
+                </Badge>
+              )}
+              {changeType === "adiada" && (
+                <Badge variant="outline" className="border-amber-500/50 bg-amber-100 text-xs text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                  <AlertTriangle className="mr-1 h-3 w-3" />
+                  Rota alterada
+                </Badge>
+              )}
+              {changeType === "endereco_alterado" && (
+                <Badge variant="outline" className="border-blue-500/50 bg-blue-100 text-xs text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
+                  <MapPin className="mr-1 h-3 w-3" />
+                  Endereço alterado
                 </Badge>
               )}
             </div>
@@ -302,6 +371,16 @@ export function EntregaCard({
             )}
             {entrega.valor && entrega.actions?.includes("receber") && (
               <p className="text-sm font-medium text-emerald-600">R$ {Number(entrega.valor).toFixed(2)}</p>
+            )}
+            {entrega.route_change_type === "adiada" && entrega.route_change_note && (
+              <div className="rounded-md bg-amber-100 p-2 text-sm text-amber-800 dark:bg-amber-500/20 dark:text-amber-200">
+                <span className="font-medium">Rota alterada:</span> {entrega.route_change_note}
+              </div>
+            )}
+            {entrega.route_change_type === "endereco_alterado" && entrega.route_change_note && (
+              <div className="rounded-md bg-blue-100 p-2 text-sm text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
+                <span className="font-medium">Endereço alterado:</span> {entrega.route_change_note}
+              </div>
             )}
             {entrega.notes && (
               <p className="text-xs text-muted-foreground italic">

@@ -31,7 +31,8 @@ export default function EntregasPage() {
         .select("*, cliente:clientes(*), endereco:enderecos(*)")
         .gte("created_at", `${selectedDate}T00:00:00`)
         .lte("created_at", `${selectedDate}T23:59:59`)
-        .in("status", ["aguardando_atribuicao", "rota_definida"])
+        .in("status", ["aguardando_atribuicao", "rota_definida", "retornada"])
+        .or("return_confirmed.is.null,return_confirmed.eq.false")
         .order("route_order", { ascending: true, nullsFirst: true });
 
       const { data: ent, error: entregadoresError } = await supabase
@@ -62,7 +63,7 @@ export default function EntregasPage() {
       .channel("entregas-kanban")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "entregas" },
+        { event: "*", schema: "public", table: "entregas" },
         () => load({ silent: true }),
       )
       .subscribe();
