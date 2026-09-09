@@ -246,6 +246,7 @@ export default function EntregaDetailPage() {
           setEditing(false);
           load();
         }}
+        onDeleted={() => router.back()}
       />
     );
   }
@@ -581,10 +582,12 @@ function EditEntregaView({
   entrega,
   onCancel,
   onSaved,
+  onDeleted,
 }: {
   entrega: EntregaWithRelations;
   onCancel: () => void;
   onSaved: () => void;
+  onDeleted: () => void;
 }) {
   const [valor, setValor] = useState(() => {
     if (entrega.valor == null) return "";
@@ -654,7 +657,7 @@ function EditEntregaView({
     try {
       await cancelEntrega(entrega.id, cancelReason);
       toast.success("Entrega cancelada.");
-      onSaved();
+      onDeleted();
     } catch (err) {
       toast.error("Erro ao cancelar entrega", { description: err instanceof Error ? err.message : undefined });
     } finally {

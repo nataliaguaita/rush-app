@@ -8,7 +8,7 @@ export interface StaleEntrega {
   id: string;
   order_number: number;
   status: string;
-  created_at: string;
+  updated_at: string;
   cliente: { name: string } | null;
 }
 
@@ -24,11 +24,11 @@ export function useStaleEntregas() {
       try {
         const { data } = await supabase
           .from("entregas")
-          .select("id, order_number, status, created_at, cliente:clientes(name)")
+          .select("id, order_number, status, updated_at, cliente:clientes(name)")
           .in("status", STALE_STATUSES)
           .or("return_confirmed.is.null,return_confirmed.eq.false")
-          .lt("created_at", cutoff)
-          .order("created_at", { ascending: true });
+          .lt("updated_at", cutoff)
+          .order("updated_at", { ascending: true });
         if (active) setEntregas((data as StaleEntrega[] | null) ?? []);
       } catch {
         // network/query error — leave the current list as-is

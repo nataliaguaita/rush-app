@@ -31,8 +31,7 @@ export default function EntregasPage() {
       const { data: e, error: entregasError } = await supabase
         .from("entregas")
         .select("*, cliente:clientes(*), endereco:enderecos(*)")
-        .gte("created_at", `${selectedDate}T00:00:00`)
-        .lte("created_at", `${selectedDate}T23:59:59`)
+        .eq("scheduled_date", selectedDate)
         .in("status", ["aguardando_atribuicao", "rota_definida", "retornada"])
         .or("return_confirmed.is.null,return_confirmed.eq.false")
         .order("route_order", { ascending: true, nullsFirst: true });

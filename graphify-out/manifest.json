@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/[id]/page.tsx": {
-    "mtime": 1788975866.4363155,
-    "seen": 1788976948.5724719,
-    "ast_hash": "8c934d8b5b69758bef407a1bdf5b2eb7",
+    "mtime": 1788978366.9007983,
+    "seen": 1788978759.4925935,
+    "ast_hash": "deff80d9a9d09ea155bff65478d587e0",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/actions.ts": {
@@ -180,9 +180,9 @@
     "semantic_hash": "73060730d45c688c383b5f2cc45d7b24"
   },
   "src/app/dashboard/entregas/kanban-board.tsx": {
-    "mtime": 1788976772.1006505,
-    "seen": 1788976948.5724719,
-    "ast_hash": "a659da892d71f593f4892f302017d3f9",
+    "mtime": 1788978721.1665874,
+    "seen": 1788978759.4925935,
+    "ast_hash": "1629257ed241f58dd87d56e5a6086ab6",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova-grupo/actions.ts": {
@@ -216,9 +216,9 @@
     "semantic_hash": "9610f8fda831facca3bc38550df8274a"
   },
   "src/app/dashboard/entregas/page.tsx": {
-    "mtime": 1788961222.7886963,
-    "seen": 1788962550.1248887,
-    "ast_hash": "869e941e5807e212dc12c83068e66d7a",
+    "mtime": 1788978366.9027953,
+    "seen": 1788978759.4936564,
+    "ast_hash": "2ff73ac5d8fc47a8355376d71f9fe7d3",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/pesquisar-entrega-dialog.tsx": {
@@ -672,9 +672,9 @@
     "semantic_hash": ""
   },
   "src/hooks/use-stale-entregas.ts": {
-    "mtime": 1788964324.1467948,
-    "seen": 1788968319.07169,
-    "ast_hash": "b538a19e658075234afe2e41e3d4e033",
+    "mtime": 1788978366.9063087,
+    "seen": 1788978759.5044563,
+    "ast_hash": "cc0c7064910fcad117cc778a2b4e1d47",
     "semantic_hash": ""
   },
   ".github/workflows/ci.yml": {
@@ -684,9 +684,9 @@
     "semantic_hash": ""
   },
   "docs/IDEIAS.md": {
-    "mtime": 1788976933.405163,
-    "seen": 1788976948.5865204,
-    "ast_hash": "278b1501ea9ccf3702864a64023aaf27",
+    "mtime": 1788978735.5939298,
+    "seen": 1788978759.5097992,
+    "ast_hash": "3790f2d81b8357d9cb76213b14ce2862",
     "semantic_hash": ""
   },
   "commitlint.config.js": {
@@ -702,9 +702,9 @@
     "semantic_hash": ""
   },
   "src/hooks/__tests__/use-stale-entregas.test.ts": {
-    "mtime": 1788964400.2841995,
-    "seen": 1788968319.07169,
-    "ast_hash": "8c30cebb0dd881aa155dd5d73abdb261",
+    "mtime": 1788978366.905302,
+    "seen": 1788978759.5044563,
+    "ast_hash": "d915bf7185bcceb8551623a365346583",
     "semantic_hash": ""
   },
   "src/lib/__tests__/geocode.test.ts": {
@@ -762,9 +762,9 @@
     "semantic_hash": ""
   },
   "src/components/__tests__/stale-entregas-banner.test.tsx": {
-    "mtime": 1788962831.0898633,
-    "seen": 1788962890.2287703,
-    "ast_hash": "153ffae9866b3ca2e527ca9fd4e4b802",
+    "mtime": 1788978366.9037957,
+    "seen": 1788978759.4984288,
+    "ast_hash": "dcd133eb8d6271ec6352bfd6a0119ab4",
     "semantic_hash": ""
   },
   "src/components/__tests__/status-badge.test.tsx": {

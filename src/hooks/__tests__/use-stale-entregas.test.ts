@@ -46,7 +46,7 @@ const sampleEntrega: StaleEntrega = {
   id: "1",
   order_number: 42,
   status: "em_rota",
-  created_at: "2026-09-01T00:00:00.000Z",
+  updated_at: "2026-09-01T00:00:00.000Z",
   cliente: { name: "Cliente Teste" },
 };
 
