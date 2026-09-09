@@ -36,9 +36,9 @@
     "semantic_hash": "915ef33a7a9e8060e2d69ab09097d186"
   },
   "package.json": {
-    "mtime": 1788962113.407895,
-    "seen": 1788962550.1153755,
-    "ast_hash": "e6992a62cff214b2b4d64b4f22e029d7",
+    "mtime": 1788968110.3368967,
+    "seen": 1788968319.0571673,
+    "ast_hash": "60b3fd29cefa3e181694060d05549a4c",
     "semantic_hash": ""
   },
   "postcss.config.mjs": {
@@ -126,9 +126,9 @@
     "semantic_hash": "003edf2078d2fcae0035522a0e5009e5"
   },
   "src/app/dashboard/clientes/[id]/cliente-edit-form.tsx": {
-    "mtime": 1788541467.338416,
-    "seen": 1788541489.8048427,
-    "ast_hash": "5c19154c3fa4ace17c66ec3c2a38a2b8",
+    "mtime": 1788964583.2917027,
+    "seen": 1788968319.0601578,
+    "ast_hash": "7fcda6d67e97f03098bfc982720ba7a5",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/edit-endereco-form.tsx": {
@@ -204,9 +204,9 @@
     "semantic_hash": "973f16f8cba528c8108b908ac0c49310"
   },
   "src/app/dashboard/entregas/nova/nova-entrega-form.tsx": {
-    "mtime": 1788544638.8692741,
-    "seen": 1788546137.1670651,
-    "ast_hash": "517022c05176328d34495f6a939d79df",
+    "mtime": 1788964711.1027033,
+    "seen": 1788968319.062175,
+    "ast_hash": "9ce84ba30fceeb936c132085c69c057c",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova/page.tsx": {
@@ -672,8 +672,8 @@
     "semantic_hash": ""
   },
   "src/hooks/use-stale-entregas.ts": {
-    "mtime": 1788962523.0252347,
-    "seen": 1788962550.1355672,
+    "mtime": 1788964324.1467948,
+    "seen": 1788968319.07169,
     "ast_hash": "b538a19e658075234afe2e41e3d4e033",
     "semantic_hash": ""
   },
@@ -696,21 +696,15 @@
     "semantic_hash": ""
   },
   "jest.config.js": {
-    "mtime": 1788962128.0677047,
-    "seen": 1788962550.1153755,
-    "ast_hash": "fdeb4912e6a3f6ce13f710e6f887badf",
-    "semantic_hash": ""
-  },
-  "jest.setup.js": {
-    "mtime": 1788962108.5417795,
-    "seen": 1788962550.1153755,
-    "ast_hash": "994c5bf3f0f8742b450d0ab09b0d6bb9",
+    "mtime": 1788964407.0797873,
+    "seen": 1788968319.056157,
+    "ast_hash": "1c2409d619f80dd97d1c5d3996247b58",
     "semantic_hash": ""
   },
   "src/hooks/__tests__/use-stale-entregas.test.ts": {
-    "mtime": 1788962502.498833,
-    "seen": 1788962550.1355672,
-    "ast_hash": "f1c45147a701d10f8f5066d129724f50",
+    "mtime": 1788964400.2841995,
+    "seen": 1788968319.07169,
+    "ast_hash": "8c30cebb0dd881aa155dd5d73abdb261",
     "semantic_hash": ""
   },
   "src/lib/__tests__/geocode.test.ts": {
@@ -783,6 +777,48 @@
     "mtime": 1788962785.8966045,
     "seen": 1788962890.2287703,
     "ast_hash": "b3cbae7636f0cf997631c546b680eb21",
+    "semantic_hash": ""
+  },
+  "src/app/dashboard/cadastros/__tests__/cadastro-dialog.test.tsx": {
+    "mtime": 1788964606.7926083,
+    "seen": 1788968319.059158,
+    "ast_hash": "8f1651ac92b568c2a816945430b5b82d",
+    "semantic_hash": ""
+  },
+  "src/app/dashboard/clientes/[id]/__tests__/cliente-edit-form.test.tsx": {
+    "mtime": 1788964600.6058679,
+    "seen": 1788968319.0601578,
+    "ast_hash": "1d36f8fc84e41419cbb4f4e77ee75405",
+    "semantic_hash": ""
+  },
+  "src/app/dashboard/entregas/nova/__tests__/nova-entrega-form.test.tsx": {
+    "mtime": 1788964691.0674465,
+    "seen": 1788968319.062175,
+    "ast_hash": "f8900507b6b9055eada1c7494387569e",
+    "semantic_hash": ""
+  },
+  "src/app/dashboard/locais/__tests__/local-dialog.test.tsx": {
+    "mtime": 1788964612.1050293,
+    "seen": 1788968319.0636811,
+    "ast_hash": "9f4b7f19df8c0254af237baef7e39adb",
+    "semantic_hash": ""
+  },
+  "e2e/criar-entrega.spec.ts": {
+    "mtime": 1788968275.1132276,
+    "seen": 1788968319.056157,
+    "ast_hash": "8862b1a468efd0df57086832919d48ab",
+    "semantic_hash": ""
+  },
+  "jest.setup.ts": {
+    "mtime": 1788964324.1368213,
+    "seen": 1788968319.056157,
+    "ast_hash": "dc972af1d2b80e79814a7e1999178b15",
+    "semantic_hash": ""
+  },
+  "playwright.config.ts": {
+    "mtime": 1788968092.154912,
+    "seen": 1788968319.0571673,
+    "ast_hash": "3b11da57100fb1c48ae01e3edd3c9f42",
     "semantic_hash": ""
   }
 }

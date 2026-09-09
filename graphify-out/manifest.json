@@ -36,9 +36,9 @@
     "semantic_hash": "915ef33a7a9e8060e2d69ab09097d186"
   },
   "package.json": {
-    "mtime": 1788962113.407895,
-    "seen": 1788962550.1153755,
-    "ast_hash": "e6992a62cff214b2b4d64b4f22e029d7",
+    "mtime": 1788968487.4051313,
+    "seen": 1788968541.4700484,
+    "ast_hash": "8e98cb4b41779c75088c4e64a3ac339a",
     "semantic_hash": ""
   },
   "postcss.config.mjs": {
@@ -126,9 +126,9 @@
     "semantic_hash": "003edf2078d2fcae0035522a0e5009e5"
   },
   "src/app/dashboard/clientes/[id]/cliente-edit-form.tsx": {
-    "mtime": 1788963864.3810382,
-    "seen": 1788964038.3592455,
-    "ast_hash": "bfacfe929255f3c669b8096f462cd087",
+    "mtime": 1788964583.2917027,
+    "seen": 1788968319.0601578,
+    "ast_hash": "7fcda6d67e97f03098bfc982720ba7a5",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/edit-endereco-form.tsx": {
@@ -204,9 +204,9 @@
     "semantic_hash": "973f16f8cba528c8108b908ac0c49310"
   },
   "src/app/dashboard/entregas/nova/nova-entrega-form.tsx": {
-    "mtime": 1788963944.9243696,
-    "seen": 1788964038.362248,
-    "ast_hash": "782f405fabcc81d660f4bd4b29457fa3",
+    "mtime": 1788964711.1027033,
+    "seen": 1788968319.062175,
+    "ast_hash": "9ce84ba30fceeb936c132085c69c057c",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova/page.tsx": {
@@ -672,8 +672,8 @@
     "semantic_hash": ""
   },
   "src/hooks/use-stale-entregas.ts": {
-    "mtime": 1788962523.0252347,
-    "seen": 1788962550.1355672,
+    "mtime": 1788964324.1467948,
+    "seen": 1788968319.07169,
     "ast_hash": "b538a19e658075234afe2e41e3d4e033",
     "semantic_hash": ""
   },
@@ -696,21 +696,15 @@
     "semantic_hash": ""
   },
   "jest.config.js": {
-    "mtime": 1788962128.0677047,
-    "seen": 1788962550.1153755,
-    "ast_hash": "fdeb4912e6a3f6ce13f710e6f887badf",
-    "semantic_hash": ""
-  },
-  "jest.setup.js": {
-    "mtime": 1788962108.5417795,
-    "seen": 1788962550.1153755,
-    "ast_hash": "994c5bf3f0f8742b450d0ab09b0d6bb9",
+    "mtime": 1788964407.0797873,
+    "seen": 1788968319.056157,
+    "ast_hash": "1c2409d619f80dd97d1c5d3996247b58",
     "semantic_hash": ""
   },
   "src/hooks/__tests__/use-stale-entregas.test.ts": {
-    "mtime": 1788962502.498833,
-    "seen": 1788962550.1355672,
-    "ast_hash": "f1c45147a701d10f8f5066d129724f50",
+    "mtime": 1788964400.2841995,
+    "seen": 1788968319.07169,
+    "ast_hash": "8c30cebb0dd881aa155dd5d73abdb261",
     "semantic_hash": ""
   },
   "src/lib/__tests__/geocode.test.ts": {
@@ -786,27 +780,45 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/cadastros/__tests__/cadastro-dialog.test.tsx": {
-    "mtime": 1788963674.7649076,
-    "seen": 1788964038.358739,
-    "ast_hash": "bec63b6d94fd7547ff521467d0f1919d",
+    "mtime": 1788964606.7926083,
+    "seen": 1788968319.059158,
+    "ast_hash": "8f1651ac92b568c2a816945430b5b82d",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/__tests__/cliente-edit-form.test.tsx": {
-    "mtime": 1788963882.1172962,
-    "seen": 1788964038.3592455,
-    "ast_hash": "4dff3571c63dc9eb8b8458032dc75a41",
+    "mtime": 1788964600.6058679,
+    "seen": 1788968319.0601578,
+    "ast_hash": "1d36f8fc84e41419cbb4f4e77ee75405",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova/__tests__/nova-entrega-form.test.tsx": {
-    "mtime": 1788963993.0859282,
-    "seen": 1788964038.362248,
-    "ast_hash": "687e6b74a3e6eeb690a4b370f5292b67",
+    "mtime": 1788964691.0674465,
+    "seen": 1788968319.062175,
+    "ast_hash": "f8900507b6b9055eada1c7494387569e",
     "semantic_hash": ""
   },
   "src/app/dashboard/locais/__tests__/local-dialog.test.tsx": {
-    "mtime": 1788963839.4519553,
-    "seen": 1788964038.3632483,
-    "ast_hash": "f4a4c2cbc3616aa11a2a4bf6491197d5",
+    "mtime": 1788964612.1050293,
+    "seen": 1788968319.0636811,
+    "ast_hash": "9f4b7f19df8c0254af237baef7e39adb",
+    "semantic_hash": ""
+  },
+  "e2e/criar-entrega.spec.ts": {
+    "mtime": 1788968502.4490423,
+    "seen": 1788968541.4680266,
+    "ast_hash": "f21cc4aabe76ee4dcc078593ab519026",
+    "semantic_hash": ""
+  },
+  "jest.setup.ts": {
+    "mtime": 1788964324.1368213,
+    "seen": 1788968319.056157,
+    "ast_hash": "dc972af1d2b80e79814a7e1999178b15",
+    "semantic_hash": ""
+  },
+  "playwright.config.ts": {
+    "mtime": 1788968492.6345792,
+    "seen": 1788968541.4700484,
+    "ast_hash": "53fd3035a261cd578289d4bdb16bae9e",
     "semantic_hash": ""
   }
 }
