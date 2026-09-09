@@ -83,6 +83,8 @@ export interface Entrega {
   group_id: string | null;
   refusal_reason: string | null;
   cancel_reason: string | null;
+  nota_devolvida: boolean;
+  nota_devolvida_at: string | null;
   created_at: string;
   updated_at: string;
 }

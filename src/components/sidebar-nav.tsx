@@ -19,6 +19,7 @@ import {
   Plus,
   Users as UsersIcon,
   MapPin,
+  ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -32,6 +33,7 @@ const adminLinks = [
   { href: "/dashboard/clientes", label: "Clientes", icon: Users },
   { href: "/dashboard/locais", label: "Endereços Fixos", icon: MapPin },
   { href: "/dashboard/cadastros", label: "Cadastros", icon: UserPlus },
+  { href: "/dashboard/devolucoes", label: "Devoluções", icon: ClipboardCheck },
   { href: "/relatorios", label: "Relatórios", icon: BarChart3 },
 ];
 

@@ -11,7 +11,6 @@ Status: `[ ]` pendente · `[x]` feito (mover pra baixo ou apagar depois de feito
 ## Prioridade média
 
 - [ ] **Notificação para o motoboy quando a rota é liberada** para a entrega.
-- [ ] **Controle de devolução (admin) para entregas com nota a assinar/receber.** Toda entrega da tarde com nota gera pendência de devolução na manhã seguinte: nota assinada (caso assinatura), nota + comprovante de cartão/dinheiro (caso recebimento), ou material + nota (caso devolução). Necessário para o adm finalizar a venda no sistema de vendas da Dental. Ideia: checklist diário com as entregas dessas características, o adm confere e dá baixa final quando tudo devolvido.
 - [ ] **Notificação/moderação de entregas esquecidas.** Entregas criadas ou "em rota" há muito tempo sem finalização precisam de um fluxo de moderação (vendedor e/ou admin) para não ficarem em aberto indefinidamente no sistema. Avaliar quem modera e como.
 
 ## Prioridade baixa / ideias soltas
