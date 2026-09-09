@@ -14,13 +14,14 @@ import {
 } from "@/components/ui/select";
 import { updateCliente } from "../actions";
 import { toast } from "sonner";
+import type { Cliente } from "@/types/database";
 
 export function ClienteEditForm({
   cliente,
   onSaved,
   onCancel,
 }: {
-  cliente: any;
+  cliente: Pick<Cliente, "id" | "name" | "active">;
   onSaved: () => void;
   onCancel?: () => void;
 }) {
@@ -33,6 +34,10 @@ export function ClienteEditForm({
       await updateCliente(cliente.id, new FormData(e.currentTarget));
       toast.success("Cliente atualizado!");
       onSaved();
+    } catch (err) {
+      toast.error("Erro ao atualizar cliente", {
+        description: err instanceof Error ? err.message : undefined,
+      });
     } finally {
       setLoading(false);
     }
