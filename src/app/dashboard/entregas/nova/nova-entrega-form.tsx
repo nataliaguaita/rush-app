@@ -64,7 +64,7 @@ export function NovaEntregaForm({
   const handleCepResult = useCallback((data: { rua: string; bairro: string; cidade: string }) => {
     setCustomAddr((prev) => ({ ...prev, rua: data.rua, bairro: data.bairro, cidade: data.cidade }));
   }, []);
-  const { fetchCep, loading: cepLoading, filled: cepFilled } = useCep(handleCepResult);
+  const { fetchCep, filled: cepFilled } = useCep(handleCepResult);
   const cepHighlight = cepFilled ? "ring-2 ring-green-500/50 transition-shadow" : "transition-shadow";
 
   const selectedCliente = clientes.find((c) => c.id === selectedClienteId);
@@ -127,8 +127,10 @@ export function NovaEntregaForm({
           await createEntrega(fd);
           toast.success("Entrega cadastrada!");
           window.location.href = "/dashboard/entregas";
-        } catch (err: any) {
-          toast.error("Erro ao criar entrega", { description: err.message });
+        } catch (err) {
+          toast.error("Erro ao criar entrega", {
+            description: err instanceof Error ? err.message : undefined,
+          });
         }
       }}
       className="space-y-4 w-[50vw] min-w-[340px] mx-auto"
@@ -446,8 +448,8 @@ export function NovaEntregaForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Manhã">Manhã</SelectItem>
-                  <SelectItem value="Tarde">Tarde</SelectItem>
+                  <SelectItem value="manha">Manhã</SelectItem>
+                  <SelectItem value="tarde">Tarde</SelectItem>
                 </SelectContent>
               </Select>
               <Label>Data:</Label>
