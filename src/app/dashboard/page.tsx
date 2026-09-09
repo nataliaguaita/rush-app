@@ -137,7 +137,7 @@ export default function DashboardPage() {
             <RefreshCw className={`h-4 w-4 sm:mr-2 ${refreshing ? "animate-spin" : ""}`} />
             <span className="hidden sm:inline">Atualizar</span>
           </Button>
-          <PesquisarEntregaDialog entregas={entregas} entregadores={entregadores} />
+          <PesquisarEntregaDialog entregadores={entregadores} />
           <Link href="/dashboard/entregas/nova-grupo">
             <Button variant="outline">
               <Users className="h-4 w-4 sm:mr-2" />
@@ -237,7 +237,7 @@ export default function DashboardPage() {
                                     <ChevronDown className="ml-auto h-3.5 w-3.5 text-muted-foreground transition-transform group-open:rotate-180" />
                                   </summary>
                                   <div className="my-1.5 border-b" />
-                                  <div className="space-y-2">
+                                  <div className="space-y-3">
                                     <GroupedEntregaRows entregas={section.items} />
                                   </div>
                                 </details>
