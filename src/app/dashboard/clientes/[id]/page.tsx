@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Select,
   SelectContent,
@@ -41,44 +42,46 @@ import { EditEnderecoForm } from "./edit-endereco-form";
 import { deleteEndereco } from "../actions";
 import { toast } from "sonner";
 import { getStatusMeta, formatOrderNumber } from "@/lib/status";
+import type { ClienteWithEnderecos, Entrega } from "@/types/database";
 
 type OrdemEntregas = "Mais recentes" | "Mais antigas";
+type EntregaResumo = Pick<Entrega, "id" | "order_number" | "status" | "created_at" | "scheduled_date">;
 
 export default function ClienteDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const [cliente, setCliente] = useState<any>(null);
+  const [cliente, setCliente] = useState<ClienteWithEnderecos | null>(null);
   const [editando, setEditando] = useState(false);
   const [editandoEnderecoId, setEditandoEnderecoId] = useState<string | null>(null);
   const [adicionandoEndereco, setAdicionandoEndereco] = useState(false);
-  const [entregas, setEntregas] = useState<any[]>([]);
+  const [entregas, setEntregas] = useState<EntregaResumo[]>([]);
   const [ordemEntregas, setOrdemEntregas] = useState<OrdemEntregas>("Mais recentes");
   const [filtroData, setFiltroData] = useState("");
   const supabase = createClient();
 
-  async function load() {
+  const load = useCallback(async () => {
     const { data } = await supabase
       .from("clientes")
       .select("*, enderecos(*)")
       .eq("id", id)
       .single();
     setCliente(data);
-  }
+  }, [id, supabase]);
 
-  async function loadEntregas() {
+  const loadEntregas = useCallback(async () => {
     const { data } = await supabase
       .from("entregas")
       .select("id, order_number, status, created_at, scheduled_date")
       .eq("cliente_id", id)
       .order("created_at", { ascending: false });
     setEntregas(data ?? []);
-  }
+  }, [id, supabase]);
 
   useEffect(() => {
-    load();
-    loadEntregas();
-  }, [id]);
+    queueMicrotask(load);
+    queueMicrotask(loadEntregas);
+  }, [load, loadEntregas]);
 
   const entregasOrdenadas = useMemo(() => {
     let lista = [...entregas];
@@ -94,7 +97,7 @@ export default function ClienteDetailPage() {
   }, [entregas, ordemEntregas, filtroData]);
 
   if (!cliente) {
-    return <div className="flex items-center justify-center py-20 text-muted-foreground">Carregando...</div>;
+    return <div className="flex items-center justify-center py-20"><Spinner /></div>;
   }
 
   async function handleDeleteEndereco(enderecoId: string) {
@@ -164,8 +167,8 @@ export default function ClienteDetailPage() {
           )}
         </CardHeader>
         <CardContent className="space-y-3">
-          {cliente.enderecos && cliente.enderecos.filter((e: any) => e.active !== false).length > 0 ? (
-            cliente.enderecos.filter((e: any) => e.active !== false).map((end: any) =>
+          {cliente.enderecos && cliente.enderecos.filter((e) => e.active !== false).length > 0 ? (
+            cliente.enderecos.filter((e) => e.active !== false).map((end) =>
               editandoEnderecoId === end.id ? (
                 <EditEnderecoForm
                   key={end.id}

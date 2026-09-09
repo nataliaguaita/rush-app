@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -180,7 +180,7 @@ export default function DashboardPage() {
                     <Icon className={`h-4 w-4 ${m.className}`} />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{m.value}</div>
+                    <div className="text-3xl font-bold"><AnimatedNumber value={m.value} /></div>
                   </CardContent>
                 </Card>
               );
@@ -372,6 +372,35 @@ function EntregaGroupRow({ entregas, startIndex }: { entregas: EntregaWithRelati
       </div>
     </div>
   );
+}
+
+function AnimatedNumber({ value }: { value: number }) {
+  const [display, setDisplay] = useState(0);
+  const displayRef = useRef(0);
+
+  useEffect(() => {
+    const from = displayRef.current;
+    const to = value;
+    if (from === to) return;
+
+    const duration = 600;
+    const start = performance.now();
+    let raf: number;
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(from + (to - from) * eased);
+      displayRef.current = current;
+      setDisplay(current);
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+
+  return display;
 }
 
 function DashboardSkeleton() {

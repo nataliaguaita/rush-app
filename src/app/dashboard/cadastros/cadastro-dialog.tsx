@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Eye, EyeOff } from "lucide-react";
+import { Plus, Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createUser } from "./actions";
 
@@ -130,6 +130,7 @@ export function CadastroDialog({ onCreated }: { onCreated?: () => void }) {
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="animate-spin" />}
               {loading ? "Criando..." : "Criar"}
             </Button>
           </div>

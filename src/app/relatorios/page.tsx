@@ -8,6 +8,7 @@ import { AppShell } from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Package,
   DollarSign,
@@ -39,20 +40,34 @@ import {
   differenceInMinutes,
   differenceInCalendarDays,
 } from "date-fns";
-import type { Profile } from "@/types/database";
+import type { Profile, RotaDiaria, DeliveryStatus, DeliveryPeriod } from "@/types/database";
+
+interface RelatorioEntrega {
+  id: string;
+  valor: number | null;
+  status: DeliveryStatus;
+  scheduled_period: DeliveryPeriod | null;
+  scheduled_date: string | null;
+  delivered_at: string | null;
+  created_at: string;
+  entregador_id: string | null;
+  cliente: { name: string } | null;
+  endereco: { bairro: string | null; lat: number | null; lng: number | null } | null;
+  entregador: { id: string; name: string } | null;
+}
 
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 const HeatmapCard = dynamic(() => import("./heatmap").then((m) => m.HeatmapCard), {
   ssr: false,
   loading: () => (
-    <div className="flex h-80 w-full items-center justify-center text-sm text-muted-foreground">
-      Carregando mapa...
+    <div className="flex h-80 w-full items-center justify-center">
+      <Spinner />
     </div>
   ),
 });
 
-function computeCoreStats(entregasList: any[], rotasList: any[]) {
+function computeCoreStats(entregasList: RelatorioEntrega[], rotasList: RotaDiaria[]) {
   const entregues = entregasList.filter((e) => e.status === "entregue");
   const recusadas = entregasList.filter((e) => e.status === "recusada");
   const canceladas = entregasList.filter((e) => e.status === "cancelada");
@@ -65,7 +80,7 @@ function computeCoreStats(entregasList: any[], rotasList: any[]) {
 
   const tempos = entregues
     .filter((e) => e.delivered_at && e.created_at)
-    .map((e) => differenceInMinutes(new Date(e.delivered_at), new Date(e.created_at)));
+    .map((e) => differenceInMinutes(new Date(e.delivered_at!), new Date(e.created_at)));
   const tempoMedio = tempos.length > 0 ? tempos.reduce((a, b) => a + b, 0) / tempos.length : 0;
 
   const kmTotal = rotasList.reduce((sum, r) => sum + r.distance_km, 0);
@@ -92,10 +107,10 @@ function pctChange(curr: number, prev: number): number | null {
 
 export default function RelatoriosPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [entregas, setEntregas] = useState<any[]>([]);
-  const [rotas, setRotas] = useState<any[]>([]);
-  const [prevEntregas, setPrevEntregas] = useState<any[]>([]);
-  const [prevRotas, setPrevRotas] = useState<any[]>([]);
+  const [entregas, setEntregas] = useState<RelatorioEntrega[]>([]);
+  const [rotas, setRotas] = useState<RotaDiaria[]>([]);
+  const [prevEntregas, setPrevEntregas] = useState<RelatorioEntrega[]>([]);
+  const [prevRotas, setPrevRotas] = useState<RotaDiaria[]>([]);
   const [loading, setLoading] = useState(true);
   const [printMode, setPrintMode] = useState<"resumo" | "completo" | null>(null);
 
@@ -188,9 +203,9 @@ export default function RelatoriosPage() {
         supabase.from("entregas").select(entregaColumns).gte("scheduled_date", prevStart).lte("scheduled_date", prevEnd),
         supabase.from("rotas_diarias").select("*").gte("data", prevStart).lte("data", prevEnd),
       ]);
-      setEntregas(entregasRes.data ?? []);
+      setEntregas((entregasRes.data ?? []) as unknown as RelatorioEntrega[]);
       setRotas(rotasRes.data ?? []);
-      setPrevEntregas(prevEntregasRes.data ?? []);
+      setPrevEntregas((prevEntregasRes.data ?? []) as unknown as RelatorioEntrega[]);
       setPrevRotas(prevRotasRes.data ?? []);
       setLoading(false);
     }
@@ -257,8 +272,8 @@ export default function RelatoriosPage() {
 
     // Heatmap points (only entregas with geocoded addresses)
     const heatPoints = entregas
-      .filter((e) => typeof e.endereco?.lat === "number" && typeof e.endereco?.lng === "number")
-      .map((e) => ({ lat: e.endereco.lat as number, lng: e.endereco.lng as number }));
+      .map((e) => ({ lat: e.endereco?.lat, lng: e.endereco?.lng }))
+      .filter((p): p is { lat: number; lng: number } => typeof p.lat === "number" && typeof p.lng === "number");
 
     return { ...core, drivers, topClientes, topBairros, heatPoints };
   }, [entregas, rotas]);
@@ -273,7 +288,7 @@ export default function RelatoriosPage() {
   }
 
   if (!profile) {
-    return <div className="flex h-screen items-center justify-center text-muted-foreground">Carregando...</div>;
+    return <div className="flex h-screen items-center justify-center"><Spinner /></div>;
   }
 
   return (
@@ -353,7 +368,7 @@ export default function RelatoriosPage() {
         </div>
 
         {loading ? (
-          <div className="py-20 text-center text-muted-foreground">Carregando dados...</div>
+          <div className="flex justify-center py-20"><Spinner /></div>
         ) : (
           <>
             {/* ── KPIs ── */}

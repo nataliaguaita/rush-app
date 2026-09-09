@@ -9,13 +9,14 @@ import { Loader2 } from "lucide-react";
 import { updateEndereco } from "../actions";
 import { toast } from "sonner";
 import { useCep } from "@/lib/use-cep";
+import type { Endereco } from "@/types/database";
 
 export function EditEnderecoForm({
   endereco,
   onSaved,
   onCancel,
 }: {
-  endereco: any;
+  endereco: Endereco;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -99,6 +100,7 @@ export function EditEnderecoForm({
       </div>
       <div className="flex gap-2">
         <Button type="submit" size="sm" disabled={loading}>
+          {loading && <Loader2 className="animate-spin" />}
           {loading ? "Salvando..." : "Salvar"}
         </Button>
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
