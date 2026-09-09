@@ -23,7 +23,7 @@ describe("StaleEntregasBanner", () => {
       id: "e1",
       order_number: 7,
       status: "em_rota",
-      created_at: "2026-09-01T00:00:00.000Z",
+      updated_at: "2026-09-01T00:00:00.000Z",
       cliente: { name: "Cliente A" },
     };
     mockedUseStaleEntregas.mockReturnValue([entrega]);
@@ -47,14 +47,14 @@ describe("StaleEntregasBanner", () => {
         id: "e1",
         order_number: 1,
         status: "em_rota",
-        created_at: "2026-09-01T00:00:00.000Z",
+        updated_at: "2026-09-01T00:00:00.000Z",
         cliente: { name: "Cliente A" },
       },
       {
         id: "e2",
         order_number: 2,
         status: "recusada",
-        created_at: "2026-09-01T00:00:00.000Z",
+        updated_at: "2026-09-01T00:00:00.000Z",
         cliente: null,
       },
     ];
