@@ -10,10 +10,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, AlertTriangle, RefreshCw, ChevronLeft, ChevronRight, Sun, Sunset, Users } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import { KanbanBoard } from "./kanban-board";
+import { StaleEntregasBanner } from "@/components/stale-entregas-banner";
+import type { EntregaWithRelations, Profile } from "@/types/database";
 
 export default function EntregasPage() {
-  const [entregas, setEntregas] = useState<any[]>([]);
-  const [entregadores, setEntregadores] = useState<any[]>([]);
+  const [entregas, setEntregas] = useState<EntregaWithRelations[]>([]);
+  const [entregadores, setEntregadores] = useState<Pick<Profile, "id" | "name">[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
@@ -57,7 +59,7 @@ export default function EntregasPage() {
   );
 
   useEffect(() => {
-    load();
+    queueMicrotask(load);
 
     const channel = supabase
       .channel("entregas-kanban")
@@ -185,6 +187,8 @@ export default function EntregasPage() {
           </Link>
         </div>
       </div>
+
+      <StaleEntregasBanner />
 
       {error ? (
         <Card className="border-destructive/30">

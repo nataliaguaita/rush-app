@@ -1,0 +1,35 @@
+name: CI - Validação de Código e Testes
+
+# 1. Quando este robô deve rodar?
+on:
+  push:
+    branches: [ "main" ] # Roda sempre que enviar código direto para a main
+  pull_request:
+    branches: [ "main" ] # Roda quando alguém tentar fazer um merge para a main
+
+jobs:
+  testes_e_seguranca:
+    # 2. Qual máquina virtual o GitHub vai usar?
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Baixar o código
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configurar ambiente (Node.js)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Versão estável do Node
+          cache: 'npm'       # Deixa a instalação mais rápida nas próximas vezes
+
+      - name: 📦 Instalar dependências
+        # O "npm ci" é melhor que o "npm install" para robôs, pois ele trava as versões exatas
+        run: npm ci
+
+      - name: 🔍 Verificação de tipagem (TypeScript) e Linter
+        run: |
+          npm run lint
+          npx tsc --noEmit
+
+      - name: 🧪 Rodar Testes Unitários
+        run: npm test

@@ -13,12 +13,14 @@ import { Package, Truck, CheckCircle, Clock, MapPin, RefreshCw, AlertTriangle, C
 import { format, addDays, subDays } from "date-fns";
 import Link from "next/link";
 import { PesquisarEntregaDialog } from "./entregas/pesquisar-entrega-dialog";
+import { StaleEntregasBanner } from "@/components/stale-entregas-banner";
+import type { EntregaWithRelations, Profile } from "@/types/database";
 
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState({ total: 0, pendentes: 0, emRota: 0, concluidas: 0 });
-  const [entregas, setEntregas] = useState<any[]>([]);
-  const [entregadores, setEntregadores] = useState<any[]>([]);
-  const [entregasPorEntregador, setEntregasPorEntregador] = useState<Record<string, any[]>>({});
+  const [entregas, setEntregas] = useState<EntregaWithRelations[]>([]);
+  const [entregadores, setEntregadores] = useState<Pick<Profile, "id" | "name">[]>([]);
+  const [entregasPorEntregador, setEntregasPorEntregador] = useState<Record<string, EntregaWithRelations[]>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
@@ -55,16 +57,16 @@ export default function DashboardPage() {
     setEntregas(all);
     setMetrics({
       total: all.length,
-      pendentes: all.filter((e: any) => e.status === "aguardando_atribuicao").length,
-      emRota: all.filter((e: any) => e.status === "rota_definida" || e.status === "em_rota").length,
-      concluidas: all.filter((e: any) => e.status === "entregue").length,
+      pendentes: all.filter((e) => e.status === "aguardando_atribuicao").length,
+      emRota: all.filter((e) => e.status === "rota_definida" || e.status === "em_rota").length,
+      concluidas: all.filter((e) => e.status === "entregue").length,
     });
 
     setEntregadores(ent ?? []);
 
-    const porEntregador: Record<string, any[]> = {};
+    const porEntregador: Record<string, EntregaWithRelations[]> = {};
     for (const entregador of ent ?? []) {
-      porEntregador[entregador.id] = all.filter((e: any) => e.entregador_id === entregador.id);
+      porEntregador[entregador.id] = all.filter((e) => e.entregador_id === entregador.id);
     }
     setEntregasPorEntregador(porEntregador);
     setLoading(false);
@@ -72,7 +74,7 @@ export default function DashboardPage() {
   }, [selectedDate]);
 
   useEffect(() => {
-    loadData();
+    queueMicrotask(loadData);
 
     const channel = supabase
       .channel("dashboard-entregas")
@@ -151,6 +153,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      <StaleEntregasBanner />
+
       {error ? (
         <Card className="border-destructive/30">
           <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
@@ -195,7 +199,7 @@ export default function DashboardPage() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {entregadores.map((entregador) => {
                   const entregasDoEntregador = entregasPorEntregador[entregador.id] ?? [];
-                  const feitas = entregasDoEntregador.filter((e: any) => e.status === "entregue").length;
+                  const feitas = entregasDoEntregador.filter((e) => e.status === "entregue").length;
                   return (
                     <Card key={entregador.id}>
                       <CardHeader className="flex flex-row items-center justify-between gap-2">
@@ -215,10 +219,10 @@ export default function DashboardPage() {
                         ) : (
                           <>
                             {(() => {
-                              const manha = entregasDoEntregador.filter((e: any) => e.scheduled_period === "manha");
-                              const tarde = entregasDoEntregador.filter((e: any) => e.scheduled_period === "tarde");
-                              const semPeriodo = entregasDoEntregador.filter((e: any) => !e.scheduled_period);
-                              const sections: { label: string; icon: React.ReactNode; color: string; items: any[] }[] = [];
+                              const manha = entregasDoEntregador.filter((e) => e.scheduled_period === "manha");
+                              const tarde = entregasDoEntregador.filter((e) => e.scheduled_period === "tarde");
+                              const semPeriodo = entregasDoEntregador.filter((e) => !e.scheduled_period);
+                              const sections: { label: string; icon: React.ReactNode; color: string; items: EntregaWithRelations[] }[] = [];
                               if (manha.length > 0) sections.push({ label: "Manhã", icon: <Sun className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400", items: manha });
                               if (tarde.length > 0) sections.push({ label: "Tarde", icon: <Sunset className="h-3.5 w-3.5" />, color: "text-blue-600 dark:text-blue-400", items: tarde });
                               if (semPeriodo.length > 0) sections.push({ label: "Sem período", icon: null, color: "text-muted-foreground", items: semPeriodo });
@@ -254,7 +258,7 @@ export default function DashboardPage() {
   );
 }
 
-function EntregaRow({ entrega, index }: { entrega: any; index: number }) {
+function EntregaRow({ entrega, index }: { entrega: EntregaWithRelations; index: number }) {
   return (
     <Link
       href={`/dashboard/entregas/${entrega.id}`}
@@ -305,9 +309,9 @@ function EntregaRow({ entrega, index }: { entrega: any; index: number }) {
   );
 }
 
-function GroupedEntregaRows({ entregas }: { entregas: any[] }) {
-  const items: { key: string; type: "single" | "group"; entregas: any[] }[] = [];
-  const groups = new Map<string, any[]>();
+function GroupedEntregaRows({ entregas }: { entregas: EntregaWithRelations[] }) {
+  const items: { key: string; type: "single" | "group"; entregas: EntregaWithRelations[] }[] = [];
+  const groups = new Map<string, EntregaWithRelations[]>();
 
   for (const e of entregas) {
     if (e.group_id) {
@@ -347,9 +351,9 @@ function GroupedEntregaRows({ entregas }: { entregas: any[] }) {
   );
 }
 
-function EntregaGroupRow({ entregas, startIndex }: { entregas: any[]; startIndex: number }) {
+function EntregaGroupRow({ entregas, startIndex }: { entregas: EntregaWithRelations[]; startIndex: number }) {
   const endereco = entregas[0]?.endereco;
-  const allDone = entregas.every((e: any) => e.status === "entregue" || e.status === "recusada");
+  const allDone = entregas.every((e) => e.status === "entregue" || e.status === "recusada");
   return (
     <div className={`rounded-lg border border-violet-500/30 bg-violet-50/5 p-2 space-y-1.5 ${allDone ? "opacity-60" : ""}`}>
       <div className="flex items-center gap-2 px-1">
@@ -362,7 +366,7 @@ function EntregaGroupRow({ entregas, startIndex }: { entregas: any[]; startIndex
         )}
       </div>
       <div className="space-y-1">
-        {entregas.map((e: any, i: number) => (
+        {entregas.map((e, i) => (
           <EntregaRow key={e.id} entrega={e} index={startIndex + i} />
         ))}
       </div>

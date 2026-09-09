@@ -48,10 +48,10 @@
     "semantic_hash": "239f3ebf717465dc636818a1a619398d"
   },
   "public/manifest.json": {
-    "mtime": 1788287762.9032912,
-    "seen": 1788530681.0028908,
-    "ast_hash": "9620a4f30b457bc2ef2dea18d8768d57",
-    "semantic_hash": "9620a4f30b457bc2ef2dea18d8768d57"
+    "mtime": 1788954506.3998213,
+    "seen": 1788959646.1781096,
+    "ast_hash": "e216281149c38e6e629a818659a2ed3f",
+    "semantic_hash": ""
   },
   "src/app/api/admin/create-user/route.ts": {
     "mtime": 1788548642.3076813,
@@ -168,9 +168,9 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/actions.ts": {
-    "mtime": 1788548642.3122854,
-    "seen": 1788549099.9328938,
-    "ast_hash": "0079414d7d7c3522e1cb7a7c404aff42",
+    "mtime": 1788954192.1138325,
+    "seen": 1788959646.1876786,
+    "ast_hash": "e09b9e177d3bfd304827b06bba2e279d",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/assign-entregador-select.tsx": {
@@ -216,9 +216,9 @@
     "semantic_hash": "9610f8fda831facca3bc38550df8274a"
   },
   "src/app/dashboard/entregas/page.tsx": {
-    "mtime": 1788550121.7655165,
-    "seen": 1788952663.861702,
-    "ast_hash": "bbfc115da953fbaa031537fe13493cde",
+    "mtime": 1788959530.8173087,
+    "seen": 1788959646.1896846,
+    "ast_hash": "7ad6d527f59daa054c2a2830a616270c",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/pesquisar-entrega-dialog.tsx": {
@@ -234,9 +234,9 @@
     "semantic_hash": "696196a782f01cf056df3e08435fb233"
   },
   "src/app/dashboard/page.tsx": {
-    "mtime": 1788550196.6577783,
-    "seen": 1788952663.861702,
-    "ast_hash": "213bb6bea900833d31d4195c99be86b3",
+    "mtime": 1788959536.8172174,
+    "seen": 1788959646.1927848,
+    "ast_hash": "787c11e8594782bdb3f5512af7a59659",
     "semantic_hash": ""
   },
   "src/app/entregador/actions.ts": {
@@ -270,10 +270,10 @@
     "semantic_hash": "546263dfb782a9408111db3fa83e398a"
   },
   "src/app/entregador/page.tsx": {
-    "mtime": 1788527976.94211,
-    "seen": 1788530681.0028908,
-    "ast_hash": "cdb61b611894a8a90380cb60e1a0fdf4",
-    "semantic_hash": "cdb61b611894a8a90380cb60e1a0fdf4"
+    "mtime": 1788958378.5541134,
+    "seen": 1788959646.1938512,
+    "ast_hash": "beda944767cb6e8a2d06bf445c11af00",
+    "semantic_hash": ""
   },
   "src/app/layout.tsx": {
     "mtime": 1788269453.7493627,
@@ -318,9 +318,9 @@
     "semantic_hash": "f53213bf52e55bdf73cb84270879fac3"
   },
   "src/components/sidebar-nav.tsx": {
-    "mtime": 1788542217.8978982,
-    "seen": 1788546137.1670651,
-    "ast_hash": "5a3b6f09015917c90f3fb6ecc1fa6c1c",
+    "mtime": 1788957430.2136595,
+    "seen": 1788959646.1957848,
+    "ast_hash": "0a388435de98a1276d2db6391a2529d3",
     "semantic_hash": ""
   },
   "src/components/status-badge.tsx": {
@@ -474,9 +474,9 @@
     "semantic_hash": "edc725051bc7504d3358dc7e8798bee1"
   },
   "src/lib/status.ts": {
-    "mtime": 1788542754.752543,
-    "seen": 1788546137.1748724,
-    "ast_hash": "33b0313a2a6ec2f2ada38c1157c4db7a",
+    "mtime": 1788959508.7536416,
+    "seen": 1788959646.2036881,
+    "ast_hash": "4e59d6b7781b9af8d9a27f650bb3f43a",
     "semantic_hash": ""
   },
   "src/lib/supabase/client.ts": {
@@ -516,9 +516,9 @@
     "semantic_hash": ""
   },
   "src/types/database.ts": {
-    "mtime": 1788542749.3345027,
-    "seen": 1788546137.1768842,
-    "ast_hash": "e1f54cc67fdb6ae62ed68e737f788dd3",
+    "mtime": 1788957421.7649076,
+    "seen": 1788959646.2046802,
+    "ast_hash": "32298e20c771217ac2731d125894eec2",
     "semantic_hash": ""
   },
   "tsconfig.json": {
@@ -651,6 +651,42 @@
     "mtime": 1788952582.5145774,
     "seen": 1788952663.8633287,
     "ast_hash": "82bfb4392ffea87af6bd776bf92fc216",
+    "semantic_hash": ""
+  },
+  "src/app/dashboard/devolucoes/actions.ts": {
+    "mtime": 1788957435.0962627,
+    "seen": 1788959646.1876786,
+    "ast_hash": "ca6db9e6a48fd0cef3ea9846e4d4bc6f",
+    "semantic_hash": ""
+  },
+  "src/app/dashboard/devolucoes/page.tsx": {
+    "mtime": 1788957932.0588784,
+    "seen": 1788959646.1876786,
+    "ast_hash": "a76720243c2fc3b0b72082b01dc6ea65",
+    "semantic_hash": ""
+  },
+  "src/components/stale-entregas-banner.tsx": {
+    "mtime": 1788959524.398741,
+    "seen": 1788959646.1957848,
+    "ast_hash": "1275756e59293b94d6fe76976251d2a6",
+    "semantic_hash": ""
+  },
+  "src/hooks/use-stale-entregas.ts": {
+    "mtime": 1788959516.3158429,
+    "seen": 1788959646.2026088,
+    "ast_hash": "3bbc3326d2c82f4bed776713a4978db1",
+    "semantic_hash": ""
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1788959643.4045258,
+    "seen": 1788959646.2056134,
+    "ast_hash": "f9b21e2bb8d50a07706d437f45641d09",
+    "semantic_hash": ""
+  },
+  "docs/IDEIAS.md": {
+    "mtime": 1788958933.0152428,
+    "seen": 1788959646.2066102,
+    "ast_hash": "a7f27ada07ac03eaf39dea8350f88f44",
     "semantic_hash": ""
   }
 }

@@ -64,6 +64,16 @@ export function formatScheduledDate(dateStr: string): string {
   return `Entregar em ${date.toLocaleDateString("pt-BR")}`;
 }
 
+// ponytail: single 24h threshold for every open status, not tuned per status
+// (e.g. em_rota probably deserves a shorter window). Split it if that's needed.
+export const STALE_HOURS = 24;
+export const STALE_STATUSES: EntregaStatus[] = [
+  "aguardando_atribuicao",
+  "rota_definida",
+  "em_rota",
+  "retornada",
+];
+
 export const RECEIVER_ROLE_LABELS: Record<string, string> = {
   secretaria: "Secretária",
   porteiro: "Porteiro",
