@@ -21,14 +21,18 @@ export function useStaleEntregas() {
 
     async function load() {
       const cutoff = new Date(Date.now() - STALE_HOURS * 60 * 60 * 1000).toISOString();
-      const { data } = await supabase
-        .from("entregas")
-        .select("id, order_number, status, created_at, cliente:clientes(name)")
-        .in("status", STALE_STATUSES)
-        .or("return_confirmed.is.null,return_confirmed.eq.false")
-        .lt("created_at", cutoff)
-        .order("created_at", { ascending: true });
-      if (active) setEntregas((data as StaleEntrega[] | null) ?? []);
+      try {
+        const { data } = await supabase
+          .from("entregas")
+          .select("id, order_number, status, created_at, cliente:clientes(name)")
+          .in("status", STALE_STATUSES)
+          .or("return_confirmed.is.null,return_confirmed.eq.false")
+          .lt("created_at", cutoff)
+          .order("created_at", { ascending: true });
+        if (active) setEntregas((data as StaleEntrega[] | null) ?? []);
+      } catch {
+        // network/query error — leave the current list as-is
+      }
     }
 
     load();
