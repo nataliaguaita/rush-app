@@ -18,9 +18,10 @@ export async function createEntrega(formData: FormData) {
     const rua = formData.get("custom_rua") as string;
     const numero = (formData.get("custom_numero") as string) || "";
     const cidade = (formData.get("custom_cidade") as string) || "";
+    const saveToCliente = formData.get("save_to_cliente") === "on";
     const coords = await geocode(rua, numero, cidade);
     const addrData = {
-      cliente_id: clienteId,
+      cliente_id: saveToCliente ? clienteId : null,
       rua: toTitleCase(rua),
       numero,
       complemento: formData.get("custom_complemento") ? toTitleCase(formData.get("custom_complemento") as string) : null,
@@ -225,11 +226,11 @@ export async function applyAddressChange(
 
   if (!entregaData) throw new Error("Entrega não encontrada");
 
-  // Criar novo endereço com coordenadas
+  // Criar novo endereço apenas para esta entrega (não deve entrar no cadastro do cliente)
   const { data: newEndereco, error: addrError } = await supabase
     .from("enderecos")
     .insert({
-      cliente_id: entregaData.cliente_id,
+      cliente_id: null,
       rua: toTitleCase(address.rua),
       numero: address.numero,
       bairro: address.bairro ? toTitleCase(address.bairro) : null,

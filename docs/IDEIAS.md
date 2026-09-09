@@ -7,7 +7,6 @@ Status: `[ ]` pendente · `[x]` feito (mover pra baixo ou apagar depois de feito
 
 ## Prioridade alta
 
-- [ ] **Bug: endereço alterado em entrega liberada está sendo salvo automaticamente no cadastro do cliente.** Ao editar o endereço de uma entrega já liberada, o sistema grava essa alteração no cadastro do cliente sem intenção. Conferir se há outros pontos com o mesmo comportamento indevido.
 
 ## Prioridade média
 
