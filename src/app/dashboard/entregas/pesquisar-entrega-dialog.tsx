@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -26,66 +27,92 @@ import { Search, MapPin, AlertTriangle, X } from "lucide-react";
 import { formatOrderNumber } from "@/lib/status";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { EntregaWithRelations, Profile } from "@/types/database";
 
 interface PesquisarEntregaDialogProps {
-  entregas: any[];
-  entregadores: any[];
+  entregadores: Pick<Profile, "id" | "name">[];
+}
+
+interface ClienteOption {
+  id: string;
+  name: string;
 }
 
 export function PesquisarEntregaDialog({
-  entregas,
   entregadores,
 }: PesquisarEntregaDialogProps) {
+  const supabase = createClient();
   const [open, setOpen] = useState(false);
   const [orderNumberQuery, setOrderNumberQuery] = useState("");
   const [clienteQuery, setClienteQuery] = useState("");
   const [entregadorId, setEntregadorId] = useState("");
   const [data, setData] = useState("");
   const [searched, setSearched] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [results, setResults] = useState<EntregaWithRelations[]>([]);
 
-  const clientes = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const e of entregas) {
-      if (e.cliente?.id && e.cliente?.name) {
-        map.set(e.cliente.id, e.cliente.name);
+  const [clientes, setClientes] = useState<ClienteOption[]>([]);
+  const [clientesLoaded, setClientesLoaded] = useState(false);
+  const [selectedClienteId, setSelectedClienteId] = useState<string | null>(null);
+  const [selectedClienteName, setSelectedClienteName] = useState("");
+  const clienteBoxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (clienteBoxRef.current && !clienteBoxRef.current.contains(e.target as Node)) {
+        setClienteQuery("");
+        setActiveIndex(-1);
       }
     }
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
-  }, [entregas]);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
 
-  const filteredClientes = useMemo(() => {
+  const filteredClientes = (() => {
     if (!clienteQuery.trim()) return [];
     const q = clienteQuery.toLowerCase();
     return clientes.filter((c) => c.name.toLowerCase().includes(q));
-  }, [clientes, clienteQuery]);
-
-  const [selectedClienteId, setSelectedClienteId] = useState<string | null>(null);
-  const [selectedClienteName, setSelectedClienteName] = useState("");
-
-  const results = useMemo(() => {
-    if (!searched) return [];
-    return entregas.filter((e) => {
-      if (orderNumberQuery.trim()) {
-        const num = orderNumberQuery.replace(/^#/, "").trim();
-        if (!String(e.order_number).includes(num)) return false;
-      }
-      if (selectedClienteId && e.cliente_id !== selectedClienteId) return false;
-      if (entregadorId && e.entregador_id !== entregadorId) return false;
-      if (data) {
-        const deliveredAt = e.delivered_at;
-        if (!deliveredAt) return false;
-        const deliveredDate = new Date(deliveredAt).toISOString().split("T")[0];
-        if (deliveredDate !== data) return false;
-      }
-      return true;
-    });
-  }, [entregas, orderNumberQuery, selectedClienteId, entregadorId, data, searched]);
+  })();
 
   const hasFilters = orderNumberQuery.trim() || selectedClienteId || entregadorId || data;
 
-  function handleSearch() {
+  async function loadClientes() {
+    if (clientesLoaded) return;
+    const { data: clientesData } = await supabase
+      .from("clientes")
+      .select("id, name")
+      .eq("active", true)
+      .order("name");
+    setClientes(clientesData ?? []);
+    setClientesLoaded(true);
+  }
+
+  async function handleSearch() {
     if (!hasFilters) return;
+    setSearching(true);
+
+    let query = supabase
+      .from("entregas")
+      .select(
+        "*, cliente:clientes(*), endereco:enderecos(*), entregador:profiles!entregas_entregador_id_fkey(id, name)"
+      )
+      .order("created_at", { ascending: false });
+
+    if (orderNumberQuery.trim()) {
+      const num = Number(orderNumberQuery.replace(/^#/, "").trim());
+      query = query.eq("order_number", num);
+    }
+    if (selectedClienteId) query = query.eq("cliente_id", selectedClienteId);
+    if (entregadorId) query = query.eq("entregador_id", entregadorId);
+    if (data) {
+      query = query.eq("scheduled_date", data);
+    }
+
+    const { data: found } = await query.limit(50);
+    setResults(found ?? []);
+    setSearching(false);
     setSearched(true);
   }
 
@@ -97,11 +124,13 @@ export function PesquisarEntregaDialog({
     setSelectedClienteId(null);
     setSelectedClienteName("");
     setSearched(false);
+    setResults([]);
   }
 
   function handleOpenChange(nextOpen: boolean) {
     setOpen(nextOpen);
-    if (!nextOpen) handleClear();
+    if (nextOpen) loadClientes();
+    else handleClear();
   }
 
   function selectCliente(id: string, name: string) {
@@ -183,7 +212,7 @@ export function PesquisarEntregaDialog({
                 </button>
               </div>
             ) : (
-              <div className="relative">
+              <div className="relative" ref={clienteBoxRef}>
                 <Input
                   role="combobox"
                   aria-expanded={filteredClientes.length > 0}
@@ -268,11 +297,11 @@ export function PesquisarEntregaDialog({
           <div className="flex gap-2">
             <Button
               onClick={handleSearch}
-              disabled={!hasFilters}
+              disabled={!hasFilters || searching}
               className="flex-1"
             >
               <Search className="mr-2 h-4 w-4" />
-              Pesquisar
+              {searching ? "Pesquisando..." : "Pesquisar"}
             </Button>
             {hasFilters && (
               <Button variant="outline" onClick={handleClear}>
@@ -283,15 +312,16 @@ export function PesquisarEntregaDialog({
 
           {/* Results */}
           {searched && (
-            <div className="space-y-3 pt-2 border-t">
-              <p className="text-sm text-muted-foreground">
+            <div className="pt-2 border-t">
+              <p className="text-sm text-muted-foreground mb-3">
                 {results.length === 0
                   ? "Nenhuma entrega encontrada."
                   : `${results.length} entrega${results.length > 1 ? "s" : ""} encontrada${results.length > 1 ? "s" : ""}.`}
               </p>
+              <div className="space-y-4">
               {results.map((entrega) => {
                 return (
-                  <Link key={entrega.id} href={`/dashboard/entregas/${entrega.id}`} onClick={() => setOpen(false)}>
+                  <Link key={entrega.id} href={`/dashboard/entregas/${entrega.id}`} onClick={() => setOpen(false)} className="block">
                     <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
                       <CardContent className="py-3">
                         <div className="space-y-1">
@@ -343,6 +373,7 @@ export function PesquisarEntregaDialog({
                   </Link>
                 );
               })}
+              </div>
             </div>
           )}
         </div>
