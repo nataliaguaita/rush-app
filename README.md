@@ -1,3 +1,7 @@
+Rush App — sistema de gestão de entregas da Dental Marechal.
+
+**Documentação completa: [docs/README.md](./docs/README.md)** (arquitetura, funcionalidades, modelo de dados).
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
