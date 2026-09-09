@@ -170,7 +170,7 @@
       "file_type": "code",
       "norm_label": "kanbanboardprops",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L716"
+      "source_location": "L745"
     },
     {
       "id": "src_app_dashboard_entregas_kanban_board_visualitem",
@@ -576,7 +576,7 @@
       "file_type": "code",
       "norm_label": "kanbancolumn()",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L553"
+      "source_location": "L555"
     },
     {
       "id": "src_app_dashboard_entregas_kanban_board_nearestneighborsort",
@@ -600,7 +600,7 @@
       "file_type": "code",
       "norm_label": "optimizebutton()",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L538"
+      "source_location": "L540"
     },
     {
       "id": "src_app_dashboard_entregas_kanban_board_optimizevisualroute",
@@ -1524,7 +1524,7 @@
       "file_type": "code",
       "norm_label": "kanbanboard()",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L721"
+      "source_location": "L750"
     },
     {
       "id": "src_app_dashboard_entregas_kanban_board_kanbanboard_expandtoentregaids",
@@ -1536,7 +1536,7 @@
       "file_type": "code",
       "norm_label": "expandtoentregaids()",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L761"
+      "source_location": "L790"
     },
     {
       "id": "src_app_dashboard_entregas_kanban_board_kanbanboard_handledragend",
@@ -1548,7 +1548,7 @@
       "file_type": "code",
       "norm_label": "handledragend()",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L897"
+      "source_location": "L926"
     },
     {
       "id": "src_app_dashboard_entregas_kanban_board_kanbanboard_handledragover",
@@ -1560,7 +1560,7 @@
       "file_type": "code",
       "norm_label": "handledragover()",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L875"
+      "source_location": "L904"
     },
     {
       "id": "src_app_dashboard_entregas_kanban_board_kanbanboard_handledragstart",
@@ -1572,7 +1572,7 @@
       "file_type": "code",
       "norm_label": "handledragstart()",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L867"
+      "source_location": "L896"
     },
     {
       "id": "src_app_dashboard_entregas_kanban_board_togroupid",
@@ -3780,7 +3780,7 @@
       "file_type": "code",
       "norm_label": "cardpreview()",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L497"
+      "source_location": "L499"
     },
     {
       "id": "src_app_dashboard_entregas_kanban_board_groupcardcontent",
@@ -3792,7 +3792,7 @@
       "file_type": "code",
       "norm_label": "groupcardcontent()",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L361"
+      "source_location": "L363"
     },
     {
       "id": "src_app_dashboard_entregas_kanban_board_sortablecard",
@@ -3804,7 +3804,7 @@
       "file_type": "code",
       "norm_label": "sortablecard()",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L193"
+      "source_location": "L195"
     },
     {
       "id": "src_app_dashboard_entregas_page_entregaspage",
@@ -9961,7 +9961,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L523",
+      "source_location": "L525",
       "weight": 1.0
     },
     {
@@ -9973,7 +9973,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L438",
+      "source_location": "L440",
       "weight": 1.0
     },
     {
@@ -9985,67 +9985,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L452",
-      "weight": 1.0
-    },
-    {
-      "source": "src_app_dashboard_entregas_kanban_board_kanbanboard",
-      "target": "src_app_dashboard_entregas_actions_releaseroute",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L1005",
-      "weight": 1.0
-    },
-    {
-      "source": "src_app_dashboard_entregas_kanban_board_kanbanboard",
-      "target": "src_app_dashboard_entregas_actions_applyaddresschange",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L1236",
-      "weight": 1.0
-    },
-    {
-      "source": "src_app_dashboard_entregas_kanban_board_kanbanboard",
-      "target": "src_app_dashboard_entregas_actions_applyroutechange",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L1255",
-      "weight": 1.0
-    },
-    {
-      "source": "src_app_dashboard_entregas_kanban_board_kanbanboard",
-      "target": "src_app_dashboard_entregas_kanban_board_togroupid",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L798",
-      "weight": 1.0
-    },
-    {
-      "source": "src_app_dashboard_entregas_kanban_board_kanbanboard",
-      "target": "src_app_dashboard_entregas_actions_persistcolumnstate",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L967",
+      "source_location": "L454",
       "weight": 1.0
     },
     {
@@ -10057,7 +9997,67 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L985",
+      "source_location": "L1014",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_dashboard_entregas_kanban_board_kanbanboard",
+      "target": "src_app_dashboard_entregas_actions_releaseroute",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
+      "source_location": "L1036",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_dashboard_entregas_kanban_board_kanbanboard",
+      "target": "src_app_dashboard_entregas_actions_applyaddresschange",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
+      "source_location": "L1263",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_dashboard_entregas_kanban_board_kanbanboard",
+      "target": "src_app_dashboard_entregas_actions_applyroutechange",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
+      "source_location": "L1282",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_dashboard_entregas_kanban_board_kanbanboard",
+      "target": "src_app_dashboard_entregas_kanban_board_togroupid",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
+      "source_location": "L827",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_dashboard_entregas_kanban_board_kanbanboard",
+      "target": "src_app_dashboard_entregas_actions_persistcolumnstate",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
+      "source_location": "L996",
       "weight": 1.0
     },
     {
@@ -10069,7 +10069,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L922",
+      "source_location": "L951",
       "weight": 1.0
     },
     {
@@ -10081,7 +10081,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L922",
+      "source_location": "L951",
       "weight": 1.0
     },
     {
@@ -10105,7 +10105,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L173",
+      "source_location": "L172",
       "weight": 1.0
     },
     {
@@ -10117,7 +10117,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L269",
+      "source_location": "L271",
       "weight": 1.0
     },
     {
@@ -10129,7 +10129,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L291",
+      "source_location": "L293",
       "weight": 1.0
     },
     {
@@ -12217,7 +12217,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L761",
+      "source_location": "L790",
       "weight": 1.0
     },
     {
@@ -12541,7 +12541,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L717",
+      "source_location": "L746",
       "weight": 1.0
     },
     {
@@ -26756,7 +26756,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L193",
+      "source_location": "L195",
       "weight": 1.0
     },
     {
@@ -26767,7 +26767,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L361",
+      "source_location": "L363",
       "weight": 1.0
     },
     {
@@ -26778,7 +26778,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L497",
+      "source_location": "L499",
       "weight": 1.0
     },
     {
@@ -26789,7 +26789,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L538",
+      "source_location": "L540",
       "weight": 1.0
     },
     {
@@ -26800,7 +26800,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L553",
+      "source_location": "L555",
       "weight": 1.0
     },
     {
@@ -26811,7 +26811,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L716",
+      "source_location": "L745",
       "weight": 1.0
     },
     {
@@ -26822,7 +26822,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L721",
+      "source_location": "L750",
       "weight": 1.0
     },
     {
@@ -26877,7 +26877,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L867",
+      "source_location": "L896",
       "weight": 1.0
     },
     {
@@ -26888,7 +26888,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L875",
+      "source_location": "L904",
       "weight": 1.0
     },
     {
@@ -26899,7 +26899,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/dashboard/entregas/kanban-board.tsx",
-      "source_location": "L897",
+      "source_location": "L926",
       "weight": 1.0
     },
     {

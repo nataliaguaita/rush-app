@@ -164,28 +164,30 @@ function optimizeVisualRoute(
   const isUrgent = (vid: string) => itemsMap[vid]?.entregas[0]?.is_urgent;
   const isManha = (vid: string) => itemsMap[vid]?.entregas[0]?.scheduled_period === "manha";
 
-  const urgent = visualIds.filter(isUrgent);
-  const normal = visualIds.filter((id) => !isUrgent(id));
-
+  // Turno por fora (o entregador sai em duas viagens separadas), urgente
+  // sempre primeiro dentro do turno dele.
   const sortGroup = (ids: string[], startLat: number, startLng: number) => {
-    const manha = ids.filter(isManha);
-    const tarde = ids.filter((id) => !isManha(id));
-    const manhaResult = nearestNeighborSort(manha, getCoords, startLat, startLng);
-    const tardeStart = manha.length > 0
-      ? { lat: manhaResult.lastLat, lng: manhaResult.lastLng }
+    const urgent = ids.filter(isUrgent);
+    const normal = ids.filter((id) => !isUrgent(id));
+    const urgentResult = nearestNeighborSort(urgent, getCoords, startLat, startLng);
+    const normalStart = urgent.length > 0
+      ? { lat: urgentResult.lastLat, lng: urgentResult.lastLng }
       : { lat: startLat, lng: startLng };
-    const tardeResult = nearestNeighborSort(tarde, getCoords, tardeStart.lat, tardeStart.lng);
-    const lastResult = tarde.length > 0 ? tardeResult : manhaResult;
-    return { ordered: [...manhaResult.ordered, ...tardeResult.ordered], lastLat: lastResult.lastLat, lastLng: lastResult.lastLng };
+    const normalResult = nearestNeighborSort(normal, getCoords, normalStart.lat, normalStart.lng);
+    const lastResult = normal.length > 0 ? normalResult : urgentResult;
+    return { ordered: [...urgentResult.ordered, ...normalResult.ordered], lastLat: lastResult.lastLat, lastLng: lastResult.lastLng };
   };
 
-  const urgentResult = sortGroup(urgent, ORIGIN_LAT, ORIGIN_LNG);
-  const normalStart = urgent.length > 0
-    ? { lat: urgentResult.lastLat, lng: urgentResult.lastLng }
-    : { lat: ORIGIN_LAT, lng: ORIGIN_LNG };
-  const normalResult = sortGroup(normal, normalStart.lat, normalStart.lng);
+  const manha = visualIds.filter(isManha);
+  const tarde = visualIds.filter((id) => !isManha(id));
 
-  return [...urgentResult.ordered, ...normalResult.ordered];
+  const manhaResult = sortGroup(manha, ORIGIN_LAT, ORIGIN_LNG);
+  const tardeStart = manha.length > 0
+    ? { lat: manhaResult.lastLat, lng: manhaResult.lastLng }
+    : { lat: ORIGIN_LAT, lng: ORIGIN_LNG };
+  const tardeResult = sortGroup(tarde, tardeStart.lat, tardeStart.lng);
+
+  return [...manhaResult.ordered, ...tardeResult.ordered];
 }
 
 // ---- Sortable single card ----
@@ -561,7 +563,6 @@ function KanbanColumn({
   onOptimize,
   onRelease,
   onMove,
-  unreleasedCount,
   totalEntregas,
   highlightedIds,
 }: {
@@ -573,9 +574,8 @@ function KanbanColumn({
   entregadores: { id: string; name: string }[];
   onAssign: (visualId: string, targetColumnId: string) => void;
   onOptimize?: (columnId: string) => void;
-  onRelease?: () => void;
+  onRelease?: (period: "manha" | "tarde") => void;
   onMove?: (columnId: string, visualId: string, direction: -1 | 1) => void;
-  unreleasedCount: number;
   totalEntregas: number;
   highlightedIds?: Set<string>;
 }) {
@@ -598,11 +598,19 @@ function KanbanColumn({
     if (!item) return false;
     return item.entregaIds.every((id) => entregasMap[id]?.status === "rota_definida");
   };
-  // Em rota primeiro, novas (não liberadas) depois — ordem real de cada
-  // grupo é preservada; a lista persistida (visualIds) não é reordenada aqui.
+  const getPeriod = (vid: string): "manha" | "tarde" =>
+    itemsMap[vid]?.entregas[0]?.scheduled_period === "manha" ? "manha" : "tarde";
+
+  // Ordem real de cada grupo é preservada; a lista persistida (visualIds)
+  // não é reordenada aqui — só a exibição é agrupada por turno/liberado.
   const releasedIds = visualIds.filter(isItemReleased);
-  const newIds = visualIds.filter((vid) => !isItemReleased(vid));
-  const displayIds = [...releasedIds, ...newIds];
+  const pendingIds = visualIds.filter((vid) => !isItemReleased(vid));
+  const manhaIds = pendingIds.filter((vid) => getPeriod(vid) === "manha");
+  const tardeIds = pendingIds.filter((vid) => getPeriod(vid) === "tarde");
+  const displayIds = isEntregador ? [...manhaIds, ...tardeIds, ...releasedIds] : visualIds;
+
+  const countEntregas = (ids: string[]) =>
+    ids.reduce((sum, vid) => sum + (itemsMap[vid]?.entregaIds.length ?? 0), 0);
 
   const hasEnoughForOptimize = visualIds.filter((vid) => {
     const e = itemsMap[vid]?.entregas[0];
@@ -614,6 +622,23 @@ function KanbanColumn({
     if (!item) return false;
     return item.entregaIds.every((id) => entregasMap[id]?.status === "rota_definida");
   });
+
+  const renderCard = (vid: string) => {
+    const idx = visualIds.indexOf(vid);
+    return (
+      <SortableCard
+        key={vid}
+        visualId={vid}
+        item={itemsMap[vid]}
+        entregadores={entregadores}
+        currentColumnId={columnId}
+        onAssign={onAssign}
+        onMoveUp={onMove && idx > 0 ? () => onMove(columnId, vid, -1) : undefined}
+        onMoveDown={onMove && idx < visualIds.length - 1 ? () => onMove(columnId, vid, 1) : undefined}
+        highlightedIds={highlightedIds}
+      />
+    );
+  };
 
   return (
     <div className="flex min-w-[280px] flex-1 flex-col">
@@ -645,53 +670,64 @@ function KanbanColumn({
         }`}
       >
         <SortableContext items={displayIds} strategy={verticalListSortingStrategy}>
-          {releasedIds.length > 0 && (
-            <p className="px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Em rota
-            </p>
-          )}
-          {releasedIds.map((vid) => {
-            const idx = visualIds.indexOf(vid);
-            return (
-              <SortableCard
-                key={vid}
-                visualId={vid}
-                item={itemsMap[vid]}
-                entregadores={entregadores}
-                currentColumnId={columnId}
-                onAssign={onAssign}
-                onMoveUp={onMove && idx > 0 ? () => onMove(columnId, vid, -1) : undefined}
-                onMoveDown={onMove && idx < visualIds.length - 1 ? () => onMove(columnId, vid, 1) : undefined}
-                highlightedIds={highlightedIds}
-              />
-            );
-          })}
+          {isEntregador ? (
+            <>
+              {manhaIds.length > 0 && (
+                <div className="rounded-md border border-dashed border-amber-400/60 p-1.5">
+                  <div className="mb-1.5 flex items-center justify-between px-0.5">
+                    <p className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                      <Sun className="h-3 w-3" />Manhã
+                    </p>
+                    {onRelease && (
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        className="border border-amber-500/40 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-400"
+                        onClick={() => onRelease("manha")}
+                      >
+                        <Send className="h-3 w-3" />
+                        Liberar {countEntregas(manhaIds)}
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">{manhaIds.map((vid) => renderCard(vid))}</div>
+                </div>
+              )}
 
-          {releasedIds.length > 0 && newIds.length > 0 && (
-            <div className="my-1 border-t border-dashed" />
-          )}
+              {tardeIds.length > 0 && (
+                <div className="rounded-md border border-dashed border-blue-400/60 p-1.5">
+                  <div className="mb-1.5 flex items-center justify-between px-0.5">
+                    <p className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
+                      <Sunset className="h-3 w-3" />Tarde
+                    </p>
+                    {onRelease && (
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        className="border border-blue-500/40 bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 dark:text-blue-400"
+                        onClick={() => onRelease("tarde")}
+                      >
+                        <Send className="h-3 w-3" />
+                        Liberar {countEntregas(tardeIds)}
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">{tardeIds.map((vid) => renderCard(vid))}</div>
+                </div>
+              )}
 
-          {newIds.length > 0 && releasedIds.length > 0 && (
-            <p className="px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Novas entregas
-            </p>
+              {releasedIds.length > 0 && (
+                <div className="rounded-md border border-dashed border-muted-foreground/30 p-1.5">
+                  <p className="mb-1.5 px-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Em rota
+                  </p>
+                  <div className="flex flex-col gap-2">{releasedIds.map((vid) => renderCard(vid))}</div>
+                </div>
+              )}
+            </>
+          ) : (
+            displayIds.map((vid) => renderCard(vid))
           )}
-          {newIds.map((vid) => {
-            const idx = visualIds.indexOf(vid);
-            return (
-              <SortableCard
-                key={vid}
-                visualId={vid}
-                item={itemsMap[vid]}
-                entregadores={entregadores}
-                currentColumnId={columnId}
-                onAssign={onAssign}
-                onMoveUp={onMove && idx > 0 ? () => onMove(columnId, vid, -1) : undefined}
-                onMoveDown={onMove && idx < visualIds.length - 1 ? () => onMove(columnId, vid, 1) : undefined}
-                highlightedIds={highlightedIds}
-              />
-            );
-          })}
         </SortableContext>
 
         {visualIds.length === 0 && (
@@ -700,13 +736,6 @@ function KanbanColumn({
           </p>
         )}
       </div>
-
-      {isEntregador && unreleasedCount > 0 && (
-        <Button className="mt-2 w-full" onClick={onRelease}>
-          <Send className="mr-2 h-4 w-4" />
-          Liberar {unreleasedCount} entrega{unreleasedCount > 1 ? "s" : ""}
-        </Button>
-      )}
     </div>
   );
 }
@@ -991,14 +1020,16 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
   );
 
   const handleRelease = useCallback(
-    (columnId: string) => {
+    (columnId: string, period: "manha" | "tarde") => {
       const cols = columnsRef.current;
       const vids = cols[columnId];
       if (!vids) return;
 
       const entregaIds = expandToEntregaIds(vids);
       const unreleased = entregaIds.filter(
-        (id) => entregasMap[id]?.status === "aguardando_atribuicao",
+        (id) =>
+          entregasMap[id]?.status === "aguardando_atribuicao" &&
+          (entregasMap[id]?.scheduled_period ?? "tarde") === period,
       );
       if (!unreleased.length) return;
 
@@ -1050,9 +1081,6 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
           const entregador = entregadores.find((e) => e.id === colId);
           const vids = columns[colId] ?? [];
           const totalEntregas = vids.reduce((sum, vid) => sum + (itemsMap[vid]?.entregaIds.length ?? 0), 0);
-          const unreleasedCount = vids
-            .flatMap((vid) => itemsMap[vid]?.entregaIds ?? [])
-            .filter((id) => entregasMap[id]?.status === "aguardando_atribuicao").length;
           return (
             <KanbanColumn
               key={colId}
@@ -1064,9 +1092,8 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
               entregadores={entregadores}
               onAssign={handleAssign}
               onOptimize={colId !== UNASSIGNED ? handleOptimize : undefined}
-              onRelease={colId !== UNASSIGNED ? () => handleRelease(colId) : undefined}
+              onRelease={colId !== UNASSIGNED ? (period) => handleRelease(colId, period) : undefined}
               onMove={handleMove}
-              unreleasedCount={unreleasedCount}
               totalEntregas={totalEntregas}
               highlightedIds={highlightedIds}
             />
