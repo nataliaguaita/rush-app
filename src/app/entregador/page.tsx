@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { EntregaCard } from "./entrega-card";
 import { EntregaGroupCard } from "./entrega-group-card";
 
@@ -17,6 +18,7 @@ export default function EntregadorPage() {
   const [completedAt, setCompletedAt] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
   const supabase = createClient();
+  const knownIds = useRef<Set<string> | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 60_000);
@@ -61,6 +63,17 @@ export default function EntregadorPage() {
 
     const list = data ?? [];
     setEntregas(list);
+
+    const ids = new Set(list.map((e) => e.id));
+    if (knownIds.current) {
+      const newCount = list.filter((e) => !knownIds.current!.has(e.id)).length;
+      if (newCount > 0) {
+        toast.success(newCount > 1 ? `${newCount} novas entregas na sua rota!` : "Nova entrega na sua rota!");
+        if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      }
+    }
+    knownIds.current = ids;
+
     if (list.length === 0 && !completedAt) {
       setCompletedAt(new Date().toISOString());
     } else if (list.length > 0) {

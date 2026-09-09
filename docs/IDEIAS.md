@@ -10,7 +10,7 @@ Status: `[ ]` pendente · `[x]` feito (mover pra baixo ou apagar depois de feito
 
 ## Prioridade média
 
-- [ ] **Notificação para o motoboy quando a rota é liberada** para a entrega.
+- [x] **Notificação para o motoboy quando a rota é liberada** para a entrega. Feito como toast in-app (som/vibração) reaproveitando o realtime já existente na tela do entregador; push real (com app fechado) fica para depois, se necessário.
 - [ ] **Notificação/moderação de entregas esquecidas.** Entregas criadas ou "em rota" há muito tempo sem finalização precisam de um fluxo de moderação (vendedor e/ou admin) para não ficarem em aberto indefinidamente no sistema. Avaliar quem modera e como.
 
 ## Prioridade baixa / ideias soltas
