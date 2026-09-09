@@ -50,7 +50,7 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "eslint --fix",
-      "tsc --noEmit -p tsconfig.json"
+      "bash -c 'tsc --noEmit -p tsconfig.json'"
     ]
   }
 }
