@@ -36,9 +36,9 @@
     "semantic_hash": "915ef33a7a9e8060e2d69ab09097d186"
   },
   "package.json": {
-    "mtime": 1788548642.30618,
-    "seen": 1788549099.9299889,
-    "ast_hash": "e14811ad427b173c4c3f0dbb687c5fe9",
+    "mtime": 1788962113.407895,
+    "seen": 1788962550.1153755,
+    "ast_hash": "e6992a62cff214b2b4d64b4f22e029d7",
     "semantic_hash": ""
   },
   "postcss.config.mjs": {
@@ -126,9 +126,9 @@
     "semantic_hash": "003edf2078d2fcae0035522a0e5009e5"
   },
   "src/app/dashboard/clientes/[id]/cliente-edit-form.tsx": {
-    "mtime": 1788541467.338416,
-    "seen": 1788541489.8048427,
-    "ast_hash": "5c19154c3fa4ace17c66ec3c2a38a2b8",
+    "mtime": 1788963864.3810382,
+    "seen": 1788964038.3592455,
+    "ast_hash": "bfacfe929255f3c669b8096f462cd087",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/edit-endereco-form.tsx": {
@@ -204,9 +204,9 @@
     "semantic_hash": "973f16f8cba528c8108b908ac0c49310"
   },
   "src/app/dashboard/entregas/nova/nova-entrega-form.tsx": {
-    "mtime": 1788544638.8692741,
-    "seen": 1788546137.1670651,
-    "ast_hash": "517022c05176328d34495f6a939d79df",
+    "mtime": 1788963944.9243696,
+    "seen": 1788964038.362248,
+    "ast_hash": "782f405fabcc81d660f4bd4b29457fa3",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova/page.tsx": {
@@ -216,9 +216,9 @@
     "semantic_hash": "9610f8fda831facca3bc38550df8274a"
   },
   "src/app/dashboard/entregas/page.tsx": {
-    "mtime": 1788959530.8173087,
-    "seen": 1788959646.1896846,
-    "ast_hash": "7ad6d527f59daa054c2a2830a616270c",
+    "mtime": 1788961222.7886963,
+    "seen": 1788962550.1248887,
+    "ast_hash": "869e941e5807e212dc12c83068e66d7a",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/pesquisar-entrega-dialog.tsx": {
@@ -234,9 +234,9 @@
     "semantic_hash": "696196a782f01cf056df3e08435fb233"
   },
   "src/app/dashboard/page.tsx": {
-    "mtime": 1788959536.8172174,
-    "seen": 1788959646.1927848,
-    "ast_hash": "787c11e8594782bdb3f5512af7a59659",
+    "mtime": 1788961271.979283,
+    "seen": 1788962550.126181,
+    "ast_hash": "d05c4a638eebf7fc8d22db0c475ffa7a",
     "semantic_hash": ""
   },
   "src/app/entregador/actions.ts": {
@@ -474,9 +474,9 @@
     "semantic_hash": "edc725051bc7504d3358dc7e8798bee1"
   },
   "src/lib/status.ts": {
-    "mtime": 1788959508.7536416,
-    "seen": 1788959646.2036881,
-    "ast_hash": "4e59d6b7781b9af8d9a27f650bb3f43a",
+    "mtime": 1788961038.2785523,
+    "seen": 1788962550.1355672,
+    "ast_hash": "b61ddcf4041f01d6b4002a12c6ad8d9d",
     "semantic_hash": ""
   },
   "src/lib/supabase/client.ts": {
@@ -666,27 +666,147 @@
     "semantic_hash": ""
   },
   "src/components/stale-entregas-banner.tsx": {
-    "mtime": 1788959524.398741,
-    "seen": 1788959646.1957848,
-    "ast_hash": "1275756e59293b94d6fe76976251d2a6",
+    "mtime": 1788961038.2785523,
+    "seen": 1788962550.130181,
+    "ast_hash": "9b80b6e118cecba1e84594d6e256c3f6",
     "semantic_hash": ""
   },
   "src/hooks/use-stale-entregas.ts": {
-    "mtime": 1788959516.3158429,
-    "seen": 1788959646.2026088,
-    "ast_hash": "3bbc3326d2c82f4bed776713a4978db1",
+    "mtime": 1788962523.0252347,
+    "seen": 1788962550.1355672,
+    "ast_hash": "b538a19e658075234afe2e41e3d4e033",
     "semantic_hash": ""
   },
   ".github/workflows/ci.yml": {
-    "mtime": 1788959643.4045258,
-    "seen": 1788959646.2056134,
-    "ast_hash": "f9b21e2bb8d50a07706d437f45641d09",
+    "mtime": 1788961038.2615266,
+    "seen": 1788962550.1375868,
+    "ast_hash": "26079618374ff0550ab7322eca0b1bd4",
     "semantic_hash": ""
   },
   "docs/IDEIAS.md": {
     "mtime": 1788958933.0152428,
     "seen": 1788959646.2066102,
     "ast_hash": "a7f27ada07ac03eaf39dea8350f88f44",
+    "semantic_hash": ""
+  },
+  "commitlint.config.js": {
+    "mtime": 1788960126.918266,
+    "seen": 1788962550.1143754,
+    "ast_hash": "d9e7a99e801c36b3ff20ddf24caa722d",
+    "semantic_hash": ""
+  },
+  "jest.config.js": {
+    "mtime": 1788962128.0677047,
+    "seen": 1788962550.1153755,
+    "ast_hash": "fdeb4912e6a3f6ce13f710e6f887badf",
+    "semantic_hash": ""
+  },
+  "jest.setup.js": {
+    "mtime": 1788962108.5417795,
+    "seen": 1788962550.1153755,
+    "ast_hash": "994c5bf3f0f8742b450d0ab09b0d6bb9",
+    "semantic_hash": ""
+  },
+  "src/hooks/__tests__/use-stale-entregas.test.ts": {
+    "mtime": 1788962502.498833,
+    "seen": 1788962550.1355672,
+    "ast_hash": "f1c45147a701d10f8f5066d129724f50",
+    "semantic_hash": ""
+  },
+  "src/lib/__tests__/geocode.test.ts": {
+    "mtime": 1788962325.191581,
+    "seen": 1788962550.1355672,
+    "ast_hash": "4f5dec6f7ef2772b2d9a6dc76f3194ba",
+    "semantic_hash": ""
+  },
+  "src/lib/__tests__/route-distance.test.ts": {
+    "mtime": 1788962290.5759385,
+    "seen": 1788962550.1355672,
+    "ast_hash": "98dc127d5e0d376a7f0ff281dc331e8e",
+    "semantic_hash": ""
+  },
+  "src/lib/__tests__/status.test.ts": {
+    "mtime": 1788962273.5811336,
+    "seen": 1788962550.1355672,
+    "ast_hash": "f36a71b33219185fcdcde84a51b0e590",
+    "semantic_hash": ""
+  },
+  "src/lib/__tests__/use-cep.test.ts": {
+    "mtime": 1788962309.2246246,
+    "seen": 1788962550.1355672,
+    "ast_hash": "205c47caeb959abb5eef16e8a931a868",
+    "semantic_hash": ""
+  },
+  "src/lib/__tests__/username.test.ts": {
+    "mtime": 1788962266.44562,
+    "seen": 1788962550.1355672,
+    "ast_hash": "3680c40103bde840474239838a679f1f",
+    "semantic_hash": ""
+  },
+  "src/lib/__tests__/utils.test.ts": {
+    "mtime": 1788962258.374421,
+    "seen": 1788962550.1355672,
+    "ast_hash": "fc16a7b909e1ea3ae707a29726f245e9",
+    "semantic_hash": ""
+  },
+  "src/components/__tests__/app-shell.test.tsx": {
+    "mtime": 1788962865.3831172,
+    "seen": 1788962890.2287703,
+    "ast_hash": "5205cfb333eeeaddbf73afd96b25677b",
+    "semantic_hash": ""
+  },
+  "src/components/__tests__/entregador-nav.test.tsx": {
+    "mtime": 1788962820.181137,
+    "seen": 1788962890.2287703,
+    "ast_hash": "39bd872c6f8d25d000bb11b5019a7a09",
+    "semantic_hash": ""
+  },
+  "src/components/__tests__/sidebar-nav.test.tsx": {
+    "mtime": 1788962809.0681005,
+    "seen": 1788962890.2287703,
+    "ast_hash": "fb36477172c2521f254218f95c5992eb",
+    "semantic_hash": ""
+  },
+  "src/components/__tests__/stale-entregas-banner.test.tsx": {
+    "mtime": 1788962831.0898633,
+    "seen": 1788962890.2287703,
+    "ast_hash": "153ffae9866b3ca2e527ca9fd4e4b802",
+    "semantic_hash": ""
+  },
+  "src/components/__tests__/status-badge.test.tsx": {
+    "mtime": 1788962764.4548042,
+    "seen": 1788962890.2287703,
+    "ast_hash": "dc9b644db875f6222e599101db688568",
+    "semantic_hash": ""
+  },
+  "src/components/__tests__/theme-toggle.test.tsx": {
+    "mtime": 1788962785.8966045,
+    "seen": 1788962890.2287703,
+    "ast_hash": "b3cbae7636f0cf997631c546b680eb21",
+    "semantic_hash": ""
+  },
+  "src/app/dashboard/cadastros/__tests__/cadastro-dialog.test.tsx": {
+    "mtime": 1788963674.7649076,
+    "seen": 1788964038.358739,
+    "ast_hash": "bec63b6d94fd7547ff521467d0f1919d",
+    "semantic_hash": ""
+  },
+  "src/app/dashboard/clientes/[id]/__tests__/cliente-edit-form.test.tsx": {
+    "mtime": 1788963882.1172962,
+    "seen": 1788964038.3592455,
+    "ast_hash": "4dff3571c63dc9eb8b8458032dc75a41",
+    "semantic_hash": ""
+  },
+  "src/app/dashboard/entregas/nova/__tests__/nova-entrega-form.test.tsx": {
+    "mtime": 1788963993.0859282,
+    "seen": 1788964038.362248,
+    "ast_hash": "687e6b74a3e6eeb690a4b370f5292b67",
+    "semantic_hash": ""
+  },
+  "src/app/dashboard/locais/__tests__/local-dialog.test.tsx": {
+    "mtime": 1788963839.4519553,
+    "seen": 1788964038.3632483,
+    "ast_hash": "f4a4c2cbc3616aa11a2a4bf6491197d5",
     "semantic_hash": ""
   }
 }
