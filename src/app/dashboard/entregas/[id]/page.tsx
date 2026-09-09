@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import type { EntregaWithRelations, EntregaFoto, Endereco, Profile } from "@/types/database";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ import {
   Share2,
   Package,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { formatOrderNumber } from "@/lib/status";
 import { format } from "date-fns";
@@ -66,9 +68,9 @@ const actionLabels: Record<string, string> = {
 export default function EntregaDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const [entrega, setEntrega] = useState<any>(null);
-  const [criador, setCriador] = useState<any>(null);
-  const [fotos, setFotos] = useState<any[]>([]);
+  const [entrega, setEntrega] = useState<EntregaWithRelations | null>(null);
+  const [criador, setCriador] = useState<Pick<Profile, "id" | "name" | "role"> | null>(null);
+  const [fotos, setFotos] = useState<EntregaFoto[]>([]);
   const [fotosUrls, setFotosUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -118,7 +120,7 @@ export default function EntregaDetailPage() {
     if (fotosData && fotosData.length > 0) {
       setFotos(fotosData);
       const urls = await Promise.all(
-        fotosData.map(async (f: any) => {
+        fotosData.map(async (f) => {
           const { data } = await supabase.storage
             .from("entregas")
             .createSignedUrl(f.storage_path, 3600);
@@ -132,10 +134,10 @@ export default function EntregaDetailPage() {
   }, [params.id]);
 
   useEffect(() => {
-    load();
+    queueMicrotask(load);
   }, [load]);
 
-  function formatEndereco(endereco: any): string {
+  function formatEndereco(endereco: Endereco | null | undefined): string {
     if (!endereco) return "";
     let addr = `${endereco.rua}, ${endereco.numero}`;
     if (endereco.complemento) addr += ` - ${endereco.complemento}`;
@@ -155,6 +157,7 @@ export default function EntregaDetailPage() {
   const canEdit = entrega?.status === "aguardando_atribuicao";
 
   async function shareWhatsApp() {
+    if (!entrega?.delivered_at) return;
     const deliveredDate = format(new Date(entrega.delivered_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
     const text = [
       `✅ Entrega ${formatOrderNumber(entrega.order_number)} realizada!`,
@@ -579,7 +582,7 @@ function EditEntregaView({
   onCancel,
   onSaved,
 }: {
-  entrega: any;
+  entrega: EntregaWithRelations;
   onCancel: () => void;
   onSaved: () => void;
 }) {
@@ -639,8 +642,8 @@ function EditEntregaView({
       await updateEntrega(entrega.id, fd);
       toast.success("Entrega atualizada!");
       onSaved();
-    } catch (err: any) {
-      toast.error("Erro ao atualizar entrega", { description: err.message });
+    } catch (err) {
+      toast.error("Erro ao atualizar entrega", { description: err instanceof Error ? err.message : undefined });
     } finally {
       setSaving(false);
     }
@@ -652,8 +655,8 @@ function EditEntregaView({
       await cancelEntrega(entrega.id, cancelReason);
       toast.success("Entrega cancelada.");
       onSaved();
-    } catch (err: any) {
-      toast.error("Erro ao cancelar entrega", { description: err.message });
+    } catch (err) {
+      toast.error("Erro ao cancelar entrega", { description: err instanceof Error ? err.message : undefined });
     } finally {
       setCancelling(false);
       setConfirmingCancel(false);
@@ -770,7 +773,7 @@ function EditEntregaView({
               <Select
                 name="scheduled_period"
                 value={scheduledPeriod}
-                onValueChange={setScheduledPeriod}
+                onValueChange={(v) => v && setScheduledPeriod(v)}
                 items={{ manha: "Manhã", tarde: "Tarde" }}
               >
                 <SelectTrigger className="w-28">
@@ -872,6 +875,7 @@ function EditEntregaView({
             Cancelar
           </Button>
           <Button type="submit" disabled={saving}>
+            {saving && <Loader2 className="animate-spin" />}
             {saving ? "Salvando..." : "Salvar Alterações"}
           </Button>
         </div>

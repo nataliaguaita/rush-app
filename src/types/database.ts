@@ -79,6 +79,7 @@ export interface Entrega {
   receiver_role: ReceiverRole | null;
   receiver_note: string | null;
   delivered_at: string | null;
+  route_started_at: string | null;
   numero_sacolas: number;
   group_id: string | null;
   refusal_reason: string | null;

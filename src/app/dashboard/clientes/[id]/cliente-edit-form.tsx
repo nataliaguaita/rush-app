@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,6 +76,7 @@ export function ClienteEditForm({
             </Select>
           </div>
           <Button type="submit" disabled={loading} className="bg-blue-500 text-white hover:bg-blue-600">
+            {loading && <Loader2 className="animate-spin" />}
             {loading ? "Salvando..." : "Salvar Alterações"}
           </Button>
         </CardContent>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { EntregadorHeader, EntregadorBottomNav } from "@/components/entregador-nav";
+import { Spinner } from "@/components/ui/spinner";
 import type { Profile } from "@/types/database";
 
 export default function EntregadorLayout({ children }: { children: React.ReactNode }) {
@@ -35,7 +36,7 @@ export default function EntregadorLayout({ children }: { children: React.ReactNo
   }, []);
 
   if (loading || !profile) {
-    return <div className="flex h-screen items-center justify-center text-muted-foreground">Carregando...</div>;
+    return <div className="flex h-screen items-center justify-center"><Spinner /></div>;
   }
 
   return (

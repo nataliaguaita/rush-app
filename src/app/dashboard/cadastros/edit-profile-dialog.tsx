@@ -19,15 +19,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pencil, Eye, EyeOff } from "lucide-react";
+import { Pencil, Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { updateProfile } from "./actions";
+import type { Profile } from "@/types/database";
 
 export function EditProfileDialog({
   profile,
   onSaved,
 }: {
-  profile: any;
+  profile: Profile;
   onSaved: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -172,6 +173,7 @@ export function EditProfileDialog({
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="animate-spin" />}
               {loading ? "Salvando..." : "Salvar"}
             </Button>
           </div>

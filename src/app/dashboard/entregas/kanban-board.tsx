@@ -12,6 +12,8 @@ import {
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
+  type DraggableAttributes,
+  type DraggableSyntheticListeners,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -68,7 +70,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { persistColumnState, releaseRoute, applyRouteChange, applyAddressChange } from "./actions";
-import type { RouteChangeType } from "@/types/database";
+import type { RouteChangeType, EntregaWithRelations } from "@/types/database";
 import { formatOrderNumber, formatScheduledDate } from "@/lib/status";
 import Link from "next/link";
 
@@ -90,7 +92,7 @@ function fromGroupId(visualId: string) {
 interface VisualItem {
   visualId: string;
   type: "single" | "group";
-  entregas: any[];
+  entregas: EntregaWithRelations[];
   entregaIds: string[];
 }
 
@@ -196,6 +198,7 @@ function SortableCard({
   onAssign,
   onMoveUp,
   onMoveDown,
+  highlightedIds,
 }: {
   visualId: string;
   item: VisualItem;
@@ -204,15 +207,18 @@ function SortableCard({
   onAssign: (visualId: string, targetColumnId: string) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
+  highlightedIds?: Set<string>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: visualId });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: `${CSS.Transform.toString(transform) ?? ""} scale(${isDragging ? 1.04 : 1}) rotate(${isDragging ? 3 : 0}deg)`.trim(),
     transition,
     opacity: isDragging ? 0.3 : 1,
   };
+
+  const isHighlighted = item.entregaIds.some((id) => highlightedIds?.has(id));
 
   if (item.type === "group") {
     return (
@@ -220,6 +226,7 @@ function SortableCard({
         <GroupCardContent
           item={item}
           isDragging={isDragging}
+          isHighlighted={isHighlighted}
           attributes={attributes}
           listeners={listeners}
           entregadores={entregadores}
@@ -246,7 +253,7 @@ function SortableCard({
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className={`${isDragging ? "ring-2 ring-primary" : ""} ${cardBorder}`}>
+      <Card className={`${isDragging ? "ring-2 ring-primary" : ""} ${cardBorder} ${isHighlighted ? "animate-[amber-flash_2s_ease-out]" : ""}`}>
         <CardContent className="space-y-2 px-3 py-3">
           <div className="flex gap-2">
             <div
@@ -354,6 +361,7 @@ function SortableCard({
 function GroupCardContent({
   item,
   isDragging,
+  isHighlighted,
   attributes,
   listeners,
   entregadores,
@@ -365,8 +373,9 @@ function GroupCardContent({
 }: {
   item: VisualItem;
   isDragging: boolean;
-  attributes: any;
-  listeners: any;
+  isHighlighted?: boolean;
+  attributes: DraggableAttributes;
+  listeners: DraggableSyntheticListeners;
   entregadores: { id: string; name: string }[];
   currentColumnId: string;
   visualId: string;
@@ -377,11 +386,11 @@ function GroupCardContent({
   const entregas = item.entregas;
   const endereco = entregas[0]?.endereco;
   const label = endereco?.label;
-  const hasUrgent = entregas.some((e: any) => e.is_urgent);
-  const anyReleased = entregas.some((e: any) => e.status === "rota_definida");
+  const hasUrgent = entregas.some((e) => e.is_urgent);
+  const anyReleased = entregas.some((e) => e.status === "rota_definida");
 
   return (
-    <Card className={`border-l-4 border-l-violet-500 ${isDragging ? "ring-2 ring-primary" : ""}`}>
+    <Card className={`border-l-4 border-l-violet-500 ${isDragging ? "ring-2 ring-primary" : ""} ${isHighlighted ? "animate-[amber-flash_2s_ease-out]" : ""}`}>
       {/* Group header */}
       <div className="flex items-center gap-2 rounded-t-lg bg-violet-50 px-3 py-2 dark:bg-violet-500/10">
         <div
@@ -424,7 +433,7 @@ function GroupCardContent({
 
         {/* List of clients */}
         <div className="space-y-0.5">
-          {entregas.map((e: any) => (
+          {entregas.map((e) => (
             <div key={e.id} className="flex items-center gap-1.5 rounded px-1.5 py-0.5 text-xs bg-muted/40">
               <span className="font-mono text-muted-foreground text-[10px]">{formatOrderNumber(e.order_number)}</span>
               <Link href={`/dashboard/entregas/${e.id}`} className="truncate hover:underline flex-1">
@@ -490,7 +499,7 @@ function CardPreview({ item }: { item: VisualItem | null }) {
   if (item.type === "group") {
     const endereco = item.entregas[0]?.endereco;
     return (
-      <Card className="w-[300px] shadow-lg ring-2 ring-violet-500 border-l-4 border-l-violet-500">
+      <Card className="w-[300px] rotate-3 shadow-lg ring-2 ring-violet-500 border-l-4 border-l-violet-500">
         <div className="flex items-center gap-2 bg-violet-50 px-3 py-2 dark:bg-violet-500/10 rounded-t-lg">
           <Users className="h-3.5 w-3.5 text-violet-600" />
           <span className="text-xs font-semibold text-violet-700 truncate">{endereco?.label || "Grupo"}</span>
@@ -508,7 +517,7 @@ function CardPreview({ item }: { item: VisualItem | null }) {
   }
   const entrega = item.entregas[0];
   return (
-    <Card className="w-[300px] shadow-lg ring-2 ring-primary">
+    <Card className="w-[300px] rotate-3 shadow-lg ring-2 ring-primary">
       <CardContent className="px-3 py-3">
         <p className="truncate font-medium">
           <span className="text-xs font-mono text-muted-foreground mr-1">{formatOrderNumber(entrega.order_number)}</span>
@@ -554,12 +563,13 @@ function KanbanColumn({
   onMove,
   unreleasedCount,
   totalEntregas,
+  highlightedIds,
 }: {
   columnId: string;
   title: string;
   visualIds: string[];
   itemsMap: Record<string, VisualItem>;
-  entregasMap: Record<string, any>;
+  entregasMap: Record<string, EntregaWithRelations>;
   entregadores: { id: string; name: string }[];
   onAssign: (visualId: string, targetColumnId: string) => void;
   onOptimize?: (columnId: string) => void;
@@ -567,9 +577,21 @@ function KanbanColumn({
   onMove?: (columnId: string, visualId: string, direction: -1 | 1) => void;
   unreleasedCount: number;
   totalEntregas: number;
+  highlightedIds?: Set<string>;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: columnId });
   const isEntregador = columnId !== UNASSIGNED;
+
+  const [countBump, setCountBump] = useState(false);
+  const prevTotalRef = useRef(totalEntregas);
+  useEffect(() => {
+    if (prevTotalRef.current !== totalEntregas) {
+      prevTotalRef.current = totalEntregas;
+      setCountBump(true);
+      const timer = setTimeout(() => setCountBump(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [totalEntregas]);
 
   const isItemReleased = (vid: string) => {
     const item = itemsMap[vid];
@@ -603,7 +625,13 @@ function KanbanColumn({
             </div>
           )}
           <span className="text-sm font-semibold">{title}</span>
-          <Badge variant="secondary" className="text-xs">{totalEntregas}</Badge>
+          <Badge
+            variant="secondary"
+            className="text-xs"
+            style={countBump ? { animation: "count-bump 0.3s ease-out" } : undefined}
+          >
+            {totalEntregas}
+          </Badge>
         </div>
         {isEntregador && onOptimize && (
           <OptimizeButton onOptimize={() => onOptimize(columnId)} enabled={hasEnoughForOptimize && !allReleased} />
@@ -634,6 +662,7 @@ function KanbanColumn({
                 onAssign={onAssign}
                 onMoveUp={onMove && idx > 0 ? () => onMove(columnId, vid, -1) : undefined}
                 onMoveDown={onMove && idx < visualIds.length - 1 ? () => onMove(columnId, vid, 1) : undefined}
+                highlightedIds={highlightedIds}
               />
             );
           })}
@@ -659,6 +688,7 @@ function KanbanColumn({
                 onAssign={onAssign}
                 onMoveUp={onMove && idx > 0 ? () => onMove(columnId, vid, -1) : undefined}
                 onMoveDown={onMove && idx < visualIds.length - 1 ? () => onMove(columnId, vid, 1) : undefined}
+                highlightedIds={highlightedIds}
               />
             );
           })}
@@ -684,14 +714,14 @@ function KanbanColumn({
 // ---- Board ----
 
 interface KanbanBoardProps {
-  entregas: any[];
+  entregas: EntregaWithRelations[];
   entregadores: { id: string; name: string }[];
 }
 
 export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
   const [columns, _setColumns] = useState<Record<string, string[]>>({});
   const [itemsMap, setItemsMap] = useState<Record<string, VisualItem>>({});
-  const [entregasMap, setEntregasMap] = useState<Record<string, any>>({});
+  const [entregasMap, setEntregasMap] = useState<Record<string, EntregaWithRelations>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const columnsRef = useRef<Record<string, string[]>>({});
   const itemsMapRef = useRef<Record<string, VisualItem>>({});
@@ -709,6 +739,8 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
   const [routeChangeType, setRouteChangeType] = useState<RouteChangeType | null>(null);
   const [routeChangeNote, setRouteChangeNote] = useState("");
   const [routeChangeAddr, setRouteChangeAddr] = useState({ rua: "", numero: "", bairro: "", cidade: "" });
+  const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
+  const prevStatusRef = useRef<Record<string, string> | null>(null);
 
   const setColumns = useCallback(
     (fn: (prev: Record<string, string[]>) => Record<string, string[]>) => {
@@ -739,9 +771,9 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
 
   // Build visual items from raw entregas
   useEffect(() => {
-    const eMap: Record<string, any> = {};
-    const groups: Record<string, any[]> = {};
-    const singles: any[] = [];
+    const eMap: Record<string, EntregaWithRelations> = {};
+    const groups: Record<string, EntregaWithRelations[]> = {};
+    const singles: EntregaWithRelations[] = [];
 
     const sorted = [...entregas].sort((a, b) => {
       if (a.route_order != null && b.route_order != null) return a.route_order - b.route_order;
@@ -806,9 +838,30 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
 
     columnsRef.current = cols;
     itemsMapRef.current = iMap;
-    _setColumns(cols);
-    setItemsMap(iMap);
-    setEntregasMap(eMap);
+
+    // Highlight cards whose status changed since the last render (e.g. via realtime)
+    const prevStatus = prevStatusRef.current;
+    const changedIds = prevStatus
+      ? sorted.filter((e) => prevStatus[e.id] && prevStatus[e.id] !== e.status).map((e) => e.id)
+      : [];
+    prevStatusRef.current = Object.fromEntries(sorted.map((e) => [e.id, e.status]));
+
+    queueMicrotask(() => {
+      _setColumns(cols);
+      setItemsMap(iMap);
+      setEntregasMap(eMap);
+
+      if (changedIds.length > 0) {
+        setHighlightedIds((prev) => new Set([...prev, ...changedIds]));
+        setTimeout(() => {
+          setHighlightedIds((prev) => {
+            const next = new Set(prev);
+            for (const id of changedIds) next.delete(id);
+            return next;
+          });
+        }, 2000);
+      }
+    });
   }, [entregas, entregadores]);
 
   function handleDragStart(event: DragStartEvent) {
@@ -992,14 +1045,14 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex items-start gap-4 overflow-x-auto pb-4">
         {columnOrder.map((colId) => {
           const entregador = entregadores.find((e) => e.id === colId);
           const vids = columns[colId] ?? [];
           const totalEntregas = vids.reduce((sum, vid) => sum + (itemsMap[vid]?.entregaIds.length ?? 0), 0);
-          const unreleasedCount = expandToEntregaIds(vids).filter(
-            (id) => entregasMap[id]?.status === "aguardando_atribuicao",
-          ).length;
+          const unreleasedCount = vids
+            .flatMap((vid) => itemsMap[vid]?.entregaIds ?? [])
+            .filter((id) => entregasMap[id]?.status === "aguardando_atribuicao").length;
           return (
             <KanbanColumn
               key={colId}
@@ -1015,6 +1068,7 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
               onMove={handleMove}
               unreleasedCount={unreleasedCount}
               totalEntregas={totalEntregas}
+              highlightedIds={highlightedIds}
             />
           );
         })}

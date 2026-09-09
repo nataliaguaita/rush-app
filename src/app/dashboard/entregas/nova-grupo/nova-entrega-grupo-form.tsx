@@ -222,8 +222,8 @@ export function NovaEntregaGrupoForm({
 
       toast.success(`${destinatarios.length} entregas em grupo cadastradas!`);
       window.location.href = "/dashboard/entregas";
-    } catch (err: any) {
-      toast.error("Erro ao criar entregas em grupo", { description: err.message });
+    } catch (err) {
+      toast.error("Erro ao criar entregas em grupo", { description: err instanceof Error ? err.message : undefined });
     }
     setSubmitting(false);
   }
@@ -570,9 +570,10 @@ export function NovaEntregaGrupoForm({
         </Link>
         <Button
           type="submit"
-          disabled={submitting || !hasValidAddress || !allDestinatariosValid}
+          loading={submitting}
+          disabled={!hasValidAddress || !allDestinatariosValid}
         >
-          {submitting ? "Cadastrando..." : `Cadastrar ${destinatarios.length} Entrega${destinatarios.length !== 1 ? "s" : ""}`}
+          {`Cadastrar ${destinatarios.length} Entrega${destinatarios.length !== 1 ? "s" : ""}`}
         </Button>
       </div>
     </form>

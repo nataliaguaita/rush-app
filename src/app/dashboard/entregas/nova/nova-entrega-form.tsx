@@ -57,6 +57,7 @@ export function NovaEntregaForm({
   const [scheduledPeriod, setScheduledPeriod] = useState<"manha" | "tarde">(getAutoPeriod());
   const [valor, setValor] = useState("");
   const [useCustomAddress, setUseCustomAddress] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [customAddr, setCustomAddr] = useState({ cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", label: "" });
   const [saveToCliente, setSaveToCliente] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -121,6 +122,7 @@ export function NovaEntregaForm({
     <form
       onSubmit={async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
           const fd = new FormData(e.currentTarget);
           fd.set("valor", parseValor(valor));
@@ -131,6 +133,7 @@ export function NovaEntregaForm({
           toast.error("Erro ao criar entrega", {
             description: err instanceof Error ? err.message : undefined,
           });
+          setIsSubmitting(false);
         }
       }}
       className="space-y-4 w-[50vw] min-w-[340px] mx-auto"
@@ -567,7 +570,7 @@ export function NovaEntregaForm({
             Cancelar
           </Button>
         </Link>
-        <Button type="submit">Finalizar Cadastro</Button>
+        <Button type="submit" loading={isSubmitting}>Finalizar Cadastro</Button>
       </div>
     </form>
   );

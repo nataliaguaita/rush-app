@@ -57,8 +57,8 @@ export function LocalDialog({
       }
       setOpen(false);
       onSaved();
-    } catch (err: any) {
-      toast.error(isEdit ? "Erro ao atualizar local" : "Erro ao cadastrar local", { description: err.message });
+    } catch (err) {
+      toast.error(isEdit ? "Erro ao atualizar local" : "Erro ao cadastrar local", { description: err instanceof Error ? err.message : undefined });
     }
     setLoading(false);
   }
@@ -152,6 +152,7 @@ export function LocalDialog({
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="animate-spin" />}
               {loading ? "Salvando..." : "Salvar"}
             </Button>
           </div>

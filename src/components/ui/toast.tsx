@@ -137,7 +137,7 @@ function ToastIcon({ type }: { type: string | undefined }) {
 
   if (type === "success") {
     icon = (
-      <CircleCheckIcon aria-hidden="true" />
+      <CircleCheckIcon className="animate-[icon-pop_0.4s_cubic-bezier(0.22,1,0.36,1)] text-[var(--status-success)]" aria-hidden="true" />
     )
   }
 

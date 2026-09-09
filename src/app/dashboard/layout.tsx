@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { Spinner } from "@/components/ui/spinner";
 import type { Profile } from "@/types/database";
 
 export default function DashboardLayout({
@@ -51,7 +52,7 @@ export default function DashboardLayout({
   if (loading || !profile) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p className="text-muted-foreground">Carregando...</p>
+        <Spinner />
       </div>
     );
   }
