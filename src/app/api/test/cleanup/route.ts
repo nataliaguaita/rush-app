@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { rejectUnlessTestEndpointsAllowed } from "@/lib/test-endpoint-guard";
 
 function getAdmin() {
   return createClient(
@@ -9,10 +10,9 @@ function getAdmin() {
   );
 }
 
-export async function POST() {
-  if (process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "Bloqueado em produção" }, { status: 403 });
-  }
+export async function POST(request: Request) {
+  const rejected = rejectUnlessTestEndpointsAllowed(request);
+  if (rejected) return rejected;
 
   const db = getAdmin();
   const log: string[] = [];

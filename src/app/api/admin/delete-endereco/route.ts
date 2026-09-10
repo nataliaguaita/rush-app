@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function getAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,8 +36,8 @@ export async function POST(request: Request) {
   }
 
   const { enderecoId } = await request.json();
-  if (!enderecoId) {
-    return NextResponse.json({ error: "ID do endereço não informado" }, { status: 400 });
+  if (typeof enderecoId !== "string" || !UUID_PATTERN.test(enderecoId)) {
+    return NextResponse.json({ error: "ID do endereço inválido" }, { status: 400 });
   }
 
   const { error } = await adminSupabase.from("enderecos").update({ active: false }).eq("id", enderecoId);

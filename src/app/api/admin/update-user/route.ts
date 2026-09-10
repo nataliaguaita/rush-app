@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { isValidUsername, normalizeUsername, usernameToSyntheticEmail } from "@/lib/username";
 import { toTitleCase } from "@/lib/utils";
 
+const VALID_ROLES = ["admin", "vendedor", "entregador"];
+
 function getAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,6 +42,9 @@ export async function POST(request: Request) {
 
   if (!id || !rawName || !rawUsername || !role) {
     return NextResponse.json({ error: "Campos obrigatórios faltando" }, { status: 400 });
+  }
+  if (!VALID_ROLES.includes(role)) {
+    return NextResponse.json({ error: "Role inválida" }, { status: 400 });
   }
 
   const name = toTitleCase(rawName);
