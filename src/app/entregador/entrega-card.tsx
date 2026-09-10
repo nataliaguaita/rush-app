@@ -40,6 +40,7 @@ import {
   Package,
   Banknote,
   FileSignature,
+  Undo2,
 } from "lucide-react";
 import {
   iniciarEntrega,
@@ -338,14 +339,40 @@ export function EntregaCard({
                   Endereço alterado
                 </Badge>
               )}
+              {entrega.return_reminder && (
+                <Badge variant="outline" className="border-violet-500/50 bg-violet-100 text-xs text-violet-700 dark:bg-violet-500/10 dark:text-violet-400">
+                  <Undo2 className="mr-1 h-3 w-3" />
+                  Pegar devolução
+                </Badge>
+              )}
             </div>
             <p className="flex items-center gap-1 text-sm text-muted-foreground">
               <MapPin className="h-3 w-3" />
               {endereco?.rua}, {endereco?.numero}
               {endereco?.bairro ? ` - ${endereco.bairro}` : ""}
             </p>
+            {entrega.route_change_type === "adiada" && entrega.route_change_note && (
+              <div className="rounded-md bg-amber-100 p-2 text-sm text-amber-800 dark:bg-amber-500/20 dark:text-amber-200">
+                <span className="font-medium">Rota alterada:</span> {entrega.route_change_note}
+              </div>
+            )}
+            {entrega.route_change_type === "endereco_alterado" && entrega.route_change_note && (
+              <div className="rounded-md bg-blue-100 p-2 text-sm text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
+                <span className="font-medium">Endereço alterado:</span> {entrega.route_change_note}
+              </div>
+            )}
+            {entrega.return_reminder && entrega.interested_note && (
+              <div className="rounded-md bg-violet-100 p-2 text-sm text-violet-800 dark:bg-violet-500/20 dark:text-violet-200">
+                <span className="font-medium">Devolução:</span> {entrega.interested_note}
+              </div>
+            )}
             {entrega.interested_name && (
               <p className="text-sm font-medium">Entregar para {entrega.interested_name}</p>
+            )}
+            {entrega.notes && (
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium">Observação:</span> {entrega.notes}
+              </p>
             )}
             {entrega.actions?.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
@@ -374,21 +401,6 @@ export function EntregaCard({
             )}
             {entrega.valor && entrega.actions?.includes("receber") && (
               <p className="text-sm font-medium text-emerald-600">R$ {Number(entrega.valor).toFixed(2)}</p>
-            )}
-            {entrega.route_change_type === "adiada" && entrega.route_change_note && (
-              <div className="rounded-md bg-amber-100 p-2 text-sm text-amber-800 dark:bg-amber-500/20 dark:text-amber-200">
-                <span className="font-medium">Rota alterada:</span> {entrega.route_change_note}
-              </div>
-            )}
-            {entrega.route_change_type === "endereco_alterado" && entrega.route_change_note && (
-              <div className="rounded-md bg-blue-100 p-2 text-sm text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
-                <span className="font-medium">Endereço alterado:</span> {entrega.route_change_note}
-              </div>
-            )}
-            {entrega.notes && (
-              <p className="text-xs text-muted-foreground italic">
-                {entrega.notes}
-              </p>
             )}
           </div>
           {isEmRota && <StatusBadge status={entrega.status} />}
