@@ -17,4 +17,5 @@ Status: `[ ]` pendente · `[x]` feito (mover pra baixo ou apagar depois de feito
 
 ## Prioridade baixa / ideias soltas
 
+- [ ] **Limpar dívida técnica de lint não relacionada a segurança.** `npm run lint` ainda acusa 31 erros e 49 avisos pré-existentes (`@typescript-eslint/no-explicit-any`, `react-hooks/set-state-in-effect`, `react-hooks/immutability`, `react-hooks/exhaustive-deps`, variáveis não usadas, `window.location.href` em vez de navegação do Next). Ficaram de fora da tarefa de configuração do `eslint-plugin-security` (2026-09-10) por não terem relação com segurança.
 - [x] **Animações / microinterações** para deixar a usabilidade mais fluida e leve. Feito com CSS puro (sem lib nova): shake em campo inválido, spring/tilt no drag do kanban, highlight âmbar quando o status muda via realtime, bump no contador da coluna, count-up nos números do dashboard, e spinner nos estados de carregamento/salvamento.

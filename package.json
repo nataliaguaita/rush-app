@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "set NODE_TLS_REJECT_UNAUTHORIZED=0&& next dev",
-    "build": "next build",
+    "build": "node scripts/check-security-lint.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "jest",
@@ -53,6 +53,7 @@
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
+    "eslint-plugin-security": "^4.0.1",
     "husky": "^9.1.7",
     "jest": "^30.5.1",
     "jest-environment-jsdom": "^30.5.1",
