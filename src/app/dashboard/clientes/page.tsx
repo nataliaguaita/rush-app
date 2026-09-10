@@ -22,13 +22,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import type { Cliente } from "@/types/database";
 
 const PER_PAGE = 20;
 
 type Filtro = "A–Z" | "Mais recentes" | "Inativos";
+type ClienteResumo = Pick<Cliente, "id" | "name" | "active" | "created_at">;
 
 export default function ClientesPage() {
-  const [clientes, setClientes] = useState<any[]>([]);
+  const [clientes, setClientes] = useState<ClienteResumo[]>([]);
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("A–Z");
   const [pagina, setPagina] = useState(1);
@@ -40,7 +42,7 @@ export default function ClientesPage() {
       .select("id, name, active, created_at")
       .order("name")
       .then(({ data }) => setClientes(data ?? []));
-  }, []);
+  }, [supabase]);
 
   const filtrados = useMemo(() => {
     const filtered = clientes.filter((c) => {
@@ -69,7 +71,7 @@ export default function ClientesPage() {
   );
 
   useEffect(() => {
-    setPagina(1);
+    queueMicrotask(() => setPagina(1));
   }, [busca, filtro]);
 
   return (

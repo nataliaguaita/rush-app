@@ -47,7 +47,7 @@ export default function DashboardLayout({
     }
 
     loadProfile();
-  }, []);
+  }, [router, supabase]);
 
   if (loading || !profile) {
     return (

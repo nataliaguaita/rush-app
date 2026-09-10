@@ -11,9 +11,12 @@ import { CheckCircle, XCircle, MapPin, Clock, AlertTriangle, ChevronLeft, Chevro
 import { format, addDays, subDays, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { RECEIVER_ROLE_LABELS, formatOrderNumber } from "@/lib/status";
+import type { EntregaWithRelations } from "@/types/database";
+
+type EntregaFinalizada = EntregaWithRelations & { fotoUrl?: string | null };
 
 export default function EntregasFinalizadasPage() {
-  const [entregas, setEntregas] = useState<any[]>([]);
+  const [entregas, setEntregas] = useState<EntregaFinalizada[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
@@ -48,8 +51,8 @@ export default function EntregasFinalizadasPage() {
 
     const list = data ?? [];
     const fotoCache = new Map<string, string>();
-    const entregasComFoto = await Promise.all(
-      list.map(async (entrega: any) => {
+    const entregasComFoto: EntregaFinalizada[] = await Promise.all(
+      list.map(async (entrega): Promise<EntregaFinalizada> => {
         const path = entrega.fotos?.[0]?.storage_path;
         if (path) {
           if (fotoCache.has(path)) {
@@ -79,10 +82,10 @@ export default function EntregasFinalizadasPage() {
 
     setEntregas(entregasComFoto);
     setLoading(false);
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
-    load(selectedDate);
+    queueMicrotask(() => load(selectedDate));
   }, [load, selectedDate]);
 
   return (

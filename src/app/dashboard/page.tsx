@@ -18,7 +18,6 @@ import type { EntregaWithRelations, Profile } from "@/types/database";
 
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState({ total: 0, pendentes: 0, emRota: 0, concluidas: 0 });
-  const [entregas, setEntregas] = useState<EntregaWithRelations[]>([]);
   const [entregadores, setEntregadores] = useState<Pick<Profile, "id" | "name">[]>([]);
   const [entregasPorEntregador, setEntregasPorEntregador] = useState<Record<string, EntregaWithRelations[]>>({});
   const [loading, setLoading] = useState(true);
@@ -54,7 +53,6 @@ export default function DashboardPage() {
     }
 
     const all = entregasData ?? [];
-    setEntregas(all);
     setMetrics({
       total: all.length,
       pendentes: all.filter((e) => e.status === "aguardando_atribuicao").length,
@@ -71,7 +69,7 @@ export default function DashboardPage() {
     setEntregasPorEntregador(porEntregador);
     setLoading(false);
     setRefreshing(false);
-  }, [selectedDate]);
+  }, [selectedDate, supabase]);
 
   useEffect(() => {
     queueMicrotask(loadData);
@@ -88,7 +86,7 @@ export default function DashboardPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [loadData]);
+  }, [loadData, supabase]);
 
   const cards = [
     { title: "Total de Entregas Hoje", value: metrics.total, icon: Package, className: "text-muted-foreground" },
@@ -322,17 +320,14 @@ function GroupedEntregaRows({ entregas }: { entregas: EntregaWithRelations[] }) 
   }
 
   const seen = new Set<string>();
-  let idx = 0;
   for (const e of entregas) {
     if (e.group_id) {
       if (!seen.has(e.group_id)) {
         seen.add(e.group_id);
         items.push({ key: e.group_id, type: "group", entregas: groups.get(e.group_id)! });
-        idx++;
       }
     } else {
       items.push({ key: e.id, type: "single", entregas: [e] });
-      idx++;
     }
   }
 

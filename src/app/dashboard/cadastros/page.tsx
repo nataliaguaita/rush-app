@@ -23,13 +23,14 @@ import {
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { CadastroDialog } from "./cadastro-dialog";
 import { EditProfileDialog } from "./edit-profile-dialog";
+import type { Profile } from "@/types/database";
 
 const PER_PAGE = 20;
 
 type Filtro = "Vendedores" | "Entregadores" | "Inativos";
 
 export default function CadastrosPage() {
-  const [profiles, setProfiles] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("Vendedores");
   const [pagina, setPagina] = useState(1);
@@ -38,10 +39,10 @@ export default function CadastrosPage() {
   const load = useCallback(async () => {
     const { data } = await supabase.from("profiles").select("*").order("name");
     setProfiles(data ?? []);
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
-    load();
+    queueMicrotask(load);
   }, [load]);
 
   const filtrados = useMemo(() => {
@@ -64,7 +65,7 @@ export default function CadastrosPage() {
   );
 
   useEffect(() => {
-    setPagina(1);
+    queueMicrotask(() => setPagina(1));
   }, [busca, filtro]);
 
   return (

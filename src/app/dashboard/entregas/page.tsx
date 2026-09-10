@@ -54,7 +54,7 @@ export default function EntregasPage() {
       setLoading(false);
       setRefreshing(false);
     },
-    [selectedDate],
+    [selectedDate, supabase],
   );
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export default function EntregasPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [load]);
+  }, [load, supabase]);
 
   const filteredEntregas = selectedPeriod === "todos"
     ? entregas

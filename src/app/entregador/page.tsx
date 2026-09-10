@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,10 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { EntregaCard } from "./entrega-card";
 import { EntregaGroupCard } from "./entrega-group-card";
+import type { EntregaWithRelations } from "@/types/database";
 
 export default function EntregadorPage() {
-  const [entregas, setEntregas] = useState<any[]>([]);
+  const [entregas, setEntregas] = useState<EntregaWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
@@ -81,10 +82,10 @@ export default function EntregadorPage() {
     }
     setLoading(false);
     setRefreshing(false);
-  }, []);
+  }, [completedAt, supabase]);
 
   useEffect(() => {
-    load();
+    queueMicrotask(load);
 
     const channel = supabase
       .channel("entregador-rota")
@@ -98,7 +99,7 @@ export default function EntregadorPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [load]);
+  }, [load, supabase]);
 
   return (
     <div className="space-y-4">
@@ -162,11 +163,11 @@ export default function EntregadorPage() {
   );
 }
 
-function GroupedEntregaList({ entregas }: { entregas: any[] }) {
+function GroupedEntregaList({ entregas }: { entregas: EntregaWithRelations[] }) {
   const items = useMemo(() => {
-    const result: { key: string; type: "single" | "group"; entregas: any[] }[] = [];
-    const grouped = new Map<string, any[]>();
-    const singles: any[] = [];
+    const result: { key: string; type: "single" | "group"; entregas: EntregaWithRelations[] }[] = [];
+    const grouped = new Map<string, EntregaWithRelations[]>();
+    const singles: EntregaWithRelations[] = [];
 
     for (const e of entregas) {
       if (e.group_id) {
@@ -178,7 +179,6 @@ function GroupedEntregaList({ entregas }: { entregas: any[] }) {
       }
     }
 
-    let globalIdx = 0;
     for (const e of entregas) {
       if (e.group_id) {
         const group = grouped.get(e.group_id);

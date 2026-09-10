@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +46,7 @@ import {
   copiarFotoParaEntregas,
 } from "./actions";
 import { toast } from "sonner";
+import type { EntregaWithRelations } from "@/types/database";
 
 const receiverRoles = [
   { value: "secretaria", label: "Secretária" },
@@ -60,7 +60,7 @@ export function EntregaGroupCard({
   entregas,
   isFirst,
 }: {
-  entregas: any[];
+  entregas: EntregaWithRelations[];
   isFirst: boolean;
 }) {
   const [mode, setMode] = useState<"idle" | "registrar" | "recusar">("idle");
@@ -78,7 +78,6 @@ export function EntregaGroupCard({
 
   const firstEntrega = entregas[0];
   const endereco = firstEntrega?.endereco;
-  const allEmRota = entregas.every((e) => e.status === "em_rota");
   const anyEmRota = entregas.some((e) => e.status === "em_rota");
   const pendingEntregas = entregas.filter((e) => e.status !== "entregue" && e.status !== "recusada" && e.status !== "retornada");
 

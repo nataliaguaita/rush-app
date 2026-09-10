@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/types/database";
 import Image from "next/image";
@@ -12,7 +12,6 @@ import {
   Users,
   UserPlus,
   BarChart3,
-  Truck,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
@@ -56,6 +55,7 @@ export function SidebarNav({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const links = profile.role === "admin" ? adminLinks : vendedorLinks;
   const [collapsedPref, setCollapsedPref] = useState(
     () => collapsible && localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true"
@@ -175,7 +175,7 @@ export function SidebarNav({
             !collapsed && "w-full justify-start gap-2"
           )}
           title="Sair"
-          onClick={() => logout()}
+          onClick={() => logout(router)}
         >
           <LogOut className="h-4 w-4" />
           {!collapsed && "Sair"}
