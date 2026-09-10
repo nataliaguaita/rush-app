@@ -88,7 +88,7 @@ aguardando_atribuicao → rota_definida → em_rota → entregue
 ## Autenticação e papéis
 
 - Auth via Supabase (`@supabase/ssr`). `src/lib/supabase/middleware.ts` roda em todo request: sem usuário autenticado → redireciona para `/login`; usuário autenticado tentando acessar `/login` → redireciona para `/dashboard`.
-- Login pode ser feito por **username** (não apenas e-mail): `src/app/api/resolve-username/route.ts` resolve o username para o e-mail sintético gerado por `usernameToSyntheticEmail()` (`src/lib/username.ts`), que é então usado no login normal do Supabase Auth.
+- Login pode ser feito por **username** (não apenas e-mail): `src/app/api/login/route.ts` deriva o e-mail sintético via `usernameToSyntheticEmail()` (`src/lib/username.ts`, determinístico a partir do username, sem consulta ao banco) e chama `signInWithPassword` no servidor, sempre respondendo com a mesma mensagem genérica em caso de erro — não há endpoint separado que confirme se um username existe.
 - Depois do login, o papel (`profiles.role`) decide o redirecionamento: `entregador` vai para `/entregador`; `admin`/`vendedor` vão para `/dashboard` (ver `src/app/dashboard/layout.tsx`).
 - Criação/edição de usuários (`/api/admin/create-user`, `/api/admin/update-user`) usa a **service role key** do Supabase no servidor — nunca exposta ao cliente.
 

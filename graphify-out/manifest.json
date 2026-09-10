@@ -71,12 +71,6 @@
     "ast_hash": "f3de5acb1f8675bd45081f33ea313ca9",
     "semantic_hash": ""
   },
-  "src/app/api/resolve-username/route.ts": {
-    "mtime": 1788273700.6097937,
-    "seen": 1788530681.0028908,
-    "ast_hash": "3050453da93773c75043e6e812928cda",
-    "semantic_hash": "3050453da93773c75043e6e812928cda"
-  },
   "src/app/api/test/cleanup/route.ts": {
     "mtime": 1789044147.8701704,
     "seen": 1789044289.0895646,
@@ -288,10 +282,10 @@
     "semantic_hash": "5845585963e35206604ca61451f2d120"
   },
   "src/app/login/page.tsx": {
-    "mtime": 1788359877.9720056,
-    "seen": 1788530681.0028908,
-    "ast_hash": "fdbbdd50754e0bd0cee85dd4bcd74eea",
-    "semantic_hash": "fdbbdd50754e0bd0cee85dd4bcd74eea"
+    "mtime": 1789046151.5335557,
+    "seen": 1789046243.389233,
+    "ast_hash": "dc6f8fc3b4e0eae67d122f9ce77524de",
+    "semantic_hash": ""
   },
   "src/app/page.tsx": {
     "mtime": 1788975866.4462707,
@@ -630,9 +624,9 @@
     "semantic_hash": ""
   },
   "docs/ARQUITETURA.md": {
-    "mtime": 1788952610.5297372,
-    "seen": 1788952663.8633287,
-    "ast_hash": "4647d30ce4c49db049d3072d82172565",
+    "mtime": 1789046160.8108554,
+    "seen": 1789046243.4007068,
+    "ast_hash": "5499b339c5a7fc8d593155fb4308bebe",
     "semantic_hash": ""
   },
   "docs/CHANGELOG.md": {
@@ -648,9 +642,9 @@
     "semantic_hash": ""
   },
   "docs/README.md": {
-    "mtime": 1788952582.5145774,
-    "seen": 1788952663.8633287,
-    "ast_hash": "82bfb4392ffea87af6bd776bf92fc216",
+    "mtime": 1789045606.8253407,
+    "seen": 1789046243.4022098,
+    "ast_hash": "ffe0a2dbb5ca45ce3228eddc08e4390a",
     "semantic_hash": ""
   },
   "src/app/dashboard/devolucoes/actions.ts": {
@@ -684,9 +678,9 @@
     "semantic_hash": ""
   },
   "docs/IDEIAS.md": {
-    "mtime": 1789043655.0079963,
-    "seen": 1789044289.1073585,
-    "ast_hash": "c771b4e1f0f30487c56bd61ceeb27e3d",
+    "mtime": 1789046166.0295057,
+    "seen": 1789046243.4022098,
+    "ast_hash": "cef16fa806ec605c9fc6f5a4ab2bf5e0",
     "semantic_hash": ""
   },
   "commitlint.config.js": {
@@ -843,6 +837,12 @@
     "mtime": 1789044141.9150102,
     "seen": 1789044289.1053517,
     "ast_hash": "885d32484a9b770430644839e2336687",
+    "semantic_hash": ""
+  },
+  "src/app/api/login/route.ts": {
+    "mtime": 1789046492.8156722,
+    "seen": 1789046546.1066248,
+    "ast_hash": "a055bde805157053dd011bcc4a64ec25",
     "semantic_hash": ""
   }
 }

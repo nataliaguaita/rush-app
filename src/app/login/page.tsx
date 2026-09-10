@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,6 @@ import { toast } from "sonner";
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const supabase = createClient();
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -31,28 +29,13 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    let email = identifier;
-    if (!identifier.includes("@")) {
-      const res = await fetch("/api/resolve-username", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: identifier }),
-      });
-      const data = await res.json();
-      if (!data.email) {
-        toast.error("Usuário ou senha inválidos");
-        setLoading(false);
-        return;
-      }
-      email = data.email;
-    }
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier, password }),
     });
 
-    if (error) {
+    if (!res.ok) {
       toast.error("Usuário ou senha inválidos");
       setLoading(false);
       return;
