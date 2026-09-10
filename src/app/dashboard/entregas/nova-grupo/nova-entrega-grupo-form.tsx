@@ -238,7 +238,7 @@ export function NovaEntregaGrupoForm({
   const allDestinatariosValid = destinatarios.every((d) => !!d.clienteId);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 w-[50vw] min-w-[340px] mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-4 w-full sm:w-[50vw] sm:min-w-[340px] mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Users className="h-6 w-6 text-primary" />

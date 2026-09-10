@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, AlertTriangle, RefreshCw, ChevronLeft, ChevronRight, Sun, Sunset, Users } from "lucide-react";
+import { Plus, AlertTriangle, RefreshCw, ChevronLeft, ChevronRight, Sun, Sunset, Truck, Users } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { format, addDays, subDays } from "date-fns";
 import { KanbanBoard } from "./kanban-board";
 import { StaleEntregasBanner } from "@/components/stale-entregas-banner";
@@ -20,7 +26,7 @@ export default function EntregasPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
-  const [selectedPeriod, setSelectedPeriod] = useState<"todos" | "manha" | "tarde">("todos");
+  const [selectedPeriod, setSelectedPeriod] = useState<"todos" | "manha" | "tarde" | "em_rota">("todos");
   const supabase = createClient();
 
   const load = useCallback(
@@ -76,6 +82,8 @@ export default function EntregasPage() {
 
   const filteredEntregas = selectedPeriod === "todos"
     ? entregas
+    : selectedPeriod === "em_rota"
+    ? entregas.filter((e) => e.status === "rota_definida")
     : entregas.filter((e) => e.scheduled_period === selectedPeriod);
 
   const pendentes = filteredEntregas.filter((e) => !e.entregador_id).length;
@@ -96,7 +104,7 @@ export default function EntregasPage() {
             {liberadas > 0 && ` · ${liberadas} liberada${liberadas > 1 ? "s" : ""}`}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="hidden flex-wrap items-center gap-2 sm:flex">
           <Button
             variant="outline"
             size="icon"
@@ -153,7 +161,7 @@ export default function EntregasPage() {
             </button>
             <button
               type="button"
-              className={`flex items-center gap-1 rounded-r-md px-2.5 text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1 border-r border-input px-2.5 text-xs font-medium transition-colors ${
                 selectedPeriod === "tarde"
                   ? "bg-blue-500 text-white"
                   : "text-muted-foreground hover:bg-accent"
@@ -162,6 +170,18 @@ export default function EntregasPage() {
             >
               <Sunset className="h-3.5 w-3.5" />
               Tarde
+            </button>
+            <button
+              type="button"
+              className={`flex items-center gap-1 rounded-r-md px-2.5 text-xs font-medium transition-colors ${
+                selectedPeriod === "em_rota"
+                  ? "bg-slate-500 text-white"
+                  : "text-muted-foreground hover:bg-accent"
+              }`}
+              onClick={() => setSelectedPeriod("em_rota")}
+            >
+              <Truck className="h-3.5 w-3.5" />
+              Em Rota
             </button>
           </div>
           <Button
@@ -184,6 +204,123 @@ export default function EntregasPage() {
               <span className="hidden sm:inline">Nova Entrega</span>
             </Button>
           </Link>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2 sm:hidden">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            onClick={() =>
+              setSelectedDate(
+                format(subDays(new Date(selectedDate + "T00:00:00"), 1), "yyyy-MM-dd"),
+              )
+            }
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="h-8 flex-1 text-center text-sm"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            onClick={() =>
+              setSelectedDate(
+                format(addDays(new Date(selectedDate + "T00:00:00"), 1), "yyyy-MM-dd"),
+              )
+            }
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="flex h-9 rounded-md border border-input">
+          <button
+            type="button"
+            className={`flex flex-1 items-center justify-center gap-1 rounded-l-md text-xs font-medium transition-colors ${
+              selectedPeriod === "todos"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent"
+            }`}
+            onClick={() => setSelectedPeriod("todos")}
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            className={`flex flex-1 items-center justify-center gap-1 border-x border-input text-xs font-medium transition-colors ${
+              selectedPeriod === "manha"
+                ? "bg-amber-500 text-white"
+                : "text-muted-foreground hover:bg-accent"
+            }`}
+            onClick={() => setSelectedPeriod("manha")}
+          >
+            <Sun className="h-3.5 w-3.5" />
+            Manhã
+          </button>
+          <button
+            type="button"
+            className={`flex flex-1 items-center justify-center gap-1 border-r border-input text-xs font-medium transition-colors ${
+              selectedPeriod === "tarde"
+                ? "bg-blue-500 text-white"
+                : "text-muted-foreground hover:bg-accent"
+            }`}
+            onClick={() => setSelectedPeriod("tarde")}
+          >
+            <Sunset className="h-3.5 w-3.5" />
+            Tarde
+          </button>
+          <button
+            type="button"
+            className={`flex flex-1 items-center justify-center gap-1 rounded-r-md text-xs font-medium transition-colors ${
+              selectedPeriod === "em_rota"
+                ? "bg-slate-500 text-white"
+                : "text-muted-foreground hover:bg-accent"
+            }`}
+            onClick={() => setSelectedPeriod("em_rota")}
+          >
+            <Truck className="h-3.5 w-3.5" />
+            Em Rota
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="shrink-0"
+            onClick={() => load({ silent: true })}
+            disabled={refreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button className="w-full flex-1 bg-blue-500 text-white hover:bg-blue-600">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nova Entrega
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem render={<Link href="/dashboard/entregas/nova" />}>
+                <Plus className="h-4 w-4" />
+                Nova Entrega
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/dashboard/entregas/nova-grupo" />}>
+                <Users className="h-4 w-4" />
+                Entrega em Grupo
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

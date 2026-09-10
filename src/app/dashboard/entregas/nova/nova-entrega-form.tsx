@@ -139,7 +139,7 @@ export function NovaEntregaForm({
           setIsSubmitting(false);
         }
       }}
-      className="space-y-4 w-[50vw] min-w-[340px] mx-auto"
+      className="space-y-4 w-full sm:w-[50vw] sm:min-w-[340px] mx-auto"
     >
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Nova Entrega</h1>

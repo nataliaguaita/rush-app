@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Check, Undo2 } from "lucide-react";
 import { format } from "date-fns";
-import { formatOrderNumber } from "@/lib/status";
+import { formatOrderNumber, pendencyBadges } from "@/lib/status";
 import { darBaixaDevolucao, desfazerBaixaDevolucao } from "./actions";
 import type { Cliente, Entrega, Profile } from "@/types/database";
 
@@ -17,16 +17,6 @@ type EntregaDevolucao = Entrega & {
   cliente: Pick<Cliente, "name"> | null;
   entregador: Pick<Profile, "id" | "name"> | null;
 };
-
-function pendencyBadges(entrega: Pick<Entrega, "actions" | "return_reminder">): string[] {
-  const badges: string[] = [];
-  if (entrega.actions?.includes("assinar_nota")) badges.push("Nota assinada");
-  if (entrega.actions?.includes("receber") || entrega.actions?.includes("receber_e_assinar")) {
-    badges.push("Nota + comprovante");
-  }
-  if (entrega.return_reminder) badges.push("Material (troca/crédito)");
-  return badges;
-}
 
 export default function DevolucoesPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
