@@ -102,7 +102,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold">Torre de Controle</h1>
           <p className="text-muted-foreground">Visão geral das entregas</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="hidden flex-wrap items-center gap-2 sm:flex">
           <Button
             variant="outline"
             size="icon"
@@ -144,11 +144,61 @@ export default function DashboardPage() {
           </Link>
           <Link href="/dashboard/entregas/nova">
             <Button className="bg-blue-500 text-white hover:bg-blue-600">
-              <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Nova Entrega</span>
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Entrega
             </Button>
           </Link>
         </div>
+      </div>
+
+      <div className="flex flex-col gap-2 sm:hidden">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            onClick={() => setSelectedDate(format(subDays(new Date(selectedDate + "T00:00:00"), 1), "yyyy-MM-dd"))}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            max={format(new Date(), "yyyy-MM-dd")}
+            className="h-8 flex-1 text-center text-sm"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            disabled={selectedDate === format(new Date(), "yyyy-MM-dd")}
+            onClick={() => setSelectedDate(format(addDays(new Date(selectedDate + "T00:00:00"), 1), "yyyy-MM-dd"))}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <Button
+            variant="outline"
+            onClick={() => loadData({ silent: true })}
+            disabled={refreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+          </Button>
+          <PesquisarEntregaDialog entregadores={entregadores} triggerClassName="w-full" />
+          <Link href="/dashboard/entregas/nova-grupo" className="contents">
+            <Button variant="outline" className="w-full">
+              <Users className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+        <Link href="/dashboard/entregas/nova">
+          <Button className="w-full bg-blue-500 text-white hover:bg-blue-600">
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Entrega
+          </Button>
+        </Link>
       </div>
 
       <StaleEntregasBanner />

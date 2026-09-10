@@ -62,7 +62,7 @@ export default function LocaisPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[180px]">Nome</TableHead>
-              <TableHead>Endereço</TableHead>
+              <TableHead className="hidden sm:table-cell">Endereço</TableHead>
               <TableHead className="w-[100px] text-right">Status</TableHead>
               <TableHead className="w-[80px]" />
             </TableRow>
@@ -84,7 +84,7 @@ export default function LocaisPage() {
                     </div>
                   </TableCell>
                   <TableCell
-                    className="truncate text-muted-foreground"
+                    className="hidden truncate text-muted-foreground sm:table-cell"
                     title={`${local.rua}, ${local.numero}${local.bairro ? ` (${local.bairro})` : ""}`}
                   >
                     {local.rua}, {local.numero}

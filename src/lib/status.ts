@@ -80,3 +80,13 @@ export const RECEIVER_ROLE_LABELS: Record<string, string> = {
   morador_vizinho: "Morador / Vizinho",
   proprietario: "Proprietário da Compra",
 };
+
+export function pendencyBadges(entrega: { actions: string[]; return_reminder: boolean }): string[] {
+  const badges: string[] = [];
+  if (entrega.actions?.includes("assinar_nota")) badges.push("Nota assinada");
+  if (entrega.actions?.includes("receber") || entrega.actions?.includes("receber_e_assinar")) {
+    badges.push("Nota + comprovante");
+  }
+  if (entrega.return_reminder) badges.push("Material (troca/crédito)");
+  return badges;
+}

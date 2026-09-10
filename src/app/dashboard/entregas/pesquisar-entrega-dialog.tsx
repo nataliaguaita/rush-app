@@ -31,6 +31,7 @@ import type { EntregaWithRelations, Profile } from "@/types/database";
 
 interface PesquisarEntregaDialogProps {
   entregadores: Pick<Profile, "id" | "name">[];
+  triggerClassName?: string;
 }
 
 interface ClienteOption {
@@ -40,6 +41,7 @@ interface ClienteOption {
 
 export function PesquisarEntregaDialog({
   entregadores,
+  triggerClassName,
 }: PesquisarEntregaDialogProps) {
   const supabase = createClient();
   const [open, setOpen] = useState(false);
@@ -171,7 +173,7 @@ export function PesquisarEntregaDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button variant="outline">
+          <Button variant="outline" className={triggerClassName}>
             <Search className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Pesquisar Entrega</span>
           </Button>
