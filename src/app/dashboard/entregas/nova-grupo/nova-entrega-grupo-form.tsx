@@ -22,6 +22,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { AlertTriangle, Bookmark, ChevronLeft, MapPin, Plus, Trash2, Users } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createEntregaGrupo } from "./actions";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -84,6 +85,7 @@ export function NovaEntregaGrupoForm({
   const [saveLocal, setSaveLocal] = useState(false);
   const addressDropdownRef = useRef<HTMLDivElement>(null);
   const localDropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const handleCepResult = useCallback((data: { rua: string; bairro: string; cidade: string }) => {
     setCustomAddr((prev) => ({ ...prev, rua: data.rua, bairro: data.bairro, cidade: data.cidade }));
@@ -221,7 +223,8 @@ export function NovaEntregaGrupoForm({
       });
 
       toast.success(`${destinatarios.length} entregas em grupo cadastradas!`);
-      window.location.href = "/dashboard/entregas";
+      router.push("/dashboard/entregas");
+      router.refresh();
     } catch (err) {
       toast.error("Erro ao criar entregas em grupo", { description: err instanceof Error ? err.message : undefined });
     }

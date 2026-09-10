@@ -22,6 +22,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { AlertTriangle, ChevronLeft, MapPin, Users } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createEntrega } from "../actions";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -61,6 +62,7 @@ export function NovaEntregaForm({
   const [customAddr, setCustomAddr] = useState({ cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", label: "" });
   const [saveToCliente, setSaveToCliente] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const handleCepResult = useCallback((data: { rua: string; bairro: string; cidade: string }) => {
     setCustomAddr((prev) => ({ ...prev, rua: data.rua, bairro: data.bairro, cidade: data.cidade }));
@@ -128,7 +130,8 @@ export function NovaEntregaForm({
           fd.set("valor", parseValor(valor));
           await createEntrega(fd);
           toast.success("Entrega cadastrada!");
-          window.location.href = "/dashboard/entregas";
+          router.push("/dashboard/entregas");
+          router.refresh();
         } catch (err) {
           toast.error("Erro ao criar entrega", {
             description: err instanceof Error ? err.message : undefined,

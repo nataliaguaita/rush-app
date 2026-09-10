@@ -7,6 +7,9 @@ import type { ClienteWithEnderecos } from "@/types/database";
 import type { OpenGroup } from "../page";
 
 jest.mock("../../actions", () => ({ createEntrega: jest.fn() }));
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn(), refresh: jest.fn() }),
+}));
 jest.mock("sonner", () => ({
   toast: { error: jest.fn(), success: jest.fn() },
 }));
