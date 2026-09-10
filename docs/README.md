@@ -34,6 +34,7 @@ Variáveis de ambiente necessárias (`.env.local`):
 | `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anônima (pública) do Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Chave de service role — usada nas rotas admin (`/api/admin/*`) para criar/editar usuários |
+| `TEST_ENDPOINT_SECRET` | Segredo exigido por `/api/test/seed` e `/api/test/cleanup` (dev/staging only) |
 
 O schema do banco está em [`supabase/schema.sql`](../supabase/schema.sql), com migrações incrementais em `supabase/migrations/` e nos arquivos `supabase/add_*.sql`.
 
