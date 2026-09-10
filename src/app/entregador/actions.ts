@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { calcRouteDistanceKm } from "@/lib/route-distance";
 import { toTitleCase } from "@/lib/utils";
-import type { ReceiverRole } from "@/types/database";
+import type { Endereco, ReceiverRole } from "@/types/database";
 
 export async function iniciarEntrega(entregaId: string) {
   const supabase = createClient();
@@ -71,8 +71,8 @@ async function tryCalculateRouteDistance(
     .order("route_order");
 
   const waypoints = (delivered ?? [])
-    .map((d: any) => d.endereco)
-    .filter((e: any) => e?.lat && e?.lng);
+    .map((d) => d.endereco as unknown as Pick<Endereco, "lat" | "lng"> | null)
+    .filter((e): e is { lat: number; lng: number } => !!e?.lat && !!e?.lng);
 
   const km = await calcRouteDistanceKm(waypoints, entrega.scheduled_period);
 

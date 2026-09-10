@@ -114,7 +114,7 @@ export default function RelatoriosPage() {
   const [loading, setLoading] = useState(true);
   const [printMode, setPrintMode] = useState<"resumo" | "completo" | null>(null);
 
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   const [startDate, setStartDate] = useState(() => format(startOfMonth(now), "yyyy-MM-dd"));
   const [endDate, setEndDate] = useState(() => format(endOfMonth(now), "yyyy-MM-dd"));
 
@@ -126,7 +126,7 @@ export default function RelatoriosPage() {
     setEndDate(format(end, "yyyy-MM-dd"));
   }
 
-  const presets = [
+  const presets = useMemo(() => [
     { label: "Hoje", start: now, end: now, prevStart: subDays(now, 1), prevEnd: subDays(now, 1) },
     {
       label: "Esta Semana",
@@ -156,7 +156,7 @@ export default function RelatoriosPage() {
       prevStart: startOfYear(subYears(now, 1)),
       prevEnd: endOfYear(subYears(now, 1)),
     },
-  ];
+  ], [now]);
 
   // Comparison baseline: matching preset uses its calendar-aware previous period,
   // a custom range falls back to the immediately preceding period of equal length.
@@ -173,7 +173,7 @@ export default function RelatoriosPage() {
     const pEnd = subDays(start, 1);
     const pStart = subDays(pEnd, days - 1);
     return { prevStart: format(pStart, "yyyy-MM-dd"), prevEnd: format(pEnd, "yyyy-MM-dd") };
-  }, [startDate, endDate]);
+  }, [startDate, endDate, presets]);
 
   useEffect(() => {
     async function checkAuth() {
@@ -184,7 +184,7 @@ export default function RelatoriosPage() {
       setProfile(data as Profile);
     }
     checkAuth();
-  }, []);
+  }, [router, supabase]);
 
   useEffect(() => {
     if (!profile) return;
@@ -210,7 +210,7 @@ export default function RelatoriosPage() {
       setLoading(false);
     }
     load();
-  }, [profile, startDate, endDate, prevStart, prevEnd]);
+  }, [profile, startDate, endDate, prevStart, prevEnd, supabase]);
 
   function handlePrint(mode: "resumo" | "completo") {
     setPrintMode(mode);

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { NovaEntregaForm } from "./nova-entrega-form";
 import { format } from "date-fns";
+import type { ClienteWithEnderecos, Endereco } from "@/types/database";
 
 export interface OpenGroup {
   groupId: string;
@@ -12,8 +13,10 @@ export interface OpenGroup {
   count: number;
 }
 
+type EnderecoResumo = Pick<Endereco, "rua" | "numero" | "bairro" | "label">;
+
 export default function NovaEntregaPage() {
-  const [clientes, setClientes] = useState<any[]>([]);
+  const [clientes, setClientes] = useState<ClienteWithEnderecos[]>([]);
   const [openGroups, setOpenGroups] = useState<OpenGroup[]>([]);
   const supabase = createClient();
 
@@ -24,7 +27,7 @@ export default function NovaEntregaPage() {
         .select("*, enderecos(*)")
         .eq("active", true)
         .order("name");
-      setClientes(data ?? []);
+      setClientes((data ?? []) as ClienteWithEnderecos[]);
 
       // Fetch today's open groups
       const today = format(new Date(), "yyyy-MM-dd");
@@ -37,7 +40,7 @@ export default function NovaEntregaPage() {
         .lte("created_at", `${today}T23:59:59`);
 
       if (groupEntregas) {
-        const grouped = new Map<string, { enderecoId: string; endereco: any; count: number }>();
+        const grouped = new Map<string, { enderecoId: string; endereco: EnderecoResumo | null; count: number }>();
         for (const e of groupEntregas) {
           if (!e.group_id) continue;
           const existing = grouped.get(e.group_id);
@@ -46,14 +49,14 @@ export default function NovaEntregaPage() {
           } else {
             grouped.set(e.group_id, {
               enderecoId: e.endereco_id,
-              endereco: e.endereco,
+              endereco: e.endereco as unknown as EnderecoResumo | null,
               count: 1,
             });
           }
         }
         const groups: OpenGroup[] = [];
         for (const [gid, info] of grouped) {
-          const addr = info.endereco as any;
+          const addr = info.endereco;
           const label = addr?.label
             ? `${addr.label} — ${addr.rua}, ${addr.numero}`
             : `${addr?.rua ?? "?"}, ${addr?.numero ?? ""}${addr?.bairro ? ` (${addr.bairro})` : ""}`;
@@ -68,7 +71,7 @@ export default function NovaEntregaPage() {
       }
     }
     load();
-  }, []);
+  }, [supabase]);
 
   return (
     <div className="mx-auto">

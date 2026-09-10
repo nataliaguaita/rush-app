@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -77,14 +77,8 @@ import Link from "next/link";
 const UNASSIGNED = "unassigned";
 const GROUP_PREFIX = "group:";
 
-function isGroupId(id: string) {
-  return id.startsWith(GROUP_PREFIX);
-}
 function toGroupId(groupId: string) {
   return GROUP_PREFIX + groupId;
-}
-function fromGroupId(visualId: string) {
-  return visualId.slice(GROUP_PREFIX.length);
 }
 
 // ---- Types ----

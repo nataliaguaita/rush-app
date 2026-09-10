@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -25,10 +24,10 @@ export default function LocaisPage() {
   const load = useCallback(async () => {
     const { data } = await supabase.from("locais_frequentes").select("*").order("name");
     setLocais((data ?? []) as LocalFrequente[]);
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
-    load();
+    queueMicrotask(load);
   }, [load]);
 
   const filtrados = useMemo(() => {

@@ -5,6 +5,11 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
 
+// ponytail: leaflet.heat has no official types, this is the minimal shape we call
+interface LeafletHeat {
+  heatLayer(latlngs: [number, number][], options?: { radius?: number; blur?: number }): L.Layer;
+}
+
 export function HeatmapCard({ points }: { points: { lat: number; lng: number }[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -34,8 +39,7 @@ export function HeatmapCard({ points }: { points: { lat: number; lng: number }[]
       // layout not settled); skip and let the next resize/point update retry.
       if (pts.length === 0 || map.getSize().x === 0 || map.getSize().y === 0) return;
       const latLngs = pts.map((p): [number, number] => [p.lat, p.lng]);
-      // ponytail: leaflet.heat has no official types, cast to access L.heatLayer
-      heatRef.current = (L as any).heatLayer(latLngs, { radius: 22, blur: 18 }).addTo(map);
+      heatRef.current = (L as unknown as LeafletHeat).heatLayer(latLngs, { radius: 22, blur: 18 }).addTo(map);
       map.fitBounds(L.latLngBounds(latLngs), { padding: [24, 24], maxZoom: 15 });
     }
 

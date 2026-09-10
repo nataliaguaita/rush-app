@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/types/database";
-import { Package, CheckCircle, LogOut, Settings } from "lucide-react";
+import { Package, CheckCircle, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { logout } from "@/app/login/actions";
@@ -16,6 +16,7 @@ const links = [
 ];
 
 export function EntregadorHeader({ profile }: { profile: Profile }) {
+  const router = useRouter();
   return (
     <header className="border-b bg-card">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-4 py-3">
@@ -25,7 +26,7 @@ export function EntregadorHeader({ profile }: { profile: Profile }) {
             {profile.name}
           </span>
           <ThemeToggle collapsed />
-          <Button variant="ghost" size="icon" onClick={() => logout()} aria-label="Sair">
+          <Button variant="ghost" size="icon" onClick={() => logout(router)} aria-label="Sair">
             <LogOut className="h-4 w-4" />
           </Button>
         </div>

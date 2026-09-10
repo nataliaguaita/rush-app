@@ -33,7 +33,7 @@ export default function EntregadorLayout({ children }: { children: React.ReactNo
       router.replace("/dashboard");
     }
     loadProfile();
-  }, []);
+  }, [router, supabase]);
 
   if (loading || !profile) {
     return <div className="flex h-screen items-center justify-center"><Spinner /></div>;

@@ -11,9 +11,14 @@ import { AlertTriangle, Check, Undo2 } from "lucide-react";
 import { format } from "date-fns";
 import { formatOrderNumber } from "@/lib/status";
 import { darBaixaDevolucao, desfazerBaixaDevolucao } from "./actions";
-import type { Profile } from "@/types/database";
+import type { Cliente, Entrega, Profile } from "@/types/database";
 
-function pendencyBadges(entrega: any): string[] {
+type EntregaDevolucao = Entrega & {
+  cliente: Pick<Cliente, "name"> | null;
+  entregador: Pick<Profile, "id" | "name"> | null;
+};
+
+function pendencyBadges(entrega: Pick<Entrega, "actions" | "return_reminder">): string[] {
   const badges: string[] = [];
   if (entrega.actions?.includes("assinar_nota")) badges.push("Nota assinada");
   if (entrega.actions?.includes("receber") || entrega.actions?.includes("receber_e_assinar")) {
@@ -25,7 +30,7 @@ function pendencyBadges(entrega: any): string[] {
 
 export default function DevolucoesPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [entregas, setEntregas] = useState<any[]>([]);
+  const [entregas, setEntregas] = useState<EntregaDevolucao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [tab, setTab] = useState<"pendentes" | "conferidas">("pendentes");
@@ -42,7 +47,7 @@ export default function DevolucoesPage() {
       setProfile(data as Profile);
     }
     checkAuth();
-  }, []);
+  }, [router, supabase]);
 
   const load = useCallback(async () => {
     setError(false);
@@ -61,11 +66,11 @@ export default function DevolucoesPage() {
 
     setEntregas(data ?? []);
     setLoading(false);
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     if (!profile) return;
-    load();
+    queueMicrotask(load);
   }, [profile, load]);
 
   const relevantes = entregas.filter((e) => pendencyBadges(e).length > 0);

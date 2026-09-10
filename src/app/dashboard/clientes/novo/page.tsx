@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { createClienteMultiEnderecos } from "../actions";
 import { ChevronLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 interface EnderecoForm {
@@ -177,6 +178,7 @@ function EnderecoCard({
 }
 
 export default function NovoClientePage() {
+  const router = useRouter();
   const [enderecos, setEnderecos] = useState<EnderecoForm[]>([emptyEndereco(0)]);
   const [nextKey, setNextKey] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -207,12 +209,13 @@ export default function NovoClientePage() {
         { name },
         enderecos
           .filter((end) => end.rua.trim() !== "")
-          .map(({ key: _key, ...rest }) => rest)
+          .map(({ key, ...rest }) => (void key, rest))
       );
       toast.success("Cliente cadastrado!");
-      window.location.href = "/dashboard/clientes";
-    } catch (err: any) {
-      toast.error("Erro ao cadastrar", { description: err.message });
+      router.push("/dashboard/clientes");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast.error("Erro ao cadastrar", { description: message });
       setLoading(false);
     }
   }

@@ -43,7 +43,6 @@ jest.mock("@/components/ui/dialog", () => {
 });
 
 jest.mock("@/components/ui/select", () => {
-  const React = require("react");
   const Passthrough = ({ children }: any) => children ?? null;
   return {
     Select: Passthrough,

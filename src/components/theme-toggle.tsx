@@ -10,6 +10,7 @@ export function ThemeToggle({ collapsed = false }: { collapsed?: boolean }) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- must run post-hydration to avoid an SSR/client mismatch
   useEffect(() => setMounted(true), []);
 
   const isDark = mounted && resolvedTheme === "dark";

@@ -6,6 +6,7 @@ import type { Profile } from "@/types/database";
 
 jest.mock("next/navigation", () => ({
   usePathname: jest.fn(),
+  useRouter: jest.fn(() => ({ push: jest.fn() })),
 }));
 
 jest.mock("@/app/login/actions", () => ({

@@ -50,6 +50,7 @@ import {
   confirmarRetornoEntrega,
 } from "./actions";
 import { toast } from "sonner";
+import type { EntregaWithRelations } from "@/types/database";
 
 const actionConfig: Record<string, { label: string; icon: typeof Package }> = {
   entregar: { label: "Entregar", icon: Package },
@@ -87,13 +88,14 @@ export function EntregaCard({
   entrega,
   isFirst,
 }: {
-  entrega: any;
+  entrega: EntregaWithRelations;
   isFirst: boolean;
 }) {
   const sk = `entrega-reg-${entrega.id}`;
   const [mode, setMode] = usePersistedState<"idle" | "registrar" | "recusar">(`${sk}-mode`, "idle");
   const [loading, setLoading] = useState(false);
   const [fotoStatus, setFotoStatus] = usePersistedState<"idle" | "uploading" | "done" | "error">(`${sk}-foto`, "idle");
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   useEffect(() => {
     if (fotoStatus === "uploading") {
       setFotoStatus("idle");
@@ -114,7 +116,6 @@ export function EntregaCard({
         }
       });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [receiverName, setReceiverName] = usePersistedState(`${sk}-name`, "");
   const [receiverRole, setReceiverRole] = usePersistedState(`${sk}-role`, "");
   const [customRole, setCustomRole] = usePersistedState(`${sk}-custom`, "");
@@ -130,7 +131,7 @@ export function EntregaCard({
     } catch {}
   }
 
-  const endereco = entrega.endereco;
+  const endereco = entrega.endereco!;
   const isEmRota = entrega.status === "em_rota";
   const isRetornada = entrega.status === "retornada";
 

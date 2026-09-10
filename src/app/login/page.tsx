@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -9,13 +10,13 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -41,7 +42,7 @@ export default function LoginPage() {
       return;
     }
 
-    window.location.href = "/";
+    router.push("/");
   }
 
   return (

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import type { EntregaWithRelations, EntregaFoto, Endereco, Profile } from "@/types/database";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,10 +39,8 @@ import {
   Copy,
   Check,
   AlertTriangle,
-  Clock,
   User,
   Truck,
-  FileText,
   Camera,
   DollarSign,
   Calendar,
@@ -56,7 +55,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { updateEntrega, cancelEntrega } from "../actions";
 import { toast } from "sonner";
-import Link from "next/link";
 
 const actionLabels: Record<string, string> = {
   entregar: "Entregar",
@@ -131,7 +129,7 @@ export default function EntregaDetailPage() {
     }
 
     setLoading(false);
-  }, [params.id]);
+  }, [params.id, supabase]);
 
   useEffect(() => {
     queueMicrotask(load);
@@ -552,12 +550,14 @@ export default function EntregaDetailPage() {
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block overflow-hidden rounded-lg border"
+                      className="relative block h-40 w-full overflow-hidden rounded-lg border"
                     >
-                      <img
+                      <Image
                         src={url}
                         alt={`Foto ${i + 1}`}
-                        className="h-40 w-full object-cover"
+                        fill
+                        sizes="(max-width: 640px) 50vw, 25vw"
+                        className="object-cover"
                       />
                     </a>
                   ))}
