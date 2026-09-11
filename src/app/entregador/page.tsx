@@ -11,11 +11,21 @@ import { EntregaCard } from "./entrega-card";
 import { EntregaGroupCard } from "./entrega-group-card";
 import type { EntregaWithRelations } from "@/types/database";
 
+const LIST_CACHE = "rush-entregas-cache";
+
+function readCache(): EntregaWithRelations[] | null {
+  try {
+    const raw = localStorage.getItem(LIST_CACHE);
+    return raw ? (JSON.parse(raw) as EntregaWithRelations[]) : null;
+  } catch { return null; }
+}
+
 export default function EntregadorPage() {
   const [entregas, setEntregas] = useState<EntregaWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
+  const [stale, setStale] = useState(false);
   const [completedAt, setCompletedAt] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
   const supabase = createClient();
@@ -38,10 +48,26 @@ export default function EntregadorPage() {
     if (silent) setRefreshing(true);
     setError(false);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    // Sem rede caímos no cache: a rota já carregada continua utilizável e as
+    // finalizações vão para a fila local.
+    const fallbackToCache = () => {
+      const cached = readCache();
+      if (cached) {
+        setEntregas(cached);
+        setStale(true);
+      } else {
+        setError(true);
+      }
       setLoading(false);
       setRefreshing(false);
+    };
+
+    const user = await supabase.auth.getUser()
+      .then(({ data }) => data.user)
+      .catch(() => null);
+
+    if (!user) {
+      fallbackToCache();
       return;
     }
 
@@ -56,14 +82,14 @@ export default function EntregadorPage() {
       .order("created_at", { ascending: true });
 
     if (fetchError) {
-      setError(true);
-      setLoading(false);
-      setRefreshing(false);
+      fallbackToCache();
       return;
     }
 
     const list = data ?? [];
     setEntregas(list);
+    setStale(false);
+    try { localStorage.setItem(LIST_CACHE, JSON.stringify(list)); } catch {}
 
     const ids = new Set(list.map((e) => e.id));
     if (knownIds.current) {
@@ -106,7 +132,10 @@ export default function EntregadorPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold">Entregas do Dia</h1>
-          <p className="text-sm text-muted-foreground">{entregas.length} entregas pendentes</p>
+          <p className="text-sm text-muted-foreground">
+            {entregas.length} entregas pendentes
+            {stale && " · lista offline"}
+          </p>
         </div>
         <Button variant="outline" size="icon" onClick={() => load({ silent: true })} disabled={refreshing} aria-label="Atualizar">
           <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />

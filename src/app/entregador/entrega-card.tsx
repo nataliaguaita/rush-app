@@ -41,6 +41,7 @@ import {
   Banknote,
   FileSignature,
   Undo2,
+  CloudOff,
 } from "lucide-react";
 import {
   iniciarEntrega,
@@ -50,6 +51,7 @@ import {
   removerFotosEntrega,
   confirmarRetornoEntrega,
 } from "./actions";
+import { useQueueStore } from "@/lib/offline-queue";
 import { toast } from "sonner";
 import type { EntregaWithRelations } from "@/types/database";
 
@@ -93,6 +95,7 @@ export function EntregaCard({
   isFirst: boolean;
 }) {
   const sk = `entrega-reg-${entrega.id}`;
+  const isQueued = useQueueStore((s) => s.pendingIds.has(entrega.id));
   const [mode, setMode] = usePersistedState<"idle" | "registrar" | "recusar">(`${sk}-mode`, "idle");
   const [loading, setLoading] = useState(false);
   const [fotoStatus, setFotoStatus] = usePersistedState<"idle" | "uploading" | "done" | "error">(`${sk}-foto`, "idle");
@@ -107,15 +110,18 @@ export function EntregaCard({
       .select("storage_path")
       .eq("entrega_id", entrega.id)
       .limit(1)
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          setFotoStatus("done");
-          if (!fotoPreview) {
-            const { data: urlData } = supabase.storage.from("entregas").getPublicUrl(data[0].storage_path);
-            if (urlData?.publicUrl) setFotoPreview(urlData.publicUrl);
+      .then(
+        ({ data }) => {
+          if (data && data.length > 0) {
+            setFotoStatus("done");
+            if (!fotoPreview) {
+              const { data: urlData } = supabase.storage.from("entregas").getPublicUrl(data[0].storage_path);
+              if (urlData?.publicUrl) setFotoPreview(urlData.publicUrl);
+            }
           }
-        }
-      });
+        },
+        () => {}, // sem rede: mantém o status que veio do sessionStorage
+      );
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [receiverName, setReceiverName] = usePersistedState(`${sk}-name`, "");
   const [receiverRole, setReceiverRole] = usePersistedState(`${sk}-role`, "");
@@ -143,14 +149,18 @@ export function EntregaCard({
   }
 
   async function handleIniciar() {
-    await iniciarEntrega(entrega.id);
+    try {
+      await iniciarEntrega(entrega.id);
+    } catch {
+      toast.error("Falha ao iniciar a entrega.");
+    }
     openNavigation();
   }
 
   async function handleRegistrar() {
     setLoading(true);
     try {
-      await registrarEntrega(entrega.id, {
+      const result = await registrarEntrega(entrega.id, {
         receiver_name: receiverName,
         receiver_role: receiverRole,
         custom_role: receiverRole === "outro" ? customRole : undefined,
@@ -158,7 +168,11 @@ export function EntregaCard({
       });
       clearPersistedState();
       setMode("idle");
-      toast.success("Entrega registrada!");
+      toast.success(
+        result === "queued"
+          ? "Entrega salva no aparelho. Será enviada quando houver internet."
+          : "Entrega registrada!",
+      );
     } catch {
       toast.error("Falha ao registrar entrega. Tente novamente.");
     }
@@ -168,10 +182,14 @@ export function EntregaCard({
   async function handleRecusar() {
     setLoading(true);
     try {
-      await registrarRecusa(entrega.id, pendingNote.current || "");
+      const result = await registrarRecusa(entrega.id, pendingNote.current || "");
       clearPersistedState();
       setMode("idle");
-      toast.info("Recusa registrada.");
+      toast.info(
+        result === "queued"
+          ? "Recusa salva no aparelho. Será enviada quando houver internet."
+          : "Recusa registrada.",
+      );
     } catch {
       toast.error("Falha ao registrar recusa. Tente novamente.");
     }
@@ -222,11 +240,9 @@ export function EntregaCard({
 
     try {
       const compressed = await compressImage(file);
-      const fd = new FormData();
-      fd.append("foto", compressed);
-      await uploadFotoEntrega(entrega.id, fd);
+      const result = await uploadFotoEntrega(entrega.id, compressed);
       setFotoStatus("done");
-      toast.success("Foto enviada!");
+      toast.success(result === "queued" ? "Foto salva no aparelho." : "Foto enviada!");
     } catch {
       setFotoStatus("error");
       toast.error("Falha ao enviar a foto. Tente novamente.");
@@ -259,25 +275,36 @@ export function EntregaCard({
               </div>
             )}
           </div>
-          <Button
-            size="lg"
-            variant="destructive"
-            className="w-full"
-            disabled={loading}
-            onClick={async () => {
-              setLoading(true);
-              try {
-                await confirmarRetornoEntrega(entrega.id);
-                toast.info("Retorno confirmado.");
-              } catch {
-                toast.error("Falha ao confirmar retorno.");
-              }
-              setLoading(false);
-            }}
-          >
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-            Confirmar Retorno
-          </Button>
+          {isQueued ? (
+            <div className="flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
+              <CloudOff className="h-4 w-4 shrink-0" />
+              Retorno salvo no aparelho — aguardando internet.
+            </div>
+          ) : (
+            <Button
+              size="lg"
+              variant="destructive"
+              className="w-full"
+              disabled={loading}
+              onClick={async () => {
+                setLoading(true);
+                try {
+                  const result = await confirmarRetornoEntrega(entrega.id);
+                  toast.info(
+                    result === "queued"
+                      ? "Retorno salvo no aparelho. Será enviado quando houver internet."
+                      : "Retorno confirmado.",
+                  );
+                } catch {
+                  toast.error("Falha ao confirmar retorno.");
+                }
+                setLoading(false);
+              }}
+            >
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+              Confirmar Retorno
+            </Button>
+          )}
         </CardContent>
       </Card>
     );
@@ -406,8 +433,15 @@ export function EntregaCard({
           {isEmRota && <StatusBadge status={entrega.status} />}
         </div>
 
+        {isQueued && (
+          <div className="flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
+            <CloudOff className="h-4 w-4 shrink-0" />
+            Registrada no aparelho — aguardando internet para enviar.
+          </div>
+        )}
+
         {/* Actions */}
-        {mode === "idle" && (
+        {mode === "idle" && !isQueued && (
           <div className="flex flex-col gap-2 sm:flex-row">
             {!isEmRota && isFirst ? (
               <Button size="lg" className="flex-1 min-h-12 bg-[#0090FF] text-white font-bold hover:bg-[#0090FF]/80" onClick={handleIniciar}>
@@ -443,7 +477,7 @@ export function EntregaCard({
         )}
 
         {/* Registro de Entrega */}
-        {mode === "registrar" && (
+        {mode === "registrar" && !isQueued && (
           <form
             onSubmit={(e) => handleConfirmSubmit(e, "entrega")}
             className="space-y-3 border-t pt-3"
@@ -566,7 +600,7 @@ export function EntregaCard({
         )}
 
         {/* Recusa */}
-        {mode === "recusar" && (
+        {mode === "recusar" && !isQueued && (
           <form
             onSubmit={(e) => handleConfirmSubmit(e, "recusa")}
             className="space-y-3 border-t pt-3"

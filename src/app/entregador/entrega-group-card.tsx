@@ -36,6 +36,7 @@ import {
   Loader2,
   Package,
   Users,
+  CloudOff,
 } from "lucide-react";
 import {
   iniciarEntrega,
@@ -45,6 +46,7 @@ import {
   removerFotosEntrega,
   copiarFotoParaEntregas,
 } from "./actions";
+import { useQueueStore } from "@/lib/offline-queue";
 import { toast } from "sonner";
 import type { EntregaWithRelations } from "@/types/database";
 
@@ -76,10 +78,18 @@ export function EntregaGroupCard({
   const pendingNote = useRef("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const queuedIds = useQueueStore((s) => s.pendingIds);
+
   const firstEntrega = entregas[0];
   const endereco = firstEntrega?.endereco;
   const anyEmRota = entregas.some((e) => e.status === "em_rota");
-  const pendingEntregas = entregas.filter((e) => e.status !== "entregue" && e.status !== "recusada" && e.status !== "retornada");
+  const pendingEntregas = entregas.filter(
+    (e) =>
+      e.status !== "entregue" &&
+      e.status !== "recusada" &&
+      e.status !== "retornada" &&
+      !queuedIds.has(e.id),
+  );
 
   function toggleSelected(id: string) {
     setSelectedIds((prev) => {
@@ -101,8 +111,12 @@ export function EntregaGroupCard({
   }
 
   async function handleIniciar() {
-    for (const e of entregas) {
-      if (e.status === "rota_definida") await iniciarEntrega(e.id);
+    try {
+      for (const e of entregas) {
+        if (e.status === "rota_definida") await iniciarEntrega(e.id);
+      }
+    } catch {
+      toast.error("Falha ao iniciar as entregas.");
     }
     openNavigation();
   }
@@ -148,11 +162,9 @@ export function EntregaGroupCard({
 
     try {
       const compressed = await compressImage(file);
-      const fd = new FormData();
-      fd.append("foto", compressed);
-      await uploadFotoEntrega(targetId, fd);
+      const result = await uploadFotoEntrega(targetId, compressed);
       setFotoStatus("done");
-      toast.success("Foto enviada!");
+      toast.success(result === "queued" ? "Foto salva no aparelho." : "Foto enviada!");
     } catch {
       setFotoStatus("error");
       toast.error("Falha ao enviar a foto.");
@@ -164,19 +176,26 @@ export function EntregaGroupCard({
     setLoading(true);
     try {
       const ids = [...selectedIds];
+      let queued = false;
       for (const id of ids) {
-        await registrarEntrega(id, {
+        const result = await registrarEntrega(id, {
           receiver_name: receiverName,
           receiver_role: receiverRole,
           custom_role: receiverRole === "outro" ? customRole : undefined,
           receiver_note: pendingNote.current,
         });
+        if (result === "queued") queued = true;
       }
       if (fotoEntregaId && ids.length > 1) {
         const others = ids.filter((id) => id !== fotoEntregaId);
         await copiarFotoParaEntregas(fotoEntregaId, others);
       }
-      toast.success(`${ids.length} entrega${ids.length > 1 ? "s" : ""} registrada${ids.length > 1 ? "s" : ""}!`);
+      const plural = ids.length > 1;
+      toast.success(
+        queued
+          ? `${ids.length} entrega${plural ? "s" : ""} salva${plural ? "s" : ""} no aparelho. Serão enviadas quando houver internet.`
+          : `${ids.length} entrega${plural ? "s" : ""} registrada${plural ? "s" : ""}!`,
+      );
       setMode("idle");
       setSelectedIds(new Set());
       setReceiverName("");
@@ -195,10 +214,17 @@ export function EntregaGroupCard({
     setLoading(true);
     try {
       const ids = [...selectedIds];
+      let queued = false;
       for (const id of ids) {
-        await registrarRecusa(id, pendingNote.current || "");
+        const result = await registrarRecusa(id, pendingNote.current || "");
+        if (result === "queued") queued = true;
       }
-      toast.info(`${ids.length} entrega${ids.length > 1 ? "s" : ""} recusada${ids.length > 1 ? "s" : ""}.`);
+      const plural = ids.length > 1;
+      toast.info(
+        queued
+          ? `${ids.length} recusa${plural ? "s" : ""} salva${plural ? "s" : ""} no aparelho. Serão enviadas quando houver internet.`
+          : `${ids.length} entrega${plural ? "s" : ""} recusada${plural ? "s" : ""}.`,
+      );
       setMode("idle");
       setSelectedIds(new Set());
     } catch {
@@ -247,7 +273,8 @@ export function EntregaGroupCard({
         {/* Destinatários list */}
         <div className="space-y-1.5">
           {entregas.map((e) => {
-            const isDone = e.status === "entregue" || e.status === "recusada" || e.status === "retornada";
+            const isQueued = queuedIds.has(e.id);
+            const isDone = isQueued || e.status === "entregue" || e.status === "recusada" || e.status === "retornada";
             return (
               <div
                 key={e.id}
@@ -268,11 +295,16 @@ export function EntregaGroupCard({
                   <Package className="mr-0.5 h-2.5 w-2.5" />
                   {e.numero_sacolas ?? 1}
                 </Badge>
-                {isDone && (
+                {isQueued ? (
+                  <Badge variant="outline" className="shrink-0 border-amber-500/50 text-xs text-amber-700 dark:text-amber-300">
+                    <CloudOff className="mr-1 h-3 w-3" />
+                    Aguardando envio
+                  </Badge>
+                ) : isDone ? (
                   <Badge variant={e.status === "entregue" ? "default" : "destructive"} className="text-xs shrink-0">
                     {e.status === "entregue" ? "Entregue" : e.status === "retornada" ? "Retornada" : "Recusada"}
                   </Badge>
-                )}
+                ) : null}
               </div>
             );
           })}

@@ -3,19 +3,21 @@
 import { createClient } from "@/lib/supabase/client";
 import { calcRouteDistanceKm } from "@/lib/route-distance";
 import { toTitleCase } from "@/lib/utils";
+import { run, dropOps, type QueuedOp, type RegistroDados } from "@/lib/offline-queue";
 import type { Endereco, ReceiverRole } from "@/types/database";
-
-export async function iniciarEntrega(entregaId: string) {
-  const supabase = createClient();
-  await supabase.from("entregas").update({ status: "em_rota", route_started_at: new Date().toISOString() }).eq("id", entregaId);
-}
 
 const VALID_ROLES: ReceiverRole[] = ["secretaria", "porteiro", "morador_vizinho", "proprietario"];
 
-export async function registrarEntrega(
-  entregaId: string,
-  dados: { receiver_name: string; receiver_role: string; custom_role?: string; receiver_note?: string },
-) {
+async function applyIniciar(entregaId: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("entregas")
+    .update({ status: "em_rota", route_started_at: new Date().toISOString() })
+    .eq("id", entregaId);
+  if (error) throw new Error(error.message);
+}
+
+async function applyRegistrarEntrega(entregaId: string, dados: RegistroDados) {
   const supabase = createClient();
 
   const isValidRole = VALID_ROLES.includes(dados.receiver_role as ReceiverRole);
@@ -88,7 +90,7 @@ async function tryCalculateRouteDistance(
   );
 }
 
-export async function registrarRecusa(entregaId: string, motivo: string) {
+async function applyRegistrarRecusa(entregaId: string, motivo: string) {
   const supabase = createClient();
   const { error } = await supabase.from("entregas").update({
     status: "recusada",
@@ -98,7 +100,7 @@ export async function registrarRecusa(entregaId: string, motivo: string) {
   if (error) throw new Error(error.message);
 }
 
-export async function confirmarRetornoEntrega(entregaId: string) {
+async function applyConfirmarRetorno(entregaId: string) {
   const supabase = createClient();
   const { error } = await supabase
     .from("entregas")
@@ -107,13 +109,14 @@ export async function confirmarRetornoEntrega(entregaId: string) {
   if (error) throw new Error(error.message);
 }
 
-export async function removerFotosEntrega(entregaId: string) {
+async function applyRemoverFotos(entregaId: string) {
   const supabase = createClient();
-  const { data: fotos } = await supabase
+  const { data: fotos, error } = await supabase
     .from("entrega_fotos")
     .select("id, storage_path")
     .eq("entrega_id", entregaId);
 
+  if (error) throw new Error(error.message);
   if (!fotos || fotos.length === 0) return;
 
   const paths = fotos.map((f) => f.storage_path);
@@ -121,32 +124,73 @@ export async function removerFotosEntrega(entregaId: string) {
   await supabase.from("entrega_fotos").delete().eq("entrega_id", entregaId);
 }
 
-export async function uploadFotoEntrega(entregaId: string, formData: FormData) {
+async function applyUploadFoto(entregaId: string, blob: Blob, filename: string) {
   const supabase = createClient();
-  const file = formData.get("foto") as File;
-  if (!file || file.size === 0) return;
-
-  const ext = file.name.split(".").pop();
+  const ext = filename.split(".").pop() || "jpg";
   const path = `${entregaId}/${Date.now()}.${ext}`;
 
-  const { error: uploadError } = await supabase.storage.from("entregas").upload(path, file);
+  const { error: uploadError } = await supabase.storage.from("entregas").upload(path, blob);
   if (uploadError) throw new Error(uploadError.message);
 
-  await supabase.from("entrega_fotos").insert({ entrega_id: entregaId, storage_path: path });
+  const { error } = await supabase.from("entrega_fotos").insert({ entrega_id: entregaId, storage_path: path });
+  if (error) throw new Error(error.message);
 }
 
-export async function copiarFotoParaEntregas(sourceEntregaId: string, targetEntregaIds: string[]) {
+async function applyCopiarFoto(sourceEntregaId: string, targetEntregaIds: string[]) {
   if (targetEntregaIds.length === 0) return;
   const supabase = createClient();
-  const { data: fotos } = await supabase
+  const { data: fotos, error } = await supabase
     .from("entrega_fotos")
     .select("storage_path")
     .eq("entrega_id", sourceEntregaId);
 
+  if (error) throw new Error(error.message);
   if (!fotos || fotos.length === 0) return;
 
   const rows = targetEntregaIds.flatMap((id) =>
     fotos.map((f) => ({ entrega_id: id, storage_path: f.storage_path }))
   );
-  await supabase.from("entrega_fotos").insert(rows);
+  const { error: insertError } = await supabase.from("entrega_fotos").insert(rows);
+  if (insertError) throw new Error(insertError.message);
+}
+
+export async function applyOp(op: QueuedOp, blob?: Blob): Promise<void> {
+  switch (op.kind) {
+    case "iniciar": return applyIniciar(op.entregaId);
+    case "entrega": return applyRegistrarEntrega(op.entregaId, op.dados);
+    case "recusa": return applyRegistrarRecusa(op.entregaId, op.motivo);
+    case "retorno": return applyConfirmarRetorno(op.entregaId);
+    case "foto": return applyUploadFoto(op.entregaId, blob!, op.filename);
+    case "removerFotos": return applyRemoverFotos(op.entregaId);
+    case "copiarFoto": return applyCopiarFoto(op.entregaId, op.targetEntregaIds);
+  }
+}
+
+export function iniciarEntrega(entregaId: string) {
+  return run({ kind: "iniciar", entregaId }, applyOp);
+}
+
+export function registrarEntrega(entregaId: string, dados: RegistroDados) {
+  return run({ kind: "entrega", entregaId, dados }, applyOp);
+}
+
+export function registrarRecusa(entregaId: string, motivo: string) {
+  return run({ kind: "recusa", entregaId, motivo }, applyOp);
+}
+
+export function confirmarRetornoEntrega(entregaId: string) {
+  return run({ kind: "retorno", entregaId }, applyOp);
+}
+
+export function uploadFotoEntrega(entregaId: string, file: File) {
+  return run({ kind: "foto", entregaId, filename: file.name }, applyOp, file);
+}
+
+export async function removerFotosEntrega(entregaId: string) {
+  await dropOps((op) => op.kind === "foto" && op.entregaId === entregaId);
+  return run({ kind: "removerFotos", entregaId }, applyOp);
+}
+
+export function copiarFotoParaEntregas(sourceEntregaId: string, targetEntregaIds: string[]) {
+  return run({ kind: "copiarFoto", entregaId: sourceEntregaId, targetEntregaIds }, applyOp);
 }
