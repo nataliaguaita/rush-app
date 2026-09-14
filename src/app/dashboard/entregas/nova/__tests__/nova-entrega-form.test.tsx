@@ -84,6 +84,8 @@ const clienteComEndereco: ClienteWithEnderecos = {
   name: "Ana Cliente",
   phone: null,
   active: true,
+  codigo_externo: null,
+  cpf_cnpj: null,
   created_at: "2026-01-01T00:00:00.000Z",
   updated_at: "2026-01-01T00:00:00.000Z",
   enderecos: [
@@ -109,6 +111,8 @@ const clienteSemEndereco: ClienteWithEnderecos = {
   id: "c2",
   name: "Bruno Sem Endereço",
   phone: null,
+  codigo_externo: null,
+  cpf_cnpj: null,
   active: true,
   created_at: "2026-01-01T00:00:00.000Z",
   updated_at: "2026-01-01T00:00:00.000Z",
