@@ -61,50 +61,73 @@ export async function POST(request: Request) {
       continue;
     }
 
-    let cidadeResolvida: string | null = null;
     let enderecoTratado = null;
     if (item.endereco && item.cep) {
       enderecoTratado = await tratarEnderecoExterno(item.endereco, item.cep);
-      cidadeResolvida = enderecoTratado.cidade;
     }
 
-    // Fora da área atendida: não importa o cliente (fica só no sistema de vendas).
-    if (cidadeResolvida && !CIDADES_ATENDIDAS.has(cidadeResolvida.toLowerCase())) {
-      continue;
-    }
+    // Endereço "oficial" do sistema de vendas pode não ser o de entrega (ex:
+    // matriz fora de Curitiba, entrega aqui). Por isso não descartamos o
+    // cliente — ele entra inativo, pra revisão manual na aba Inativos.
+    const foraDaRegiao = !!(
+      enderecoTratado?.cidade && !CIDADES_ATENDIDAS.has(enderecoTratado.cidade.toLowerCase())
+    );
 
-    const { data: cliente, error: clienteError } = await supabase
+    const { data: existente } = await supabase
       .from("clientes")
-      .upsert(
-        {
+      .select("id")
+      .eq("codigo_externo", item.codigo)
+      .maybeSingle();
+
+    let clienteId: string;
+    if (existente) {
+      // Nunca sobrescreve "active" num cliente que já existe: pode ter sido
+      // reativado manualmente após revisão, e um novo sync não deve desfazer isso.
+      const { error } = await supabase
+        .from("clientes")
+        .update({
+          name: item.nome,
+          phone: item.telefone || null,
+          cpf_cnpj: item.cpf_cnpj || null,
+        })
+        .eq("id", existente.id);
+      if (error) {
+        revisaoNecessaria.push(item.codigo);
+        continue;
+      }
+      clienteId = existente.id;
+    } else {
+      const { data: novo, error } = await supabase
+        .from("clientes")
+        .insert({
           codigo_externo: item.codigo,
           name: item.nome,
           phone: item.telefone || null,
           cpf_cnpj: item.cpf_cnpj || null,
-          active: item.ativo ?? true,
-        },
-        { onConflict: "codigo_externo" }
-      )
-      .select("id")
-      .single();
-
-    if (clienteError || !cliente) {
-      revisaoNecessaria.push(item.codigo);
-      continue;
+          active: foraDaRegiao ? false : (item.ativo ?? true),
+        })
+        .select("id")
+        .single();
+      if (error || !novo) {
+        revisaoNecessaria.push(item.codigo);
+        continue;
+      }
+      clienteId = novo.id;
     }
 
     processados++;
 
-    if (!enderecoTratado || enderecoTratado.precisaRevisao || !enderecoTratado.cidade) {
+    if (foraDaRegiao || !enderecoTratado || enderecoTratado.precisaRevisao || !enderecoTratado.cidade) {
       revisaoNecessaria.push(item.codigo);
-      continue;
     }
+
+    if (!enderecoTratado || !enderecoTratado.cidade) continue;
 
     // Endereço vindo da integração é sempre o mesmo (fonte externa tem só 1
     // por cliente): substitui o que existir em vez de acumular duplicado.
-    await supabase.from("enderecos").delete().eq("cliente_id", cliente.id).eq("label", "Sistema de vendas");
+    await supabase.from("enderecos").delete().eq("cliente_id", clienteId).eq("label", "Sistema de vendas");
     await supabase.from("enderecos").insert({
-      cliente_id: cliente.id,
+      cliente_id: clienteId,
       label: "Sistema de vendas",
       rua: enderecoTratado.rua,
       numero: enderecoTratado.numero,
