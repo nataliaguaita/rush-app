@@ -32,6 +32,8 @@ export interface Cliente {
   name: string;
   phone: string | null;
   active: boolean;
+  codigo_externo: string | null;
+  cpf_cnpj: string | null;
   created_at: string;
   updated_at: string;
 }
