@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { NovaEntregaGrupoForm } from "./nova-entrega-grupo-form";
 import type { ClienteWithEnderecos, LocalFrequente } from "@/types/database";
 
@@ -12,11 +13,13 @@ export default function NovaEntregaGrupoPage() {
 
   useEffect(() => {
     async function load() {
-      const [{ data: c }, { data: l }] = await Promise.all([
-        supabase.from("clientes").select("*, enderecos(*)").eq("active", true).order("name"),
+      const [c, { data: l }] = await Promise.all([
+        fetchAll<ClienteWithEnderecos>((from, to) =>
+          supabase.from("clientes").select("*, enderecos(*)").eq("active", true).order("name").range(from, to)
+        ),
         supabase.from("locais_frequentes").select("*").eq("active", true).order("name"),
       ]);
-      setClientes((c ?? []) as ClienteWithEnderecos[]);
+      setClientes(c);
       setLocais((l ?? []) as LocalFrequente[]);
     }
     load();

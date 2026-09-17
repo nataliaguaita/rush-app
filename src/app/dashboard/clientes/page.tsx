@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,11 +38,13 @@ export default function ClientesPage() {
   const supabase = createClient();
 
   useEffect(() => {
-    supabase
-      .from("clientes")
-      .select("id, name, active, created_at, codigo_externo")
-      .order("name")
-      .then(({ data }) => setClientes(data ?? []));
+    fetchAll<ClienteResumo>((from, to) =>
+      supabase
+        .from("clientes")
+        .select("id, name, active, created_at, codigo_externo")
+        .order("name")
+        .range(from, to)
+    ).then(setClientes);
   }, [supabase]);
 
   const filtrados = useMemo(() => {
