@@ -148,6 +148,10 @@ export default function ClienteDetailPage() {
               <span className="uppercase">{cliente.name}</span>
             </div>
             <div>
+              <span className="text-muted-foreground">Código:</span>{" "}
+              {cliente.codigo_externo || "—"}
+            </div>
+            <div>
               <span className="text-muted-foreground">Status:</span>{" "}
               {cliente.active ? "Ativo" : "Inativo"}
             </div>

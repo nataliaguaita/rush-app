@@ -86,8 +86,9 @@ export async function updateCliente(id: string, formData: FormData) {
 
   const name = toTitleCase(formData.get("name") as string);
   const active = formData.get("active") === "true";
+  const codigoExterno = (formData.get("codigo_externo") as string)?.trim() || null;
 
-  await supabase.from("clientes").update({ name, active }).eq("id", id);
+  await supabase.from("clientes").update({ name, active, codigo_externo: codigoExterno }).eq("id", id);
 }
 
 export async function addEndereco(clienteId: string, formData: FormData) {

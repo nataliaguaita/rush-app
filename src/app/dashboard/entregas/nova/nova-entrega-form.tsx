@@ -76,7 +76,9 @@ export function NovaEntregaForm({
   const filteredClientes = useMemo(() => {
     if (!clienteSearch.trim()) return clientes;
     const q = clienteSearch.toLowerCase();
-    return clientes.filter((c) => c.name.toLowerCase().includes(q));
+    return clientes.filter(
+      (c) => c.name.toLowerCase().includes(q) || c.codigo_externo?.toLowerCase().includes(q)
+    );
   }, [clientes, clienteSearch]);
 
   useEffect(() => {
@@ -160,7 +162,7 @@ export function NovaEntregaForm({
           <div className="space-y-2 relative" ref={dropdownRef}>
             <Label>Selecionar Cliente *</Label>
             <Input
-              placeholder="Digite o nome do cliente..."
+              placeholder="Digite o nome do cliente ou o código..."
               value={selectedCliente ? selectedCliente.name : clienteSearch}
               onChange={(e) => {
                 setClienteSearch(e.target.value);
@@ -187,6 +189,9 @@ export function NovaEntregaForm({
                     }}
                   >
                     {c.name}
+                    {c.codigo_externo && (
+                      <span className="ml-2 text-xs text-muted-foreground">#{c.codigo_externo}</span>
+                    )}
                   </button>
                 ))}
               </div>

@@ -55,7 +55,7 @@ jest.mock("@/components/ui/select", () => {
 
 const mockedUpdateCliente = updateCliente as jest.Mock;
 
-const cliente = { id: "cli-1", name: "Ana Cliente", active: true };
+const cliente = { id: "cli-1", name: "Ana Cliente", active: true, codigo_externo: null };
 
 describe("ClienteEditForm", () => {
   afterEach(() => jest.resetAllMocks());
