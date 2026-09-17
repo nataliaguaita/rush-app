@@ -40,6 +40,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "ID do cliente inválido" }, { status: 400 });
   }
 
+  // Se o cliente veio da integração com o sistema de vendas, registra o
+  // código externo antes de apagar — assim a próxima sincronização não
+  // recria quem já foi descartado de propósito.
+  const { data: cliente } = await adminSupabase
+    .from("clientes")
+    .select("codigo_externo")
+    .eq("id", clienteId)
+    .single();
+  if (cliente?.codigo_externo) {
+    await adminSupabase
+      .from("clientes_excluidos_integracao")
+      .upsert({ codigo_externo: cliente.codigo_externo });
+  }
+
   const { error } = await adminSupabase.from("clientes").delete().eq("id", clienteId);
   if (error) {
     if (error.code === "23503") {
