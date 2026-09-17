@@ -38,7 +38,7 @@ import { ChevronLeft, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { ClienteEditForm } from "./cliente-edit-form";
 import { AddEnderecoForm } from "./add-endereco-form";
 import { EditEnderecoForm } from "./edit-endereco-form";
-import { deleteEndereco } from "../actions";
+import { deleteEndereco, deleteCliente } from "../actions";
 import { toast } from "sonner";
 import { getStatusMeta, formatOrderNumber } from "@/lib/status";
 import type { ClienteWithEnderecos, Entrega } from "@/types/database";
@@ -57,6 +57,7 @@ export default function ClienteDetailPage() {
   const [entregas, setEntregas] = useState<EntregaResumo[]>([]);
   const [ordemEntregas, setOrdemEntregas] = useState<OrdemEntregas>("Mais recentes");
   const [filtroData, setFiltroData] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const supabase = createClient();
 
   const load = useCallback(async () => {
@@ -67,6 +68,16 @@ export default function ClienteDetailPage() {
       .single();
     setCliente(data);
   }, [id, supabase]);
+
+  useEffect(() => {
+    async function loadRole() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+      setIsAdmin(data?.role === "admin");
+    }
+    loadRole();
+  }, [supabase]);
 
   const loadEntregas = useCallback(async () => {
     const { data } = await supabase
@@ -109,6 +120,16 @@ export default function ClienteDetailPage() {
     load();
   }
 
+  async function handleDeleteCliente() {
+    const result = await deleteCliente(cliente!.id);
+    if (result.error) {
+      toast.error("Erro ao excluir cliente", { description: result.error });
+      return;
+    }
+    toast.success("Cliente excluído");
+    router.push("/dashboard/clientes");
+  }
+
   return (
     <div className="mx-auto w-full max-w-[50vw] space-y-6">
       <div className="flex items-center justify-between">
@@ -137,10 +158,39 @@ export default function ClienteDetailPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Dados do Cliente</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => setEditando(true)}>
-              <Pencil className="mr-1 h-4 w-4" />
-              Editar
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setEditando(true)}>
+                <Pencil className="mr-1 h-4 w-4" />
+                Editar
+              </Button>
+              {isAdmin && (
+                <AlertDialog>
+                  <AlertDialogTrigger
+                    render={
+                      <Button variant="outline" size="sm">
+                        <Trash2 className="mr-1 h-4 w-4 text-destructive" />
+                        Excluir
+                      </Button>
+                    }
+                  />
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Excluir cliente?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja excluir <strong>{cliente.name}</strong>? Esta ação não pode ser desfeita.
+                        Clientes com entregas registradas não podem ser excluídos.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction variant="destructive" onClick={handleDeleteCliente}>
+                        Excluir
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div>

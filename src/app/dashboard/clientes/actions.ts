@@ -37,7 +37,7 @@ export async function createCliente(formData: FormData) {
 }
 
 export async function createClienteMultiEnderecos(
-  clienteData: { name: string },
+  clienteData: { name: string; codigoExterno: string },
   enderecos: {
     label: string;
     rua: string;
@@ -48,11 +48,18 @@ export async function createClienteMultiEnderecos(
     cep: string;
   }[]
 ) {
+  const codigoExterno = clienteData.codigoExterno?.trim();
+  if (!codigoExterno) throw new Error("Código interno é obrigatório");
+
   const supabase = createClient();
 
   const { data: cliente, error } = await supabase
     .from("clientes")
-    .insert({ name: toTitleCase(clienteData.name), active: true })
+    .insert({
+      name: toTitleCase(clienteData.name),
+      active: true,
+      codigo_externo: codigoExterno,
+    })
     .select()
     .single();
 
@@ -146,6 +153,25 @@ export async function deleteEndereco(enderecoId: string) {
 
   const data = await res.json();
   if (!res.ok) return { error: data.error || "Erro ao remover endereço" };
+  return { error: null };
+}
+
+export async function deleteCliente(clienteId: string) {
+  const supabase = createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { error: "Sessão expirada. Faça login novamente." };
+
+  const res = await fetch("/api/admin/delete-cliente", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ clienteId }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) return { error: data.error || "Erro ao excluir cliente" };
   return { error: null };
 }
 
