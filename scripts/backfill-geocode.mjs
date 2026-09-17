@@ -9,8 +9,7 @@ const supabase = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
-async function geocode(rua, numero, cidade) {
-  const query = `${rua}, ${numero}, ${cidade}, Brazil`;
+async function buscarNominatim(query) {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?${new URLSearchParams({
@@ -28,10 +27,19 @@ async function geocode(rua, numero, cidade) {
   }
 }
 
+async function geocode(rua, numero, cidade) {
+  const comNumero = await buscarNominatim(`${rua}, ${numero}, ${cidade}, Brazil`);
+  if (comNumero) return comNumero;
+  await new Promise((r) => setTimeout(r, 1100));
+  // Estrada/rodovia rural: sem numeração de porta no OSM, cai pro ponto
+  // aproximado da via em vez de ficar sem coordenada nenhuma.
+  return buscarNominatim(`${rua}, ${cidade}, Brazil`);
+}
+
 const { data: enderecos, error } = await supabase
   .from("enderecos")
   .select("id, rua, numero, cidade, cliente_id")
-  .eq("label", "Sistema de vendas")
+  .eq("active", true)
   .is("lat", null);
 
 if (error) {
