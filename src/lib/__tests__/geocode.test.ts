@@ -39,6 +39,25 @@ describe("geocode", () => {
     expect(options).toEqual({ headers: { "User-Agent": "RushApp/1.0" } });
   });
 
+  it("falls back to a query without the house number when the full match fails", async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({ json: async () => [] })
+      .mockResolvedValueOnce({ json: async () => [{ lat: "-25.37", lon: "-49.19" }] });
+
+    const result = await geocode("Estrada da Ribeira", "4567", "Colombo");
+
+    expect(result).toEqual({ lat: -25.37, lng: -49.19 });
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    const [urlComNumero] = (global.fetch as jest.Mock).mock.calls[0];
+    const [urlSemNumero] = (global.fetch as jest.Mock).mock.calls[1];
+    expect(urlComNumero).toContain(
+      new URLSearchParams({ q: "Estrada da Ribeira, 4567, Colombo, Brazil" }).toString()
+    );
+    expect(urlSemNumero).toContain(
+      new URLSearchParams({ q: "Estrada da Ribeira, Colombo, Brazil" }).toString()
+    );
+  });
+
   it("returns null when no results are found", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       json: async () => [],

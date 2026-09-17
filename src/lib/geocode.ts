@@ -1,9 +1,4 @@
-export async function geocode(
-  rua: string,
-  numero: string,
-  cidade: string,
-): Promise<{ lat: number; lng: number } | null> {
-  const query = `${rua}, ${numero}, ${cidade}, Brazil`;
+async function buscarNominatim(query: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?${new URLSearchParams({
@@ -19,4 +14,18 @@ export async function geocode(
   } catch {
     return null;
   }
+}
+
+export async function geocode(
+  rua: string,
+  numero: string,
+  cidade: string,
+): Promise<{ lat: number; lng: number } | null> {
+  const comNumero = await buscarNominatim(`${rua}, ${numero}, ${cidade}, Brazil`);
+  if (comNumero) return comNumero;
+
+  // Estrada/rodovia rural: o OpenStreetMap tem o traçado da via, mas não
+  // numeração de porta. Sem isso, a busca com número nunca acha nada — tenta
+  // de novo só com rua + cidade, aceitando um ponto aproximado na via.
+  return buscarNominatim(`${rua}, ${cidade}, Brazil`);
 }
