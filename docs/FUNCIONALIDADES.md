@@ -47,7 +47,7 @@ Ações disponíveis (`src/app/entregador/actions.ts`, todas Server Actions):
 
 ## Funcionalidades transversais
 
-- **Login por username ou e-mail** — `/login`, resolvido via `/api/resolve-username`
+- **Login por username ou e-mail** — `/login`, autenticado no servidor via `/api/login`
 - **PWA** — instalável (manifest em `public/`), pensado para o entregador usar no celular
 - **Tema claro/escuro** — via `next-themes`
 - **Busca de endereço com autocomplete** — seleção de endereço local com busca (usado no cadastro de entrega)
