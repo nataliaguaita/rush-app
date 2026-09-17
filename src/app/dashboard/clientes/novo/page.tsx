@@ -202,11 +202,12 @@ export default function NovoClientePage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
+    const codigoExterno = formData.get("codigo_externo") as string;
 
     setLoading(true);
     try {
       await createClienteMultiEnderecos(
-        { name },
+        { name, codigoExterno },
         enderecos
           .filter((end) => end.rua.trim() !== "")
           .map(({ key, ...rest }) => (void key, rest))
@@ -244,6 +245,10 @@ export default function NovoClientePage() {
             <div className="space-y-2">
               <Label htmlFor="name">Nome *</Label>
               <Input id="name" name="name" required placeholder="Nome do cliente" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="codigo_externo">Código interno *</Label>
+              <Input id="codigo_externo" name="codigo_externo" required placeholder="Código do sistema da loja" />
             </div>
           </CardContent>
         </Card>

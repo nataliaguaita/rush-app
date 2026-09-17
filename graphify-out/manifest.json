@@ -132,21 +132,21 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/page.tsx": {
-    "mtime": 1789647080.116759,
-    "seen": 1789647244.2227583,
-    "ast_hash": "ebc2054d3362aa7350e0ee84f26cef8a",
+    "mtime": 1789649912.459524,
+    "seen": 1789649946.9667056,
+    "ast_hash": "072899c0e0063d1b0ca3d22d99b1276a",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/actions.ts": {
-    "mtime": 1789647089.1125658,
-    "seen": 1789647244.2227583,
-    "ast_hash": "ca67a82f3ee9c0ccde0f36583e25727d",
+    "mtime": 1789649980.2639737,
+    "seen": 1789650022.3493106,
+    "ast_hash": "d812e70de38b88fbaa0ebb1fa3b87e58",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/novo/page.tsx": {
-    "mtime": 1789047967.1474965,
-    "seen": 1789053986.8143034,
-    "ast_hash": "6410ab3dbfb049a8fa91036affb54051",
+    "mtime": 1789649969.6125796,
+    "seen": 1789650022.3493106,
+    "ast_hash": "7f9d951bf14172c50f8fbe1593ac1ce8",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/page.tsx": {
@@ -869,15 +869,9 @@
     "ast_hash": "e8d3ae5cc407b10dc7107e89918680bd",
     "semantic_hash": ""
   },
-  "scripts/backfill-geocode.mjs": {
-    "mtime": 1789646377.665437,
-    "seen": 1789647244.2180626,
-    "ast_hash": "f893f569dddc82d5a5e2ffebf42ddaa4",
-    "semantic_hash": ""
-  },
   "src/app/api/integracoes/vendas/clientes/route.ts": {
-    "mtime": 1789646052.025743,
-    "seen": 1789647244.2195668,
+    "mtime": 1789648994.4250815,
+    "seen": 1789649857.3393707,
     "ast_hash": "e8c93713b3a897940cf5dbbd9a57d3e0",
     "semantic_hash": ""
   },
@@ -891,6 +885,12 @@
     "mtime": 1789394460.1162193,
     "seen": 1789647244.2373047,
     "ast_hash": "388c4ca44cf9cd648b55928cd36d1053",
+    "semantic_hash": ""
+  },
+  "src/app/api/admin/delete-cliente/route.ts": {
+    "mtime": 1789649766.5679657,
+    "seen": 1789649857.3393707,
+    "ast_hash": "11813a0d33766fd53c6c791300e6df40",
     "semantic_hash": ""
   }
 }
