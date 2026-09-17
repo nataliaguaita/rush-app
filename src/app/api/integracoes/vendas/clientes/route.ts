@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { timingSafeEqual } from "node:crypto";
 import { tratarEnderecoExterno } from "@/lib/parse-endereco-externo";
+import { geocode } from "@/lib/geocode";
 
 // ponytail: lista fixa da Região Metropolitana de Curitiba — ajustar aqui se
 // o critério de "quem entra no Rush App" mudar.
@@ -19,6 +20,10 @@ interface ClienteExterno {
   ativo?: boolean;
   endereco?: string;
   cep?: string;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function safeEqual(a: string, b: string): boolean {
@@ -72,6 +77,10 @@ export async function POST(request: Request) {
     const foraDaRegiao = !!(
       enderecoTratado?.cidade && !CIDADES_ATENDIDAS.has(enderecoTratado.cidade.toLowerCase())
     );
+    // Cobre também "sem endereço" e "CEP/número não confiáveis": mesmo motivo
+    // de entrar inativo pra revisão manual, não só fora da região.
+    const precisaRevisao =
+      foraDaRegiao || !enderecoTratado || enderecoTratado.precisaRevisao || !enderecoTratado.cidade;
 
     const { data: existente } = await supabase
       .from("clientes")
@@ -104,7 +113,7 @@ export async function POST(request: Request) {
           name: item.nome,
           phone: item.telefone || null,
           cpf_cnpj: item.cpf_cnpj || null,
-          active: foraDaRegiao ? false : (item.ativo ?? true),
+          active: precisaRevisao ? false : (item.ativo ?? true),
         })
         .select("id")
         .single();
@@ -117,11 +126,16 @@ export async function POST(request: Request) {
 
     processados++;
 
-    if (foraDaRegiao || !enderecoTratado || enderecoTratado.precisaRevisao || !enderecoTratado.cidade) {
+    if (precisaRevisao) {
       revisaoNecessaria.push(item.codigo);
     }
 
     if (!enderecoTratado || !enderecoTratado.cidade) continue;
+
+    // Nominatim limita a ~1 requisição/segundo; sem essa pausa, uma sincronização
+    // com muitos clientes estoura o limite e a maioria dos geocodes falha em silêncio.
+    const coords = await geocode(enderecoTratado.rua, enderecoTratado.numero, enderecoTratado.cidade);
+    await sleep(1100);
 
     // Endereço vindo da integração é sempre o mesmo (fonte externa tem só 1
     // por cliente): substitui o que existir em vez de acumular duplicado.
@@ -135,6 +149,7 @@ export async function POST(request: Request) {
       bairro: enderecoTratado.bairro,
       cidade: enderecoTratado.cidade,
       cep: enderecoTratado.cep,
+      ...coords,
     });
   }
 

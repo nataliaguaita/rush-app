@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import {
   Dialog,
   DialogContent,
@@ -82,12 +83,10 @@ export function PesquisarEntregaDialog({
 
   async function loadClientes() {
     if (clientesLoaded) return;
-    const { data: clientesData } = await supabase
-      .from("clientes")
-      .select("id, name")
-      .eq("active", true)
-      .order("name");
-    setClientes(clientesData ?? []);
+    const clientesData = await fetchAll<ClienteOption>((from, to) =>
+      supabase.from("clientes").select("id, name").eq("active", true).order("name").range(from, to)
+    );
+    setClientes(clientesData);
     setClientesLoaded(true);
   }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { NovaEntregaForm } from "./nova-entrega-form";
 import { format } from "date-fns";
 import type { ClienteWithEnderecos, Endereco } from "@/types/database";
@@ -22,12 +23,15 @@ export default function NovaEntregaPage() {
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
-        .from("clientes")
-        .select("*, enderecos(*)")
-        .eq("active", true)
-        .order("name");
-      setClientes((data ?? []) as ClienteWithEnderecos[]);
+      const data = await fetchAll<ClienteWithEnderecos>((from, to) =>
+        supabase
+          .from("clientes")
+          .select("*, enderecos(*)")
+          .eq("active", true)
+          .order("name")
+          .range(from, to)
+      );
+      setClientes(data);
 
       // Fetch today's open groups
       const today = format(new Date(), "yyyy-MM-dd");
