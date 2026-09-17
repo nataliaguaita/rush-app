@@ -140,6 +140,17 @@ export async function POST(request: Request) {
 
     if (!enderecoTratado || !enderecoTratado.cidade) continue;
 
+    // Endereço já geocodificado (seja pelo sync original ou por correção manual
+    // depois) não é tocado de novo — sem isso, toda sincronização apagava e
+    // recriava com o texto bruto de lá, desfazendo qualquer correção manual.
+    const { data: enderecoAtual } = await supabase
+      .from("enderecos")
+      .select("lat")
+      .eq("cliente_id", clienteId)
+      .eq("label", "Sistema de vendas")
+      .maybeSingle();
+    if (enderecoAtual?.lat != null) continue;
+
     // Nominatim limita a ~1 requisição/segundo; sem essa pausa, uma sincronização
     // com muitos clientes estoura o limite e a maioria dos geocodes falha em silêncio.
     const coords = await geocode(enderecoTratado.rua, enderecoTratado.numero, enderecoTratado.cidade);
