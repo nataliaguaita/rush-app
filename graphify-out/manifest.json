@@ -120,8 +120,8 @@
     "semantic_hash": "003edf2078d2fcae0035522a0e5009e5"
   },
   "src/app/dashboard/clientes/[id]/cliente-edit-form.tsx": {
-    "mtime": 1789647086.2753396,
-    "seen": 1789647244.2227583,
+    "mtime": 1789653296.5630105,
+    "seen": 1789675512.29725,
     "ast_hash": "fb7743f000e011cc4d681b87c87f54dd",
     "semantic_hash": ""
   },
@@ -132,27 +132,27 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/page.tsx": {
-    "mtime": 1789649912.459524,
-    "seen": 1789649946.9667056,
+    "mtime": 1789653296.5630105,
+    "seen": 1789675512.29725,
     "ast_hash": "072899c0e0063d1b0ca3d22d99b1276a",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/actions.ts": {
-    "mtime": 1789649980.2639737,
-    "seen": 1789650022.3493106,
+    "mtime": 1789653296.564018,
+    "seen": 1789675512.29725,
     "ast_hash": "d812e70de38b88fbaa0ebb1fa3b87e58",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/novo/page.tsx": {
-    "mtime": 1789649969.6125796,
-    "seen": 1789650022.3493106,
+    "mtime": 1789653296.5650058,
+    "seen": 1789675512.29725,
     "ast_hash": "7f9d951bf14172c50f8fbe1593ac1ce8",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/page.tsx": {
-    "mtime": 1789647076.2802477,
-    "seen": 1789647244.2227583,
-    "ast_hash": "4239f45b66bf7670243f5ff4851c1e3c",
+    "mtime": 1789675545.6765766,
+    "seen": 1789675616.1204407,
+    "ast_hash": "a5e406212017cbc8518bc1d4eaba26ce",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/[id]/page.tsx": {
@@ -186,27 +186,27 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova-grupo/nova-entrega-grupo-form.tsx": {
-    "mtime": 1789647528.4933848,
-    "seen": 1789647561.657163,
+    "mtime": 1789653296.5670056,
+    "seen": 1789675512.2992542,
     "ast_hash": "c826a4f10d7745297d42982523625174",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova-grupo/page.tsx": {
-    "mtime": 1789047967.156774,
-    "seen": 1789053986.8154507,
-    "ast_hash": "d49dd97b5cdf78f082843d95b6398584",
+    "mtime": 1789653296.5670056,
+    "seen": 1789675512.2992542,
+    "ast_hash": "dfdeae07b5f54af37194bcda4c0fba43",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova/nova-entrega-form.tsx": {
-    "mtime": 1789647160.3242354,
-    "seen": 1789647244.2257633,
+    "mtime": 1789653296.5685022,
+    "seen": 1789675512.2992542,
     "ast_hash": "93e32436b252eac0c1179383b723ceed",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova/page.tsx": {
-    "mtime": 1789047967.156774,
-    "seen": 1789053986.8154507,
-    "ast_hash": "876d49eb2dc49c9a2162d978acf58779",
+    "mtime": 1789653296.5695033,
+    "seen": 1789675512.2992542,
+    "ast_hash": "ae5036e5a7a6be931cf18cf84fb8dacf",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/page.tsx": {
@@ -216,9 +216,9 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/pesquisar-entrega-dialog.tsx": {
-    "mtime": 1789050283.2876391,
-    "seen": 1789053986.8154507,
-    "ast_hash": "216e1e4a516dab8c6b01bfd75aa643f4",
+    "mtime": 1789653296.5705545,
+    "seen": 1789675512.2992542,
+    "ast_hash": "0cc8771a31373d2a6d7507cf93961872",
     "semantic_hash": ""
   },
   "src/app/dashboard/layout.tsx": {
@@ -456,10 +456,10 @@
     "semantic_hash": "0d365b86b593385a3a56d42e297b8076"
   },
   "src/lib/geocode.ts": {
-    "mtime": 1788357919.0653348,
-    "seen": 1788530681.0028908,
-    "ast_hash": "779408b1ef344a48833b94324f7c4c21",
-    "semantic_hash": "779408b1ef344a48833b94324f7c4c21"
+    "mtime": 1789674635.2249737,
+    "seen": 1789675512.309795,
+    "ast_hash": "88ceff9aa97af4b4c3fd6b9cde0fee4f",
+    "semantic_hash": ""
   },
   "src/lib/route-distance.ts": {
     "mtime": 1788377495.4297419,
@@ -510,8 +510,8 @@
     "semantic_hash": ""
   },
   "src/types/database.ts": {
-    "mtime": 1789394394.9319088,
-    "seen": 1789647244.2387793,
+    "mtime": 1789653296.572544,
+    "seen": 1789675512.3117926,
     "ast_hash": "4dc1363ab7d0a20668919aa350bc0949",
     "semantic_hash": ""
   },
@@ -702,9 +702,9 @@
     "semantic_hash": ""
   },
   "src/lib/__tests__/geocode.test.ts": {
-    "mtime": 1788962325.191581,
-    "seen": 1788962550.1355672,
-    "ast_hash": "4f5dec6f7ef2772b2d9a6dc76f3194ba",
+    "mtime": 1789674635.223977,
+    "seen": 1789675512.3087785,
+    "ast_hash": "bbb136b807fe00f26547211ec01abf56",
     "semantic_hash": ""
   },
   "src/lib/__tests__/route-distance.test.ts": {
@@ -780,14 +780,14 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/__tests__/cliente-edit-form.test.tsx": {
-    "mtime": 1789647096.6889644,
-    "seen": 1789647244.2217422,
+    "mtime": 1789653296.5620072,
+    "seen": 1789675512.2962422,
     "ast_hash": "c49b115a64edd4e2d7205fd89037778b",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova/__tests__/nova-entrega-form.test.tsx": {
-    "mtime": 1789394394.9301126,
-    "seen": 1789647244.2257633,
+    "mtime": 1789653296.5685022,
+    "seen": 1789675512.2992542,
     "ast_hash": "5fa03a69c6061199143fed4710ff094e",
     "semantic_hash": ""
   },
@@ -870,27 +870,39 @@
     "semantic_hash": ""
   },
   "src/app/api/integracoes/vendas/clientes/route.ts": {
-    "mtime": 1789648994.4250815,
-    "seen": 1789649857.3393707,
-    "ast_hash": "e8c93713b3a897940cf5dbbd9a57d3e0",
+    "mtime": 1789674635.2229753,
+    "seen": 1789675512.294737,
+    "ast_hash": "0e397278c1a376a93734d9a590c2c623",
     "semantic_hash": ""
   },
   "src/lib/__tests__/parse-endereco-externo.test.ts": {
-    "mtime": 1789394394.9301126,
-    "seen": 1789647244.234764,
+    "mtime": 1789653296.5705545,
+    "seen": 1789675512.3087785,
     "ast_hash": "e38893403a34d825ebfdb561d61c2627",
     "semantic_hash": ""
   },
   "src/lib/parse-endereco-externo.ts": {
-    "mtime": 1789394460.1162193,
-    "seen": 1789647244.2373047,
+    "mtime": 1789653296.571545,
+    "seen": 1789675512.3107934,
     "ast_hash": "388c4ca44cf9cd648b55928cd36d1053",
     "semantic_hash": ""
   },
   "src/app/api/admin/delete-cliente/route.ts": {
-    "mtime": 1789649766.5679657,
-    "seen": 1789649857.3393707,
-    "ast_hash": "11813a0d33766fd53c6c791300e6df40",
+    "mtime": 1789674635.2219748,
+    "seen": 1789675512.293727,
+    "ast_hash": "e4fcbb3b883b868e3e31b2e34f868a63",
+    "semantic_hash": ""
+  },
+  "scripts/backfill-geocode.mjs": {
+    "mtime": 1789674635.2209823,
+    "seen": 1789675512.293727,
+    "ast_hash": "cc9ff02e8102d3826935576269049ce8",
+    "semantic_hash": ""
+  },
+  "src/lib/fetch-all.ts": {
+    "mtime": 1789653296.571545,
+    "seen": 1789675512.309795,
+    "ast_hash": "811ae6628af23d704538541d22b22f91",
     "semantic_hash": ""
   }
 }
