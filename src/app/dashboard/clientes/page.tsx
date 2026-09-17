@@ -32,8 +32,14 @@ type ClienteResumo = Pick<Cliente, "id" | "name" | "active" | "created_at" | "co
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<ClienteResumo[]>([]);
-  const [busca, setBusca] = useState("");
-  const [filtro, setFiltro] = useState<Filtro>("A–Z");
+  const [busca, setBusca] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return sessionStorage.getItem("clientes-busca") || "";
+  });
+  const [filtro, setFiltro] = useState<Filtro>(() => {
+    if (typeof window === "undefined") return "A–Z";
+    return (sessionStorage.getItem("clientes-filtro") as Filtro) || "A–Z";
+  });
   const [pagina, setPagina] = useState(1);
   const supabase = createClient();
 
@@ -98,11 +104,20 @@ export default function ClientesPage() {
           <Input
             placeholder="Pesquisar por nome ou código..."
             value={busca}
-            onChange={(e) => setBusca(e.target.value)}
+            onChange={(e) => {
+              setBusca(e.target.value);
+              sessionStorage.setItem("clientes-busca", e.target.value);
+            }}
             className="pl-9"
           />
         </div>
-        <Select value={filtro} onValueChange={(v) => setFiltro(v as Filtro)}>
+        <Select
+          value={filtro}
+          onValueChange={(v) => {
+            setFiltro(v as Filtro);
+            sessionStorage.setItem("clientes-filtro", v as Filtro);
+          }}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue />
           </SelectTrigger>
