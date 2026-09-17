@@ -27,7 +27,7 @@ import type { Cliente } from "@/types/database";
 const PER_PAGE = 20;
 
 type Filtro = "A–Z" | "Mais recentes" | "Inativos";
-type ClienteResumo = Pick<Cliente, "id" | "name" | "active" | "created_at">;
+type ClienteResumo = Pick<Cliente, "id" | "name" | "active" | "created_at" | "codigo_externo">;
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<ClienteResumo[]>([]);
@@ -39,16 +39,19 @@ export default function ClientesPage() {
   useEffect(() => {
     supabase
       .from("clientes")
-      .select("id, name, active, created_at")
+      .select("id, name, active, created_at, codigo_externo")
       .order("name")
       .then(({ data }) => setClientes(data ?? []));
   }, [supabase]);
 
   const filtrados = useMemo(() => {
     const filtered = clientes.filter((c) => {
-      const matchNome = c.name?.toLowerCase().includes(busca.toLowerCase());
-      if (filtro === "Inativos") return matchNome && !c.active;
-      return matchNome && c.active !== false;
+      const q = busca.toLowerCase();
+      const matchBusca =
+        c.name?.toLowerCase().includes(q) ||
+        c.codigo_externo?.toLowerCase().includes(q);
+      if (filtro === "Inativos") return matchBusca && !c.active;
+      return matchBusca && c.active !== false;
     });
     if (filtro === "Mais recentes") {
       filtered.sort(
@@ -90,7 +93,7 @@ export default function ClientesPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Pesquisar por nome..."
+            placeholder="Pesquisar por nome ou código..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             className="pl-9"
@@ -112,6 +115,7 @@ export default function ClientesPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[100px]">Código</TableHead>
               <TableHead>Nome</TableHead>
               <TableHead className="w-[100px] text-right">Status</TableHead>
             </TableRow>
@@ -119,13 +123,18 @@ export default function ClientesPage() {
           <TableBody>
             {visiveis.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
                   Nenhum cliente encontrado.
                 </TableCell>
               </TableRow>
             ) : (
               visiveis.map((cliente) => (
                 <TableRow key={cliente.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableCell>
+                    <Link href={`/dashboard/clientes/${cliente.id}`} className="block w-full text-muted-foreground">
+                      {cliente.codigo_externo || "—"}
+                    </Link>
+                  </TableCell>
                   <TableCell>
                     <Link href={`/dashboard/clientes/${cliente.id}`} className="block w-full uppercase">
                       {cliente.name}

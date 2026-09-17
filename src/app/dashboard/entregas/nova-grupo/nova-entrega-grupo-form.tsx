@@ -106,7 +106,9 @@ export function NovaEntregaGrupoForm({
   const filteredAddressClientes = useMemo(() => {
     if (!addressClienteSearch.trim()) return clientes;
     const q = addressClienteSearch.toLowerCase();
-    return clientes.filter((c) => c.name.toLowerCase().includes(q));
+    return clientes.filter(
+      (c) => c.name.toLowerCase().includes(q) || c.codigo_externo?.toLowerCase().includes(q)
+    );
   }, [clientes, addressClienteSearch]);
 
   const filteredLocais = useMemo(() => {
@@ -292,7 +294,7 @@ export function NovaEntregaGrupoForm({
               <div className="relative space-y-2" ref={addressDropdownRef}>
                 <Label>Cliente (dono do endereço)</Label>
                 <Input
-                  placeholder="Digite o nome do cliente..."
+                  placeholder="Digite o nome do cliente ou o código..."
                   value={addressCliente ? addressCliente.name : addressClienteSearch}
                   onChange={(e) => {
                     setAddressClienteSearch(e.target.value);
@@ -318,6 +320,9 @@ export function NovaEntregaGrupoForm({
                         }}
                       >
                         {c.name}
+                        {c.codigo_externo && (
+                          <span className="ml-2 text-xs text-muted-foreground">#{c.codigo_externo}</span>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -605,7 +610,9 @@ function DestinatarioRow({
   const filtered = useMemo(() => {
     if (!dest.clienteSearch.trim()) return clientes;
     const q = dest.clienteSearch.toLowerCase();
-    return clientes.filter((c) => c.name.toLowerCase().includes(q));
+    return clientes.filter(
+      (c) => c.name.toLowerCase().includes(q) || c.codigo_externo?.toLowerCase().includes(q)
+    );
   }, [clientes, dest.clienteSearch]);
 
   useEffect(() => {
@@ -633,7 +640,7 @@ function DestinatarioRow({
       <div className="relative" ref={dropdownRef}>
         <Label className="text-xs">Cliente *</Label>
         <Input
-          placeholder="Digite o nome do cliente..."
+          placeholder="Digite o nome do cliente ou o código..."
           value={selectedCliente ? selectedCliente.name : dest.clienteSearch}
           onChange={(e) => {
             onUpdate({ clienteSearch: e.target.value, clienteId: "" });
@@ -656,6 +663,9 @@ function DestinatarioRow({
                 }}
               >
                 {c.name}
+                {c.codigo_externo && (
+                  <span className="ml-2 text-xs text-muted-foreground">#{c.codigo_externo}</span>
+                )}
               </button>
             ))}
           </div>

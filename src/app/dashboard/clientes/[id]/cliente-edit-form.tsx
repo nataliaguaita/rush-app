@@ -22,7 +22,7 @@ export function ClienteEditForm({
   onSaved,
   onCancel,
 }: {
-  cliente: Pick<Cliente, "id" | "name" | "active">;
+  cliente: Pick<Cliente, "id" | "name" | "active" | "codigo_externo">;
   onSaved: () => void;
   onCancel?: () => void;
 }) {
@@ -59,6 +59,10 @@ export function ClienteEditForm({
           <div className="space-y-2">
             <Label htmlFor="name">Nome</Label>
             <Input id="name" name="name" defaultValue={cliente.name} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="codigo_externo">Código</Label>
+            <Input id="codigo_externo" name="codigo_externo" defaultValue={cliente.codigo_externo ?? ""} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="active">Status</Label>
