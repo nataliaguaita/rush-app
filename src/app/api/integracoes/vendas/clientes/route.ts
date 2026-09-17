@@ -60,11 +60,19 @@ export async function POST(request: Request) {
   const revisaoNecessaria: string[] = [];
   let processados = 0;
 
+  const { data: excluidos } = await supabase
+    .from("clientes_excluidos_integracao")
+    .select("codigo_externo");
+  const codigosExcluidos = new Set((excluidos ?? []).map((e) => e.codigo_externo));
+
   for (const item of clientes) {
     if (!item.codigo || !item.nome) {
       revisaoNecessaria.push(item.codigo || "(sem código)");
       continue;
     }
+
+    // Cliente descartado manualmente antes: não recria no próximo sync.
+    if (codigosExcluidos.has(item.codigo)) continue;
 
     let enderecoTratado = null;
     if (item.endereco && item.cep) {
