@@ -79,22 +79,27 @@ export async function POST(request: Request) {
       enderecoTratado = await tratarEnderecoExterno(item.endereco, item.cep);
     }
 
-    // Endereço "oficial" do sistema de vendas pode não ser o de entrega (ex:
-    // matriz fora de Curitiba, entrega aqui). Por isso não descartamos o
-    // cliente — ele entra inativo, pra revisão manual na aba Inativos.
     const foraDaRegiao = !!(
       enderecoTratado?.cidade && !CIDADES_ATENDIDAS.has(enderecoTratado.cidade.toLowerCase())
     );
-    // Cobre também "sem endereço" e "CEP/número não confiáveis": mesmo motivo
-    // de entrar inativo pra revisão manual, não só fora da região.
+    // "Sem endereço" e "CEP/número não confiáveis" ainda entram inativos pra
+    // revisão manual — só "fora da região" é descartado (ver abaixo).
     const precisaRevisao =
-      foraDaRegiao || !enderecoTratado || enderecoTratado.precisaRevisao || !enderecoTratado.cidade;
+      !enderecoTratado || enderecoTratado.precisaRevisao || !enderecoTratado.cidade;
 
     const { data: existente } = await supabase
       .from("clientes")
       .select("id")
       .eq("codigo_externo", item.codigo)
       .maybeSingle();
+
+    // Cliente novo com endereço fora da região atendida: não cadastra. Um
+    // cliente que já existe mantém o comportamento anterior — nunca some por
+    // causa de um sync (pode ter sido reativado/corrigido manualmente).
+    if (!existente && foraDaRegiao) {
+      revisaoNecessaria.push(item.codigo);
+      continue;
+    }
 
     let clienteId: string;
     if (existente) {

@@ -126,14 +126,14 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/edit-endereco-form.tsx": {
-    "mtime": 1789738088.002971,
-    "seen": 1789738133.3405507,
+    "mtime": 1789741370.066994,
+    "seen": 1789750120.3930604,
     "ast_hash": "5e2a9580fec87c28b0ec1be4f0ac84a0",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/page.tsx": {
-    "mtime": 1789738088.0035217,
-    "seen": 1789738133.3405507,
+    "mtime": 1789741370.0679946,
+    "seen": 1789750120.3930604,
     "ast_hash": "86736037047d3c0d9bc69ecfef301993",
     "semantic_hash": ""
   },
@@ -144,8 +144,8 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/novo/page.tsx": {
-    "mtime": 1789738088.0045266,
-    "seen": 1789738133.3405507,
+    "mtime": 1789741370.0689926,
+    "seen": 1789750120.3930604,
     "ast_hash": "43d6a3895a514417b0274c37271ba7c0",
     "semantic_hash": ""
   },
@@ -156,8 +156,8 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/[id]/page.tsx": {
-    "mtime": 1789738088.0055332,
-    "seen": 1789738133.3405507,
+    "mtime": 1789741370.0725,
+    "seen": 1789750120.393566,
     "ast_hash": "e69dc5459ce0abd39e21066e64787386",
     "semantic_hash": ""
   },
@@ -174,8 +174,8 @@
     "semantic_hash": "73060730d45c688c383b5f2cc45d7b24"
   },
   "src/app/dashboard/entregas/kanban-board.tsx": {
-    "mtime": 1789738088.006534,
-    "seen": 1789738133.341555,
+    "mtime": 1789741370.0745125,
+    "seen": 1789750120.393566,
     "ast_hash": "4be5af44324ee378589771c93c844f0e",
     "semantic_hash": ""
   },
@@ -186,8 +186,8 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova-grupo/nova-entrega-grupo-form.tsx": {
-    "mtime": 1789738088.0075388,
-    "seen": 1789738133.341555,
+    "mtime": 1789741370.0760167,
+    "seen": 1789750120.393566,
     "ast_hash": "f51e0abc6007a9d69c25b933cf00e4ea",
     "semantic_hash": ""
   },
@@ -198,14 +198,14 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova/nova-entrega-form.tsx": {
-    "mtime": 1789738088.0095384,
-    "seen": 1789738133.341555,
+    "mtime": 1789741370.0770226,
+    "seen": 1789750120.393566,
     "ast_hash": "81b46820cf404bedd9485f84ee4a3d75",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova/page.tsx": {
-    "mtime": 1789738088.0105398,
-    "seen": 1789738133.341555,
+    "mtime": 1789741370.078023,
+    "seen": 1789750120.393566,
     "ast_hash": "fbda1b18c85d4370d0bdfc6b4160435f",
     "semantic_hash": ""
   },
@@ -312,8 +312,8 @@
     "semantic_hash": ""
   },
   "src/components/sidebar-nav.tsx": {
-    "mtime": 1789738382.2222202,
-    "seen": 1789738406.8402176,
+    "mtime": 1789741370.085538,
+    "seen": 1789750120.4001648,
     "ast_hash": "82d82580c4c0052939d0cb59cfdc25ac",
     "semantic_hash": ""
   },
@@ -594,14 +594,14 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/locais/local-dialog.tsx": {
-    "mtime": 1789738088.011592,
-    "seen": 1789738133.344076,
+    "mtime": 1789741370.0815284,
+    "seen": 1789750120.395079,
     "ast_hash": "f895e0bc64a0d5c17c714de3c8d22f0e",
     "semantic_hash": ""
   },
   "src/app/dashboard/locais/page.tsx": {
-    "mtime": 1789738088.0126033,
-    "seen": 1789738133.344076,
+    "mtime": 1789741370.082536,
+    "seen": 1789750120.395079,
     "ast_hash": "bc1bbe436ee491f0a441932c05a4509b",
     "semantic_hash": ""
   },
@@ -858,9 +858,9 @@
     "semantic_hash": ""
   },
   "src/app/api/integracoes/vendas/clientes/route.ts": {
-    "mtime": 1789677806.0851305,
-    "seen": 1789736964.2447515,
-    "ast_hash": "579caa13f6781a9236dac1b7d83bb04d",
+    "mtime": 1789749652.8598294,
+    "seen": 1789750120.391059,
+    "ast_hash": "7864dd311a68b8eb48e9d5a6ddeda0eb",
     "semantic_hash": ""
   },
   "src/lib/__tests__/parse-endereco-externo.test.ts": {
@@ -894,39 +894,45 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/enderecos-sem-gps/actions.ts": {
-    "mtime": 1789737974.0175817,
-    "seen": 1789738133.3405507,
-    "ast_hash": "98fea7db7c3634a1f1204a4f30c2705a",
+    "mtime": 1789741370.070993,
+    "seen": 1789750120.393566,
+    "ast_hash": "7c1069f1b6397b06e9d42ff1e753ba04",
     "semantic_hash": ""
   },
   "src/app/dashboard/enderecos-sem-gps/page.tsx": {
-    "mtime": 1789739014.636416,
-    "seen": 1789739043.5366814,
-    "ast_hash": "83a734a0bfc63cf59862c03ca2656ef8",
+    "mtime": 1789741370.0719945,
+    "seen": 1789750120.393566,
+    "ast_hash": "c1cd7b60112f6e0e2e7356ecbd5bd656",
     "semantic_hash": ""
   },
   "src/components/geocode-warning.tsx": {
-    "mtime": 1789737780.886607,
-    "seen": 1789738133.3502197,
-    "ast_hash": "23e76e1e6e82f96f5a063bbe9fbb19ce",
+    "mtime": 1789741370.083537,
+    "seen": 1789750120.3991582,
+    "ast_hash": "d65fa0ab3719f74184fddbe3fb88faf2",
     "semantic_hash": ""
   },
   "src/components/gps-badge.tsx": {
-    "mtime": 1789737783.8986826,
-    "seen": 1789738133.3502197,
-    "ast_hash": "fc1d11bee5eb1132864891d545e999ea",
+    "mtime": 1789741370.083537,
+    "seen": 1789750120.3991582,
+    "ast_hash": "ec50d1e2e12ae803e4aa567d18fa3639",
     "semantic_hash": ""
   },
   "src/lib/__tests__/use-geocode-check.test.ts": {
-    "mtime": 1789738102.8958282,
-    "seen": 1789738133.3574352,
-    "ast_hash": "9dc4001fcc290241749c4df227c7326b",
+    "mtime": 1789741370.0875359,
+    "seen": 1789750120.406167,
+    "ast_hash": "c1dbc874513a29214b902b5f9985cebf",
     "semantic_hash": ""
   },
   "src/lib/use-geocode-check.ts": {
-    "mtime": 1789738042.4203677,
-    "seen": 1789738133.3609624,
-    "ast_hash": "e91a9878757c0a8c84a835d432933913",
+    "mtime": 1789741370.088537,
+    "seen": 1789750120.4086845,
+    "ast_hash": "78aa7e3491e00a065365213571079e90",
+    "semantic_hash": ""
+  },
+  "src/app/api/integracoes/vendas/clientes/__tests__/route.test.ts": {
+    "mtime": 1789750087.0851724,
+    "seen": 1789750120.391059,
+    "ast_hash": "02e6853ee89846d7f450f9634a6c656a",
     "semantic_hash": ""
   }
 }
