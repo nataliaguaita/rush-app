@@ -50,6 +50,7 @@ jobs:
       - name: 🔍 Verificação de tipagem (TypeScript) e Linter
         run: |
           npm run lint
+          npx next typegen
           npx tsc --noEmit
 
       - name: 🧪 Rodar Testes Unitários
