@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types/database";
 import Image from "next/image";
 import {
@@ -18,6 +19,7 @@ import {
   Plus,
   Users as UsersIcon,
   MapPin,
+  MapPinOff,
   ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,7 @@ const adminLinks = [
   { href: "/dashboard/entregas", label: "Organizar Entregas", icon: Package },
   { href: "/dashboard/clientes", label: "Clientes", icon: Users },
   { href: "/dashboard/locais", label: "Endereços Fixos", icon: MapPin },
+  { href: "/dashboard/enderecos-sem-gps", label: "Endereços sem GPS", icon: MapPinOff },
   { href: "/dashboard/cadastros", label: "Cadastros", icon: UserPlus },
   { href: "/dashboard/devolucoes", label: "Devoluções", icon: ClipboardCheck },
   { href: "/relatorios", label: "Relatórios", icon: BarChart3 },
@@ -61,6 +64,19 @@ export function SidebarNav({
     () => collapsible && localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true"
   );
   const collapsed = collapsible && collapsedPref;
+  const [enderecosSemGpsCount, setEnderecosSemGpsCount] = useState(0);
+
+  useEffect(() => {
+    if (profile.role !== "admin") return;
+    const supabase = createClient();
+    queueMicrotask(async () => {
+      const [{ count: c1 }, { count: c2 }] = await Promise.all([
+        supabase.from("enderecos").select("id", { count: "exact", head: true }).eq("active", true).or("lat.is.null,lng.is.null"),
+        supabase.from("locais_frequentes").select("id", { count: "exact", head: true }).eq("active", true).or("lat.is.null,lng.is.null"),
+      ]);
+      setEnderecosSemGpsCount((c1 ?? 0) + (c2 ?? 0));
+    });
+  }, [profile.role, pathname]);
 
   function toggleCollapsed() {
     setCollapsedPref((prev) => {
@@ -142,7 +158,7 @@ export function SidebarNav({
                 title={collapsed ? link.label : undefined}
                 onClick={onNavigate}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                  "relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                   collapsed && "justify-center",
                   isActive
                     ? "bg-primary/10 text-primary font-medium"
@@ -150,7 +166,17 @@ export function SidebarNav({
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                {!collapsed && link.label}
+                {!collapsed && <span className="flex-1">{link.label}</span>}
+                {link.href === "/dashboard/enderecos-sem-gps" && enderecosSemGpsCount > 0 && (
+                  <span
+                    className={cn(
+                      "flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-medium text-white",
+                      collapsed && "absolute right-1.5 top-0.5"
+                    )}
+                  >
+                    {enderecosSemGpsCount}
+                  </span>
+                )}
               </Link>
             );
           })}

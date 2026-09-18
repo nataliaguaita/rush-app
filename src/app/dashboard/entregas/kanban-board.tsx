@@ -72,6 +72,7 @@ import { Input } from "@/components/ui/input";
 import { persistColumnState, releaseRoute, applyRouteChange, applyAddressChange } from "./actions";
 import type { RouteChangeType, EntregaWithRelations } from "@/types/database";
 import { formatOrderNumber, formatScheduledDate } from "@/lib/status";
+import { GpsBadge } from "@/components/gps-badge";
 import Link from "next/link";
 
 const UNASSIGNED = "unassigned";
@@ -316,9 +317,7 @@ function SortableCard({
                     <MapPin className="mr-0.5 h-2.5 w-2.5" />Endereço alterado
                   </Badge>
                 )}
-                {!entrega.endereco?.lat && (
-                  <span className="text-[10px] text-amber-500" title="Sem coordenadas GPS">sem GPS</span>
-                )}
+                <GpsBadge lat={entrega.endereco?.lat} lng={entrega.endereco?.lng} />
               </div>
             </div>
           </div>

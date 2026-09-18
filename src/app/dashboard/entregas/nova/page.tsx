@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { fetchAll } from "@/lib/fetch-all";
 import { NovaEntregaForm } from "./nova-entrega-form";
 import { format } from "date-fns";
-import type { ClienteWithEnderecos, Endereco } from "@/types/database";
+import type { ClienteWithEnderecos, Endereco, LocalFrequente } from "@/types/database";
 
 export interface OpenGroup {
   groupId: string;
@@ -19,19 +19,24 @@ type EnderecoResumo = Pick<Endereco, "rua" | "numero" | "bairro" | "label">;
 export default function NovaEntregaPage() {
   const [clientes, setClientes] = useState<ClienteWithEnderecos[]>([]);
   const [openGroups, setOpenGroups] = useState<OpenGroup[]>([]);
+  const [locais, setLocais] = useState<LocalFrequente[]>([]);
   const supabase = createClient();
 
   useEffect(() => {
     async function load() {
-      const data = await fetchAll<ClienteWithEnderecos>((from, to) =>
-        supabase
-          .from("clientes")
-          .select("*, enderecos(*)")
-          .eq("active", true)
-          .order("name")
-          .range(from, to)
-      );
+      const [data, { data: l }] = await Promise.all([
+        fetchAll<ClienteWithEnderecos>((from, to) =>
+          supabase
+            .from("clientes")
+            .select("*, enderecos(*)")
+            .eq("active", true)
+            .order("name")
+            .range(from, to)
+        ),
+        supabase.from("locais_frequentes").select("*").eq("active", true).order("name"),
+      ]);
       setClientes(data);
+      setLocais((l ?? []) as LocalFrequente[]);
 
       // Fetch today's open groups
       const today = format(new Date(), "yyyy-MM-dd");
@@ -79,7 +84,7 @@ export default function NovaEntregaPage() {
 
   return (
     <div className="mx-auto">
-      <NovaEntregaForm clientes={clientes} openGroups={openGroups} />
+      <NovaEntregaForm clientes={clientes} openGroups={openGroups} locaisFrequentes={locais} />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MapPin, Search } from "lucide-react";
+import { GpsBadge } from "@/components/gps-badge";
 import { LocalDialog } from "./local-dialog";
 import type { LocalFrequente } from "@/types/database";
 
@@ -89,6 +90,8 @@ export default function LocaisPage() {
                   >
                     {local.rua}, {local.numero}
                     {local.bairro ? ` (${local.bairro})` : ""}
+                    {" "}
+                    <GpsBadge lat={local.lat} lng={local.lng} />
                   </TableCell>
                   <TableCell className="text-right">
                     <Badge variant={local.active ? "default" : "secondary"}>

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCep } from "@/lib/use-cep";
+import { useGeocodeCheck } from "@/lib/use-geocode-check";
+import { GeocodeWarning } from "@/components/geocode-warning";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import {
@@ -59,6 +61,12 @@ function EnderecoCard({
   );
   const { fetchCep, loading: cepLoading, filled: cepFilled } = useCep(handleCepResult);
   const cepHighlight = cepFilled ? "ring-2 ring-green-500/50 transition-shadow" : "transition-shadow";
+  const geoCheck = useGeocodeCheck();
+
+  function updateAndReset(field: keyof EnderecoForm, value: string) {
+    onUpdate(end.key, field, value);
+    geoCheck.reset();
+  }
 
   return (
     <Card className="mt-4">
@@ -119,7 +127,7 @@ function EnderecoCard({
             <Label>Rua *</Label>
             <Input
               value={end.rua}
-              onChange={(e) => onUpdate(end.key, "rua", e.target.value)}
+              onChange={(e) => updateAndReset("rua", e.target.value)}
               required
               placeholder="Rua"
               className={cepHighlight}
@@ -129,7 +137,7 @@ function EnderecoCard({
             <Label>Número *</Label>
             <Input
               value={end.numero === "S/N" ? "" : end.numero}
-              onChange={(e) => onUpdate(end.key, "numero", e.target.value)}
+              onChange={(e) => updateAndReset("numero", e.target.value)}
               required={end.numero !== "S/N"}
               disabled={end.numero === "S/N"}
               placeholder="Nº"
@@ -137,7 +145,7 @@ function EnderecoCard({
             <label className="flex items-center gap-2 text-sm">
               <Checkbox
                 checked={end.numero === "S/N"}
-                onCheckedChange={(checked) => onUpdate(end.key, "numero", checked ? "S/N" : "")}
+                onCheckedChange={(checked) => updateAndReset("numero", checked ? "S/N" : "")}
               />
               Sem número
             </label>
@@ -156,7 +164,7 @@ function EnderecoCard({
             <Label>Bairro</Label>
             <Input
               value={end.bairro}
-              onChange={(e) => onUpdate(end.key, "bairro", e.target.value)}
+              onChange={(e) => updateAndReset("bairro", e.target.value)}
               placeholder="Bairro"
               className={cepHighlight}
             />
@@ -165,13 +173,15 @@ function EnderecoCard({
             <Label>Cidade *</Label>
             <Input
               value={end.cidade}
-              onChange={(e) => onUpdate(end.key, "cidade", e.target.value)}
+              onChange={(e) => updateAndReset("cidade", e.target.value)}
+              onBlur={() => geoCheck.check(end.rua, end.numero, end.cidade)}
               required
               placeholder="Cidade"
               className={cepHighlight}
             />
           </div>
         </div>
+        <GeocodeWarning status={geoCheck.status} />
       </CardContent>
     </Card>
   );
