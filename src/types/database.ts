@@ -51,6 +51,7 @@ export interface Endereco {
   lat: number | null;
   lng: number | null;
   active: boolean;
+  origem_integracao: boolean;
   created_at: string;
 }
 
