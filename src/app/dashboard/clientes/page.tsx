@@ -27,7 +27,7 @@ import type { Cliente } from "@/types/database";
 
 const PER_PAGE = 20;
 
-type Filtro = "A–Z" | "Mais recentes" | "Inativos";
+type Filtro = "A–Z" | "Mais recentes" | "Código ↑" | "Código ↓" | "Inativos";
 type ClienteResumo = Pick<Cliente, "id" | "name" | "active" | "created_at" | "codigo_externo">;
 
 export default function ClientesPage() {
@@ -66,6 +66,15 @@ export default function ClientesPage() {
       filtered.sort(
         (a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    } else if (filtro === "Código ↑" || filtro === "Código ↓") {
+      const dir = filtro === "Código ↑" ? 1 : -1;
+      filtered.sort(
+        (a, b) =>
+          dir *
+          (a.codigo_externo ?? "").localeCompare(b.codigo_externo ?? "", "pt-BR", {
+            numeric: true,
+          })
       );
     } else {
       filtered.sort((a, b) =>
@@ -124,6 +133,8 @@ export default function ClientesPage() {
           <SelectContent>
             <SelectItem value="A–Z">A–Z</SelectItem>
             <SelectItem value="Mais recentes">Mais recentes</SelectItem>
+            <SelectItem value="Código ↑">Código ↑</SelectItem>
+            <SelectItem value="Código ↓">Código ↓</SelectItem>
             <SelectItem value="Inativos">Inativos</SelectItem>
           </SelectContent>
         </Select>
