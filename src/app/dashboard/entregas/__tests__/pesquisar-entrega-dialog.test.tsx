@@ -4,7 +4,7 @@ import { PesquisarEntregaDialog } from "../pesquisar-entrega-dialog";
 
 function mockBuilder(resolvedValue: { data: any[] }) {
   const builder: any = {};
-  ["select", "order", "eq", "filter", "gte", "lte", "limit"].forEach((method) => {
+  ["select", "order", "eq", "filter", "gte", "lte", "limit", "range"].forEach((method) => {
     builder[method] = jest.fn(() => builder);
   });
   builder.then = (resolve: any) => Promise.resolve(resolvedValue).then(resolve);
