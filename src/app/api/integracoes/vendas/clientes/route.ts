@@ -148,11 +148,13 @@ export async function POST(request: Request) {
     // Endereço já geocodificado (seja pelo sync original ou por correção manual
     // depois) não é tocado de novo — sem isso, toda sincronização apagava e
     // recriava com o texto bruto de lá, desfazendo qualquer correção manual.
+    // Identificado por origem_integracao (estável), não pelo label: o "Apelido"
+    // é editável livremente no formulário e não pode servir de identificador.
     const { data: enderecoAtual } = await supabase
       .from("enderecos")
       .select("lat")
       .eq("cliente_id", clienteId)
-      .eq("label", "Sistema de vendas")
+      .eq("origem_integracao", true)
       .maybeSingle();
     if (enderecoAtual?.lat != null) continue;
 
@@ -163,7 +165,7 @@ export async function POST(request: Request) {
 
     // Endereço vindo da integração é sempre o mesmo (fonte externa tem só 1
     // por cliente): substitui o que existir em vez de acumular duplicado.
-    await supabase.from("enderecos").delete().eq("cliente_id", clienteId).eq("label", "Sistema de vendas");
+    await supabase.from("enderecos").delete().eq("cliente_id", clienteId).eq("origem_integracao", true);
     await supabase.from("enderecos").insert({
       cliente_id: clienteId,
       label: "Sistema de vendas",
@@ -173,6 +175,7 @@ export async function POST(request: Request) {
       bairro: enderecoTratado.bairro,
       cidade: enderecoTratado.cidade,
       cep: enderecoTratado.cep,
+      origem_integracao: true,
       ...coords,
     });
   }
