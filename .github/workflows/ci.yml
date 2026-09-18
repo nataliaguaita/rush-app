@@ -40,7 +40,7 @@ jobs:
       - name: ⚙️ Configurar ambiente (Node.js)
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Versão estável do Node
+          node-version: '24' # LTS atual - Node 20 foi descontinuado nos runners do Actions
           cache: 'npm'       # Deixa a instalação mais rápida nas próximas vezes
 
       - name: 📦 Instalar dependências
