@@ -3,9 +3,9 @@ name: CI - Validação de Código e Testes
 # 1. Quando este robô deve rodar?
 on:
   push:
-    branches: [ "main" ] # Roda sempre que enviar código direto para a main
+    branches: [ "master" ] # Roda sempre que enviar código direto para a master
   pull_request:
-    branches: [ "main" ] # Roda quando alguém tentar fazer um merge para a main
+    branches: [ "master" ] # Roda quando alguém tentar fazer um merge para a master
 
 jobs:
   testes_e_seguranca:
@@ -15,11 +15,32 @@ jobs:
     steps:
       - name: 📥 Baixar o código
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # precisa do histórico completo pra comparar migrations novas com a base
+
+      - name: 🔒 Nome de migration nova deve ter prefixo de timestamp
+        # Sem o prefixo <timestamp>_ o Supabase não consegue rastrear a versão
+        # aplicada no banco e o deploy trava com "Remote migration versions
+        # not found in local migrations directory".
+        run: |
+          BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
+          if [[ -z "$BASE" || "$BASE" =~ ^0+$ ]]; then
+            echo "Sem base pra comparar (branch nova) - pulando checagem."
+            exit 0
+          fi
+          NOVOS=$(git diff --name-only --diff-filter=A "$BASE" HEAD -- supabase/migrations/)
+          for f in $NOVOS; do
+            nome=$(basename "$f")
+            if ! [[ "$nome" =~ ^[0-9]{14}_.+\.sql$ ]]; then
+              echo "::error file=$f::Migration nova sem prefixo de timestamp. Renomeie para <timestamp>_nome.sql (ex: 20260918183022_nome.sql) antes de aplicar."
+              exit 1
+            fi
+          done
 
       - name: ⚙️ Configurar ambiente (Node.js)
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Versão estável do Node
+          node-version: '24' # LTS atual - Node 20 foi descontinuado nos runners do Actions
           cache: 'npm'       # Deixa a instalação mais rápida nas próximas vezes
 
       - name: 📦 Instalar dependências
@@ -29,6 +50,7 @@ jobs:
       - name: 🔍 Verificação de tipagem (TypeScript) e Linter
         run: |
           npm run lint
+          npx next typegen
           npx tsc --noEmit
 
       - name: 🧪 Rodar Testes Unitários
