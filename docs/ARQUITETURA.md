@@ -34,8 +34,9 @@ src/
     relatorios/            # relatórios e KPIs (admin), export PDF via print
     configuracoes/         # configurações da conta
     api/
-      admin/               # create-user, update-user, delete-endereco (usam service role)
-      resolve-username/    # resolve username -> email sintético (login por usuário)
+      admin/               # create-user, update-user, delete-cliente, delete-endereco (usam service role)
+      login/               # login por username: deriva e-mail sintético e autentica no servidor
+      integracoes/vendas/  # importa clientes/endereços do sistema de vendas externo
       test/                # seed/cleanup para ambiente de teste
     auth/callback/         # callback do fluxo de auth do Supabase
   components/

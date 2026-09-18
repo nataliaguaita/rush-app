@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,8 @@ import { Loader2 } from "lucide-react";
 import { updateEndereco } from "../actions";
 import { toast } from "sonner";
 import { useCep } from "@/lib/use-cep";
+import { useGeocodeCheck } from "@/lib/use-geocode-check";
+import { GeocodeWarning } from "@/components/geocode-warning";
 import type { Endereco } from "@/types/database";
 
 export function EditEnderecoForm({
@@ -25,6 +27,8 @@ export function EditEnderecoForm({
   const [bairro, setBairro] = useState(endereco.bairro ?? "");
   const [cidade, setCidade] = useState(endereco.cidade ?? "");
   const [loading, setLoading] = useState(false);
+  const numeroRef = useRef<HTMLInputElement>(null);
+  const geoCheck = useGeocodeCheck();
 
   const handleCepResult = useCallback(
     (data: { rua: string; bairro: string; cidade: string }) => {
@@ -72,14 +76,28 @@ export function EditEnderecoForm({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="sm:col-span-2 space-y-2">
           <Label>Rua *</Label>
-          <Input name="rua" required value={rua} onChange={(e) => setRua(e.target.value)} className={cepHighlight} />
+          <Input
+            name="rua"
+            required
+            value={rua}
+            onChange={(e) => { setRua(e.target.value); geoCheck.reset(); }}
+            className={cepHighlight}
+          />
         </div>
         <div className="space-y-2">
           <Label>Nº *</Label>
           {semNumero && <input type="hidden" name="numero" value="S/N" />}
-          <Input name={semNumero ? undefined : "numero"} required={!semNumero} disabled={semNumero} placeholder={semNumero ? "S/N" : "Nº"} defaultValue={endereco.numero === "S/N" ? "" : (endereco.numero ?? "")} />
+          <Input
+            ref={numeroRef}
+            name={semNumero ? undefined : "numero"}
+            required={!semNumero}
+            disabled={semNumero}
+            placeholder={semNumero ? "S/N" : "Nº"}
+            defaultValue={endereco.numero === "S/N" ? "" : (endereco.numero ?? "")}
+            onChange={() => geoCheck.reset()}
+          />
           <label className="flex items-center gap-2 text-sm">
-            <Checkbox checked={semNumero} onCheckedChange={(v) => setSemNumero(!!v)} />
+            <Checkbox checked={semNumero} onCheckedChange={(v) => { setSemNumero(!!v); geoCheck.reset(); }} />
             Sem número
           </label>
         </div>
@@ -91,13 +109,21 @@ export function EditEnderecoForm({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>Bairro</Label>
-          <Input name="bairro" value={bairro} onChange={(e) => setBairro(e.target.value)} className={cepHighlight} />
+          <Input name="bairro" value={bairro} onChange={(e) => { setBairro(e.target.value); geoCheck.reset(); }} className={cepHighlight} />
         </div>
         <div className="space-y-2">
           <Label>Cidade *</Label>
-          <Input name="cidade" required value={cidade} onChange={(e) => setCidade(e.target.value)} className={cepHighlight} />
+          <Input
+            name="cidade"
+            required
+            value={cidade}
+            onChange={(e) => { setCidade(e.target.value); geoCheck.reset(); }}
+            onBlur={() => geoCheck.check(rua, semNumero ? "S/N" : (numeroRef.current?.value ?? ""), cidade)}
+            className={cepHighlight}
+          />
         </div>
       </div>
+      <GeocodeWarning status={geoCheck.status} />
       <div className="flex gap-2">
         <Button type="submit" size="sm" disabled={loading}>
           {loading && <Loader2 className="animate-spin" />}

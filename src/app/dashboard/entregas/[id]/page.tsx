@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StatusBadge } from "@/components/status-badge";
+import { GpsBadge } from "@/components/gps-badge";
 import { RECEIVER_ROLE_LABELS } from "@/lib/status";
 import {
   Select,
@@ -329,6 +330,7 @@ export default function EntregaDetailPage() {
                   ({entrega.endereco.label})
                 </p>
               )}
+              <GpsBadge lat={entrega.endereco?.lat} lng={entrega.endereco?.lng} />
             </div>
             <Button
               variant="ghost"

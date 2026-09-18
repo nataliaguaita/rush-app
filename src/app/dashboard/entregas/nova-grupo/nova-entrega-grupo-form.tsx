@@ -26,6 +26,8 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import type { ClienteWithEnderecos, LocalFrequente } from "@/types/database";
 import { useCep } from "@/lib/use-cep";
+import { useGeocodeCheck } from "@/lib/use-geocode-check";
+import { GeocodeWarning } from "@/components/geocode-warning";
 
 interface Destinatario {
   id: string;
@@ -90,6 +92,7 @@ export function NovaEntregaGrupoForm({
   }, []);
   const { fetchCep, filled: cepFilled } = useCep(handleCepResult);
   const cepHighlight = cepFilled ? "ring-2 ring-green-500/50 transition-shadow" : "transition-shadow";
+  const geoCheck = useGeocodeCheck();
 
   // Scheduling (shared)
   const [scheduledDate, setScheduledDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -145,6 +148,7 @@ export function NovaEntregaGrupoForm({
         label: local.name,
       });
       setSaveLocal(false);
+      geoCheck.markResult(!!(local.lat && local.lng));
     }
   }
 
@@ -154,6 +158,7 @@ export function NovaEntregaGrupoForm({
     setLocalSearch("");
     setSaveLocal(false);
     setCustomAddr({ cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", label: "" });
+    geoCheck.reset();
   }
 
   function addDestinatario() {
@@ -399,6 +404,7 @@ export function NovaEntregaGrupoForm({
                       </p>
                     </div>
                   )}
+                  {selectedLocalId && <GeocodeWarning status={geoCheck.status} />}
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground">
@@ -431,7 +437,7 @@ export function NovaEntregaGrupoForm({
                   <Label className="text-xs">Rua *</Label>
                   <Input
                     value={customAddr.rua}
-                    onChange={(e) => setCustomAddr((p) => ({ ...p, rua: e.target.value }))}
+                    onChange={(e) => { setCustomAddr((p) => ({ ...p, rua: e.target.value })); geoCheck.reset(); }}
                     required
                     className={`h-8 text-sm ${cepHighlight}`}
                   />
@@ -442,7 +448,7 @@ export function NovaEntregaGrupoForm({
                   <Label className="text-xs">Número *</Label>
                   <Input
                     value={customAddr.numero === "S/N" ? "" : customAddr.numero}
-                    onChange={(e) => setCustomAddr((p) => ({ ...p, numero: e.target.value }))}
+                    onChange={(e) => { setCustomAddr((p) => ({ ...p, numero: e.target.value })); geoCheck.reset(); }}
                     required={customAddr.numero !== "S/N"}
                     disabled={customAddr.numero === "S/N"}
                     className="h-8 text-sm"
@@ -450,7 +456,7 @@ export function NovaEntregaGrupoForm({
                   <label className="flex items-center gap-2 text-xs">
                     <Checkbox
                       checked={customAddr.numero === "S/N"}
-                      onCheckedChange={(checked) => setCustomAddr((p) => ({ ...p, numero: checked ? "S/N" : "" }))}
+                      onCheckedChange={(checked) => { setCustomAddr((p) => ({ ...p, numero: checked ? "S/N" : "" })); geoCheck.reset(); }}
                     />
                     Sem número
                   </label>
@@ -467,7 +473,7 @@ export function NovaEntregaGrupoForm({
                   <Label className="text-xs">Bairro</Label>
                   <Input
                     value={customAddr.bairro}
-                    onChange={(e) => setCustomAddr((p) => ({ ...p, bairro: e.target.value }))}
+                    onChange={(e) => { setCustomAddr((p) => ({ ...p, bairro: e.target.value })); geoCheck.reset(); }}
                     className={`h-8 text-sm ${cepHighlight}`}
                   />
                 </div>
@@ -477,7 +483,8 @@ export function NovaEntregaGrupoForm({
                   <Label className="text-xs">Cidade *</Label>
                   <Input
                     value={customAddr.cidade}
-                    onChange={(e) => setCustomAddr((p) => ({ ...p, cidade: e.target.value }))}
+                    onChange={(e) => { setCustomAddr((p) => ({ ...p, cidade: e.target.value })); geoCheck.reset(); }}
+                    onBlur={() => geoCheck.check(customAddr.rua, customAddr.numero, customAddr.cidade)}
                     required
                     className={`h-8 text-sm ${cepHighlight}`}
                   />
@@ -492,6 +499,7 @@ export function NovaEntregaGrupoForm({
                   />
                 </div>
               </div>
+              <GeocodeWarning status={geoCheck.status} />
               <div className="flex items-center gap-2 pt-1">
                 <Checkbox
                   id="save_local"

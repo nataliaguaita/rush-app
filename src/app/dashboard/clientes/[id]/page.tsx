@@ -34,6 +34,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
+import { GpsBadge } from "@/components/gps-badge";
 import { ChevronLeft, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { ClienteEditForm } from "./cliente-edit-form";
 import { AddEnderecoForm } from "./add-endereco-form";
@@ -242,6 +243,7 @@ export default function ClienteDetailPage() {
                       <p className="text-xs text-muted-foreground">
                         {[end.bairro, end.cidade, end.cep].filter(Boolean).join(" - ")}
                       </p>
+                      <GpsBadge lat={end.lat} lng={end.lng} />
                     </div>
                   </div>
                   <div className="flex gap-1">
