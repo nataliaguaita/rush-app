@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { fetchAll } from "@/lib/fetch-all";
@@ -17,10 +17,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ChevronLeft, ChevronRight, Loader2, MapPinOff, RefreshCw, UserX } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, MapPinOff, RefreshCw, Undo2, UserX } from "lucide-react";
 import { toast } from "sonner";
 import { useCep } from "@/lib/use-cep";
-import { retryGeocode, setManualCoords, type AddressFields, type EnderecoSemGpsKind } from "./actions";
+import { retryGeocode, resgatarClienteExcluido, setManualCoords, type AddressFields, type EnderecoSemGpsKind } from "./actions";
 
 const PAGE_SIZE = 10;
 
@@ -40,17 +40,26 @@ interface Row {
   fields: AddressFields;
 }
 
+interface ClienteExcluido {
+  codigoExterno: string;
+  excluidoEm: string;
+}
+
 export default function EnderecosSemGpsPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [clientesSemEndereco, setClientesSemEndereco] = useState<ClienteSemEndereco[]>([]);
   const [clientPage, setClientPage] = useState(1);
+  const [excluidos, setExcluidos] = useState<ClienteExcluido[]>([]);
+  const [resgatando, setResgatando] = useState<string | null>(null);
+  const [excluidosBusca, setExcluidosBusca] = useState("");
+  const [excluidosPage, setExcluidosPage] = useState(1);
   const supabase = createClient();
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: enderecos }, { data: locais }, clientesData] = await Promise.all([
+    const [{ data: enderecos }, { data: locais }, clientesData, { data: excluidosData, error: excluidosError }] = await Promise.all([
       supabase
         .from("enderecos")
         .select("*, clientes(name, codigo_externo)")
@@ -68,7 +77,18 @@ export default function EnderecosSemGpsPage() {
           .order("name")
           .range(from, to)
       ),
+      supabase
+        .from("clientes_excluidos_integracao")
+        .select("codigo_externo, excluido_em")
+        .order("excluido_em", { ascending: false }),
     ]);
+
+    if (excluidosError) {
+      toast.error("Erro ao carregar clientes descartados", { description: excluidosError.message });
+    }
+    setExcluidos(
+      (excluidosData ?? []).map((e) => ({ codigoExterno: e.codigo_externo, excluidoEm: e.excluido_em }))
+    );
 
     setClientesSemEndereco(
       clientesData
@@ -123,6 +143,29 @@ export default function EnderecosSemGpsPage() {
   const clientTotalPages = Math.max(1, Math.ceil(clientesSemEndereco.length / PAGE_SIZE));
   const clientCurrentPage = Math.min(clientPage, clientTotalPages);
   const pageClientes = clientesSemEndereco.slice((clientCurrentPage - 1) * PAGE_SIZE, clientCurrentPage * PAGE_SIZE);
+
+  const excluidosFiltrados = useMemo(
+    () => excluidos.filter((e) => e.codigoExterno.toLowerCase().includes(excluidosBusca.trim().toLowerCase())),
+    [excluidos, excluidosBusca]
+  );
+  const excluidosTotalPages = Math.max(1, Math.ceil(excluidosFiltrados.length / PAGE_SIZE));
+  const excluidosCurrentPage = Math.min(excluidosPage, excluidosTotalPages);
+  const pageExcluidos = excluidosFiltrados.slice(
+    (excluidosCurrentPage - 1) * PAGE_SIZE,
+    excluidosCurrentPage * PAGE_SIZE
+  );
+
+  async function handleResgatar(codigoExterno: string) {
+    setResgatando(codigoExterno);
+    try {
+      await resgatarClienteExcluido(codigoExterno);
+      toast.success("Cliente resgatado! Ele volta a ser criado na próxima sincronização.");
+      setExcluidos((prev) => prev.filter((e) => e.codigoExterno !== codigoExterno));
+    } catch (err) {
+      toast.error("Erro ao resgatar cliente", { description: err instanceof Error ? err.message : undefined });
+    }
+    setResgatando(null);
+  }
 
   return (
     <div className="mx-auto w-full max-w-full space-y-4 lg:max-w-[60vw]">
@@ -230,6 +273,106 @@ export default function EnderecosSemGpsPage() {
                   Anterior
                 </Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => setClientPage(clientCurrentPage + 1)} disabled={clientCurrentPage >= clientTotalPages}>
+                  Próxima
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      <div className="pt-4">
+        <h2 className="text-lg font-bold flex items-center gap-2">
+          <Undo2 className="h-5 w-5 text-amber-500" />
+          Clientes descartados
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Clientes excluídos manualmente da integração de vendas. Resgatar recria o cliente na próxima sincronização.
+        </p>
+      </div>
+
+      {!loading && excluidos.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">
+            Nenhum cliente descartado.
+          </CardContent>
+        </Card>
+      ) : !loading && (
+        <>
+          <Input
+            placeholder="Buscar por código..."
+            value={excluidosBusca}
+            onChange={(e) => {
+              setExcluidosBusca(e.target.value);
+              setExcluidosPage(1);
+            }}
+            className="max-w-xs"
+          />
+          {excluidosFiltrados.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                Nenhum código encontrado.
+              </CardContent>
+            </Card>
+          ) : (
+        <div className="rounded-md border">
+          <Table className="table-fixed">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Código</TableHead>
+                <TableHead>Excluído em</TableHead>
+                <TableHead className="w-[100px]" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {pageExcluidos.map((e) => (
+                <TableRow key={e.codigoExterno}>
+                  <TableCell className="font-medium">{e.codigoExterno}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {new Date(e.excluidoEm).toLocaleDateString("pt-BR")}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleResgatar(e.codigoExterno)}
+                      disabled={resgatando === e.codigoExterno}
+                    >
+                      {resgatando === e.codigoExterno && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Resgatar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+          )}
+          {excluidosTotalPages > 1 && (
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-xs text-muted-foreground">
+                Página {excluidosCurrentPage} de {excluidosTotalPages} — {excluidosFiltrados.length} clientes descartados
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setExcluidosPage(excluidosCurrentPage - 1)}
+                  disabled={excluidosCurrentPage <= 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setExcluidosPage(excluidosCurrentPage + 1)}
+                  disabled={excluidosCurrentPage >= excluidosTotalPages}
+                >
                   Próxima
                   <ChevronRight className="h-4 w-4" />
                 </Button>

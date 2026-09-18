@@ -53,3 +53,13 @@ export async function setManualCoords(kind: EnderecoSemGpsKind, id: string, fiel
     .eq("id", id);
   if (error) throw new Error(error.message);
 }
+
+/** Remove o código da lista de descartados: o próximo sync da integração de vendas volta a recriar esse cliente. */
+export async function resgatarClienteExcluido(codigoExterno: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("clientes_excluidos_integracao")
+    .delete()
+    .eq("codigo_externo", codigoExterno);
+  if (error) throw new Error(error.message);
+}

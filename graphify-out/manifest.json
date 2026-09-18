@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/page.tsx": {
-    "mtime": 1789677806.0861297,
-    "seen": 1789736964.2467594,
-    "ast_hash": "fba80ff26fde4282c4bd56d5805c8b93",
+    "mtime": 1789752269.7552989,
+    "seen": 1789752280.6556613,
+    "ast_hash": "cd2902a9a44e2060cae6d0984f259261",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/[id]/page.tsx": {
@@ -894,15 +894,15 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/enderecos-sem-gps/actions.ts": {
-    "mtime": 1789741370.070993,
-    "seen": 1789750120.393566,
-    "ast_hash": "7c1069f1b6397b06e9d42ff1e753ba04",
+    "mtime": 1789755811.5485876,
+    "seen": 1789755866.5146072,
+    "ast_hash": "97cc41033f73f2ec5d8b8206ef3ea0a9",
     "semantic_hash": ""
   },
   "src/app/dashboard/enderecos-sem-gps/page.tsx": {
-    "mtime": 1789741370.0719945,
-    "seen": 1789750120.393566,
-    "ast_hash": "c1cd7b60112f6e0e2e7356ecbd5bd656",
+    "mtime": 1789756523.6406562,
+    "seen": 1789756561.403615,
+    "ast_hash": "4e450b97e2432ced9c182da6e1aa5daa",
     "semantic_hash": ""
   },
   "src/components/geocode-warning.tsx": {
