@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import { useCep } from "@/lib/use-cep";
 import { useGeocodeCheck } from "@/lib/use-geocode-check";
 import { GeocodeWarning } from "@/components/geocode-warning";
@@ -30,6 +31,7 @@ export function LocalDialog({
 }) {
   const isEdit = !!local;
   const [open, setOpen] = useState(false);
+  const { formRef, guard, dialog } = useUnsavedChanges();
   const [loading, setLoading] = useState(false);
   const [semNumero, setSemNumero] = useState(local?.numero === "S/N");
   const [rua, setRua] = useState(local?.rua ?? "");
@@ -68,7 +70,7 @@ export function LocalDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : guard(() => setOpen(false)))}>
       <DialogTrigger
         render={
           isEdit ? (
@@ -88,7 +90,7 @@ export function LocalDialog({
             Locais reutilizáveis para entregas em grupo (cursos, eventos, etc.)
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-3">
           <div className="space-y-2">
             <Label htmlFor="name">Nome *</Label>
             <Input id="name" name="name" required defaultValue={local?.name ?? ""} placeholder="Ex: Curso de Especialização" />
@@ -168,7 +170,7 @@ export function LocalDialog({
             </div>
           )}
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => guard(() => setOpen(false))}>
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
@@ -177,6 +179,7 @@ export function LocalDialog({
             </Button>
           </div>
         </form>
+        {dialog}
       </DialogContent>
     </Dialog>
   );

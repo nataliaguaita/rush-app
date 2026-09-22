@@ -25,6 +25,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createEntrega } from "../actions";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import { format } from "date-fns";
 import type { ClienteWithEnderecos, LocalFrequente } from "@/types/database";
 import { EnderecoPicker } from "../endereco-picker";
@@ -62,6 +63,7 @@ export function NovaEntregaForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { formRef, dialog } = useUnsavedChanges();
 
   const selectedCliente = clientes.find((c) => c.id === selectedClienteId);
   const enderecos = (selectedCliente?.enderecos ?? []).filter((e) => e.active !== false);
@@ -117,6 +119,7 @@ export function NovaEntregaForm({
 
   return (
     <form
+      ref={formRef}
       onSubmit={async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -425,6 +428,7 @@ export function NovaEntregaForm({
         </Link>
         <Button type="submit" loading={isSubmitting}>Finalizar Cadastro</Button>
       </div>
+      {dialog}
     </form>
   );
 }
