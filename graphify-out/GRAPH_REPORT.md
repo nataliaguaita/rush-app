@@ -1,40 +1,40 @@
 # Graph Report - rush-app  (2026-09-22)
 
 ## Corpus Check
-- 171 files · ~68,982 words
+- 173 files · ~69,539 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 890 nodes · 2266 edges · 66 communities (38 shown, 22 thin omitted)
+- 892 nodes · 2274 edges · 64 communities (37 shown, 21 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 16 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `99f8ea9b`
+- Built from commit: `c5224d67`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- NovaEntregaGrupoForm
-- EditEntregaView
-- cadastro-dialog.test.tsx
-- entregas/page.tsx
+- createClient
+- use-stale-entregas.ts
+- clientes/[id]/page.tsx
+- cn
 - dependencies
 - compilerOptions
 - devDependencies
 - components.json
 - kanban-board.tsx
-- createClient
+- entregador/actions.ts
 - clsx
 - @dnd-kit/sortable
-- database.ts
+- relatorios/page.tsx
 - @dnd-kit/utilities
 - create-user/route.ts
 - Arquitetura
 - manifest.json
 - RelatoriosPage
 - app/layout.tsx
-- client.ts
+- entregador-nav.tsx
 - seed/route.ts
 - CLAUDE.md
 - leaflet
@@ -52,36 +52,34 @@
 - lucide-react
 - package.json
 - scripts
-- createClienteMultiEnderecos
-- entregas/actions.ts
+- KanbanBoard
+- client.ts
 - jest.config.js
 - next
 - next-themes
 - react
 - react-dom
 - sonner
-- cn
+- nova-entrega-grupo-form.tsx
 - @supabase/ssr
 - @supabase/supabase-js
 - tailwind-merge
 - Profile
 - enderecos-sem-gps/page.tsx
 - check-security-lint.mjs
-- heatmap.tsx
-- cliente-edit-form.test.tsx
-- finalizarPeloPainel
-- spinner.tsx
-- sidebar-nav.tsx
+- nova-grupo/page.tsx
+- database.ts
+- DevolucoesPage
+- entregador/layout.tsx
 - backfill-geocode.mjs
-- local-dialog.test.tsx
 - delete-cliente/route.ts
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 101 edges
-2. `createClient()` - 97 edges
+2. `createClient()` - 98 edges
 3. `Button()` - 37 edges
-4. `Input()` - 28 edges
-5. `formatOrderNumber()` - 28 edges
+4. `formatOrderNumber()` - 30 edges
+5. `Input()` - 28 edges
 6. `geocode()` - 25 edges
 7. `toTitleCase()` - 24 edges
 8. `Card()` - 23 edges
@@ -89,37 +87,37 @@
 10. `Label()` - 20 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `handleSubmit()` --calls--> `createUser()`  [EXTRACTED]
-  src/app/dashboard/cadastros/cadastro-dialog.tsx → src/app/dashboard/cadastros/actions.ts
 - `CadastrosPage()` --calls--> `createClient()`  [EXTRACTED]
   src/app/dashboard/cadastros/page.tsx → src/lib/supabase/client.ts
+- `handleSubmit()` --calls--> `updateCliente()`  [EXTRACTED]
+  src/app/dashboard/clientes/[id]/cliente-edit-form.tsx → src/app/dashboard/clientes/actions.ts
+- `handleSubmit()` --calls--> `createClienteMultiEnderecos()`  [EXTRACTED]
+  src/app/dashboard/clientes/novo/page.tsx → src/app/dashboard/clientes/actions.ts
 - `updateEntregaStatus()` --calls--> `createClient()`  [EXTRACTED]
   src/app/dashboard/entregas/actions.ts → src/lib/supabase/client.ts
 - `confirmarRetorno()` --calls--> `createClient()`  [EXTRACTED]
   src/app/dashboard/entregas/actions.ts → src/lib/supabase/client.ts
-- `load()` --calls--> `fetchAll()`  [EXTRACTED]
-  src/app/dashboard/entregas/nova/page.tsx → src/lib/fetch-all.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (66 total, 22 thin omitted)
+## Communities (64 total, 21 thin omitted)
 
-### Community 0 - "NovaEntregaGrupoForm"
+### Community 0 - "createClient"
 Cohesion: 0.18
-Nodes (9): createEntregaGrupo(), DestinatarioRow(), handleClickOutside(), emptyDestinatario(), NovaEntregaGrupoForm(), addDestinatario(), formatValor(), handleSubmit() (+1 more)
+Nodes (19): addEndereco(), createCliente(), createClienteMultiEnderecos(), deleteCliente(), deleteEndereco(), geocodeExistingAddresses(), updateCliente(), updateEndereco() (+11 more)
 
-### Community 1 - "EditEntregaView"
-Cohesion: 0.28
-Nodes (5): cancelEntrega(), EditEntregaView(), handleCancelEntrega(), handleSubmit(), parseValor()
+### Community 1 - "use-stale-entregas.ts"
+Cohesion: 0.25
+Nodes (6): mockedUseStaleEntregas, mockedCreateClient, sampleEntrega, StaleEntrega, useStaleEntregas(), STALE_STATUSES
 
-### Community 2 - "cadastro-dialog.test.tsx"
-Cohesion: 0.18
-Nodes (6): CadastroDialog(), handleSubmit(), mockedCreateUser, Select(), handleSelect(), SelectItem()
+### Community 2 - "clientes/[id]/page.tsx"
+Cohesion: 0.07
+Nodes (46): createUser(), updateProfile(), CadastroDialog(), handleSubmit(), EditProfileDialog(), handleSubmit(), CadastrosPage(), Filtro (+38 more)
 
-### Community 3 - "entregas/page.tsx"
-Cohesion: 0.08
-Nodes (19): EntregasPage(), StaleEntregasBanner(), mockedUseStaleEntregas, DropdownMenu(), DropdownMenuCheckboxItem(), DropdownMenuContent(), DropdownMenuItem(), DropdownMenuLabel() (+11 more)
+### Community 3 - "cn"
+Cohesion: 0.05
+Nodes (48): adminLinks, ctaLink, SidebarNav(), vendedorLinks, mockedUseTheme, ThemeToggle(), AlertDialogMedia(), AlertDialogOverlay() (+40 more)
 
 ### Community 4 - "dependencies"
 Cohesion: 0.15
@@ -138,16 +136,16 @@ Cohesion: 0.09
 Nodes (21): aliases, components, hooks, lib, ui, utils, iconLibrary, menuAccent (+13 more)
 
 ### Community 8 - "kanban-board.tsx"
+Cohesion: 0.08
+Nodes (54): EntregaDevolucao, FinalizarPainelCard(), Modo, actionLabels, EntregaDetailPage(), copyAddress(), formatEndereco(), shareWhatsApp() (+46 more)
+
+### Community 9 - "entregador/actions.ts"
 Cohesion: 0.07
-Nodes (62): deleteCliente(), deleteEndereco(), ClienteDetailPage(), handleDeleteCliente(), handleDeleteEndereco(), EntregaResumo, OrdemEntregas, EntregaDevolucao (+54 more)
+Nodes (58): applyConfirmarRetorno(), applyCopiarFoto(), applyIniciar(), applyOp(), applyRegistrarEntrega(), applyRegistrarRecusa(), applyRemoverFotos(), applyUploadFoto() (+50 more)
 
-### Community 9 - "createClient"
-Cohesion: 0.06
-Nodes (65): darBaixaDevolucao(), desfazerBaixaDevolucao(), DevolucoesPage(), handleBaixa(), handleDesfazer(), DashboardPage(), applyConfirmarRetorno(), applyCopiarFoto() (+57 more)
-
-### Community 12 - "database.ts"
-Cohesion: 0.15
-Nodes (9): brl, RelatorioEntrega, Database, DeliveryAction, DeliveryPeriod, DeliveryStatus, EntregaFoto, RotaDiaria (+1 more)
+### Community 12 - "relatorios/page.tsx"
+Cohesion: 0.14
+Nodes (9): HeatmapCard(), renderHeat(), LeafletHeat, brl, CanceladasTable(), HeatmapCard, RelatorioEntrega, DeliveryPeriod (+1 more)
 
 ### Community 14 - "create-user/route.ts"
 Cohesion: 0.20
@@ -169,25 +167,25 @@ Nodes (3): computeCoreStats(), pctChange(), RelatoriosPage()
 Cohesion: 0.28
 Nodes (5): geistMono, inter, metadata, ThemeProvider(), Toaster()
 
-### Community 19 - "client.ts"
-Cohesion: 0.22
-Nodes (10): cachedProfile(), EntregadorLayout(), loadProfile(), logout(), EntregadorBottomNav(), EntregadorHeader(), links, mockedLogout (+2 more)
+### Community 19 - "entregador-nav.tsx"
+Cohesion: 0.29
+Nodes (7): logout(), EntregadorBottomNav(), EntregadorHeader(), links, mockedLogout, mockedUsePathname, profile
 
 ### Community 20 - "seed/route.ts"
 Cohesion: 0.27
 Nodes (9): getAdmin(), POST(), getAdmin(), POST(), TEST_ADDRESSES, TEST_CLIENTS, TEST_USERS, rejectUnlessTestEndpointsAllowed() (+1 more)
 
 ### Community 23 - "geocode"
-Cohesion: 0.18
-Nodes (12): addEndereco(), createCliente(), geocodeExistingAddresses(), updateEndereco(), AddEnderecoForm(), handleSubmit(), handleSubmit(), CreateEntregaGrupoParams (+4 more)
+Cohesion: 0.25
+Nodes (9): CreateEntregaGrupoParams, DestinatarioData, createLocal(), LocalFormData, readLocalForm(), updateLocal(), handleSubmit(), buscarNominatim() (+1 more)
 
 ### Community 25 - "sidebar-nav.test.tsx"
-Cohesion: 0.29
-Nodes (5): SidebarNav(), adminProfile, mockedLogout, mockedUsePathname, vendedorProfile
+Cohesion: 0.40
+Nodes (4): adminProfile, mockedLogout, mockedUsePathname, vendedorProfile
 
 ### Community 30 - "nova-entrega-form.test.tsx"
-Cohesion: 0.08
-Nodes (16): NovaEntregaForm(), EnderecoResumo, NovaEntregaPage(), load(), OpenGroup, clienteComEndereco, clientes, clienteSemEndereco (+8 more)
+Cohesion: 0.11
+Nodes (9): NovaEntregaForm(), clienteComEndereco, clientes, clienteSemEndereco, mockedCreateEntrega, PointerEventPolyfill, Select(), handleSelect() (+1 more)
 
 ### Community 31 - "Ideias e Alterações Pendentes"
 Cohesion: 0.40
@@ -209,73 +207,69 @@ Nodes (7): lint-staged, *.{js,jsx,ts,tsx}, name, private, version, bash -c 'tsc 
 Cohesion: 0.22
 Nodes (9): scripts, build, dev, lint, prepare, start, test, test:e2e (+1 more)
 
-### Community 40 - "createClienteMultiEnderecos"
-Cohesion: 0.33
-Nodes (5): createClienteMultiEnderecos(), emptyEndereco(), NovoClientePage(), addEndereco(), handleSubmit()
+### Community 40 - "KanbanBoard"
+Cohesion: 0.28
+Nodes (7): applyRouteChange(), persistColumnState(), releaseRoute(), KanbanBoard(), expandToEntregaIds(), handleDragEnd(), toGroupId()
 
-### Community 41 - "entregas/actions.ts"
-Cohesion: 0.12
-Nodes (20): applyAddressChange(), applyRouteChange(), assignEntregador(), confirmarRetorno(), createEntrega(), FinalizacaoPainel, persistColumnState(), releaseRoute() (+12 more)
+### Community 41 - "client.ts"
+Cohesion: 0.11
+Nodes (16): assignEntregador(), cancelEntrega(), confirmarRetorno(), createEntrega(), FinalizacaoPainel, finalizarPeloPainel(), resolveEnderecoId(), updateEntrega() (+8 more)
 
 ### Community 42 - "jest.config.js"
 Cohesion: 0.50
 Nodes (3): config, createJestConfig, nextJest
 
-### Community 48 - "cn"
-Cohesion: 0.07
-Nodes (64): createUser(), updateProfile(), EditProfileDialog(), handleSubmit(), EditEnderecoForm(), EnderecoCard(), EnderecoForm, EnderecoPicker() (+56 more)
+### Community 48 - "nova-entrega-grupo-form.tsx"
+Cohesion: 0.06
+Nodes (43): AddEnderecoForm(), EditEnderecoForm(), emptyEndereco(), EnderecoCard(), EnderecoForm, NovoClientePage(), addEndereco(), handleSubmit() (+35 more)
 
 ### Community 52 - "Profile"
-Cohesion: 0.33
-Nodes (5): PesquisarEntregaDialogProps, DashboardLayout(), AppShell(), profile, Profile
+Cohesion: 0.40
+Nodes (4): PesquisarEntregaDialogProps, AppShell(), profile, Profile
 
 ### Community 53 - "enderecos-sem-gps/page.tsx"
-Cohesion: 0.11
-Nodes (32): CadastrosPage(), Filtro, ClienteResumo, ClientesPage(), Filtro, AddressFields, EnderecoSemGpsKind, resgatarClienteExcluido() (+24 more)
+Cohesion: 0.22
+Nodes (15): AddressFields, EnderecoSemGpsKind, resgatarClienteExcluido(), retryGeocode(), setManualCoords(), tableFor(), toRow(), ClienteExcluido (+7 more)
 
-### Community 55 - "heatmap.tsx"
-Cohesion: 0.40
-Nodes (4): HeatmapCard(), renderHeat(), LeafletHeat, HeatmapCard
-
-### Community 59 - "cliente-edit-form.test.tsx"
-Cohesion: 0.28
-Nodes (8): updateCliente(), ClienteEditForm(), handleSubmit(), cliente, mockedUpdateCliente, Select(), handleSelect(), SelectItem()
-
-### Community 60 - "finalizarPeloPainel"
-Cohesion: 0.40
-Nodes (3): finalizarPeloPainel(), FinalizarPainelCard(), submit()
-
-### Community 62 - "sidebar-nav.tsx"
+### Community 55 - "nova-grupo/page.tsx"
 Cohesion: 0.32
-Nodes (5): adminLinks, ctaLink, vendedorLinks, mockedUseTheme, ThemeToggle()
+Nodes (6): ClientesPage(), NovaEntregaGrupoPage(), load(), NovaEntregaPage(), load(), fetchAll()
+
+### Community 59 - "database.ts"
+Cohesion: 0.25
+Nodes (7): Database, DeliveryAction, EntregaFoto, ReceiverRole, RotaDiaria, RouteChangeType, UserRole
+
+### Community 60 - "DevolucoesPage"
+Cohesion: 0.33
+Nodes (5): darBaixaDevolucao(), desfazerBaixaDevolucao(), DevolucoesPage(), handleBaixa(), handleDesfazer()
+
+### Community 61 - "entregador/layout.tsx"
+Cohesion: 0.23
+Nodes (6): DashboardLayout(), cachedProfile(), EntregadorLayout(), loadProfile(), Home(), Spinner()
 
 ### Community 63 - "backfill-geocode.mjs"
 Cohesion: 0.67
 Nodes (3): buscarNominatim(), geocode(), supabase
 
-### Community 64 - "local-dialog.test.tsx"
-Cohesion: 0.15
-Nodes (11): createLocal(), LocalFormData, readLocalForm(), updateLocal(), handleSubmit(), field(), fillRequired(), mockedCreateLocal (+3 more)
-
 ## Knowledge Gaps
 - **220 isolated node(s):** `$schema`, `style`, `rsc`, `tsx`, `config` (+215 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 327 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **22 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **21 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `createClient()` connect `createClient` to `NovaEntregaGrupoForm`, `EditEntregaView`, `entregas/page.tsx`, `kanban-board.tsx`, `database.ts`, `RelatoriosPage`, `client.ts`, `geocode`, `sidebar-nav.test.tsx`, `nova-entrega-form.test.tsx`, `PesquisarEntregaDialog`, `createClienteMultiEnderecos`, `entregas/actions.ts`, `cn`, `Profile`, `enderecos-sem-gps/page.tsx`, `cliente-edit-form.test.tsx`, `finalizarPeloPainel`, `spinner.tsx`, `sidebar-nav.tsx`, `local-dialog.test.tsx`?**
-  _High betweenness centrality (0.135) - this node is a cross-community bridge._
-- **Why does `cn()` connect `cn` to `entregas/page.tsx`, `kanban-board.tsx`, `client.ts`, `enderecos-sem-gps/page.tsx`, `sidebar-nav.test.tsx`, `spinner.tsx`, `sidebar-nav.tsx`?**
+- **Why does `createClient()` connect `createClient` to `PesquisarEntregaDialog`, `clientes/[id]/page.tsx`, `cn`, `use-stale-entregas.ts`, `kanban-board.tsx`, `client.ts`, `KanbanBoard`, `entregador/actions.ts`, `relatorios/page.tsx`, `nova-entrega-grupo-form.tsx`, `RelatoriosPage`, `entregador-nav.tsx`, `geocode`, `enderecos-sem-gps/page.tsx`, `nova-grupo/page.tsx`, `DevolucoesPage`, `entregador/layout.tsx`?**
+  _High betweenness centrality (0.134) - this node is a cross-community bridge._
+- **Why does `cn()` connect `cn` to `clientes/[id]/page.tsx`, `kanban-board.tsx`, `nova-entrega-grupo-form.tsx`, `entregador-nav.tsx`, `entregador/layout.tsx`?**
   _High betweenness centrality (0.056) - this node is a cross-community bridge._
-- **Why does `geocode()` connect `geocode` to `NovaEntregaGrupoForm`, `local-dialog.test.tsx`, `clientes/route.ts`, `createClienteMultiEnderecos`, `entregas/actions.ts`, `cn`, `enderecos-sem-gps/page.tsx`?**
+- **Why does `geocode()` connect `geocode` to `createClient`, `clientes/route.ts`, `client.ts`, `nova-entrega-grupo-form.tsx`, `enderecos-sem-gps/page.tsx`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **What connects `$schema`, `style`, `rsc` to the rest of the system?**
   _220 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `entregas/page.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.08387096774193549 - nodes in this community are weakly interconnected._
+- **Should `clientes/[id]/page.tsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.07075873827791987 - nodes in this community are weakly interconnected._
+- **Should `cn` be split into smaller, more focused modules?**
+  _Cohesion score 0.05128205128205128 - nodes in this community are weakly interconnected._
 - **Should `compilerOptions` be split into smaller, more focused modules?**
   _Cohesion score 0.06896551724137931 - nodes in this community are weakly interconnected._
-- **Should `devDependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.0425531914893617 - nodes in this community are weakly interconnected._

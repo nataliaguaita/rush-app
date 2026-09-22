@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import {
   Truck,
   Clock,
   Route,
+  Ban,
 } from "lucide-react";
 import {
   format,
@@ -41,9 +43,13 @@ import {
   differenceInCalendarDays,
 } from "date-fns";
 import type { Profile, RotaDiaria, DeliveryStatus, DeliveryPeriod } from "@/types/database";
+import { formatOrderNumber } from "@/lib/status";
 
 interface RelatorioEntrega {
   id: string;
+  order_number: number;
+  cancel_reason: string | null;
+  updated_at: string;
   valor: number | null;
   status: DeliveryStatus;
   scheduled_period: DeliveryPeriod | null;
@@ -54,6 +60,7 @@ interface RelatorioEntrega {
   cliente: { name: string } | null;
   endereco: { bairro: string | null; lat: number | null; lng: number | null } | null;
   entregador: { id: string; name: string } | null;
+  cancelador: { name: string } | null;
 }
 
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -191,11 +198,12 @@ export default function RelatoriosPage() {
     async function load() {
       setLoading(true);
       const entregaColumns = `
-        id, valor, status, scheduled_period, scheduled_date,
-        delivered_at, created_at, entregador_id,
+        id, order_number, valor, status, scheduled_period, scheduled_date,
+        delivered_at, created_at, updated_at, entregador_id, cancel_reason,
         cliente:clientes(name),
         endereco:enderecos(bairro, lat, lng),
-        entregador:profiles!entregas_entregador_id_fkey(id, name)
+        entregador:profiles!entregas_entregador_id_fkey(id, name),
+        cancelador:profiles!entregas_cancelado_por_fkey(name)
       `;
       const [entregasRes, rotasRes, prevEntregasRes, prevRotasRes] = await Promise.all([
         supabase.from("entregas").select(entregaColumns).gte("scheduled_date", startDate).lte("scheduled_date", endDate),
@@ -275,7 +283,12 @@ export default function RelatoriosPage() {
       .map((e) => ({ lat: e.endereco?.lat, lng: e.endereco?.lng }))
       .filter((p): p is { lat: number; lng: number } => typeof p.lat === "number" && typeof p.lng === "number");
 
-    return { ...core, drivers, topClientes, topBairros, heatPoints };
+    // Entrega cancelada não é mais editável, então updated_at é o momento do cancelamento.
+    const canceladasList = entregas
+      .filter((e) => e.status === "cancelada")
+      .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+
+    return { ...core, drivers, topClientes, topBairros, heatPoints, canceladasList };
   }, [entregas, rotas]);
 
   const prevStats = useMemo(() => computeCoreStats(prevEntregas, prevRotas), [prevEntregas, prevRotas]);
@@ -488,6 +501,8 @@ export default function RelatoriosPage() {
               </Card>
             </div>
 
+            {stats.canceladasList.length > 0 && <CanceladasTable items={stats.canceladasList} />}
+
             {/* ── Geografia e Demanda ── */}
             {printMode !== "resumo" && (
               <div className="space-y-4 print-break">
@@ -638,6 +653,49 @@ function StackedBarCard({ icon: Icon, title, items }: {
             </div>
           </div>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CanceladasTable({ items }: { items: RelatorioEntrega[] }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Ban className="h-4 w-4" />
+          Entregas Canceladas ({items.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-muted-foreground">
+                <th className="pb-2 font-medium">Nº</th>
+                <th className="pb-2 font-medium">Cliente</th>
+                <th className="pb-2 font-medium">Cancelada em</th>
+                <th className="pb-2 font-medium">Cancelada por</th>
+                <th className="pb-2 font-medium">Motivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((e) => (
+                <tr key={e.id} className="border-b last:border-0 align-top">
+                  <td className="py-2.5 font-medium">
+                    <Link href={`/dashboard/entregas/${e.id}`} className="text-primary hover:underline">
+                      {formatOrderNumber(e.order_number)}
+                    </Link>
+                  </td>
+                  <td className="py-2.5 truncate max-w-[200px]">{e.cliente?.name ?? "—"}</td>
+                  <td className="py-2.5 whitespace-nowrap">{format(new Date(e.updated_at), "dd/MM/yyyy HH:mm")}</td>
+                  <td className="py-2.5">{e.cancelador?.name ?? "—"}</td>
+                  <td className="py-2.5 whitespace-pre-wrap text-muted-foreground">{e.cancel_reason ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </CardContent>
     </Card>
   );
