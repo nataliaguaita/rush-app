@@ -194,7 +194,8 @@ export async function POST(request: Request) {
       .eq("active", true);
     const equivalente = (enderecosDoCliente ?? []).find((e) => mesmoEndereco(enderecoTratado, e));
     if (equivalente) {
-      await supabase.from("enderecos").update({ origem_integracao: true }).eq("id", equivalente.id);
+      const { error } = await supabase.from("enderecos").update({ origem_integracao: true }).eq("id", equivalente.id);
+      if (error) revisaoNecessaria.push(item.codigo);
       continue;
     }
 
@@ -205,8 +206,15 @@ export async function POST(request: Request) {
 
     // Endereço vindo da integração é sempre o mesmo (fonte externa tem só 1
     // por cliente): substitui o que existir em vez de acumular duplicado.
-    await supabase.from("enderecos").delete().eq("cliente_id", clienteId).eq("origem_integracao", true);
-    await supabase.from("enderecos").insert({
+    // Erro em qualquer uma dessas duas operações não pode passar batido: o
+    // cliente já foi marcado como processado, e sem isso o endereço some em
+    // silêncio sem sobrar rastro em lugar nenhum (nem revisão manual).
+    const { error: erroDelete } = await supabase
+      .from("enderecos")
+      .delete()
+      .eq("cliente_id", clienteId)
+      .eq("origem_integracao", true);
+    const { error: erroInsert } = await supabase.from("enderecos").insert({
       cliente_id: clienteId,
       label: "Sistema de vendas",
       rua: enderecoTratado.rua,
@@ -218,6 +226,7 @@ export async function POST(request: Request) {
       origem_integracao: true,
       ...coords,
     });
+    if (erroDelete || erroInsert) revisaoNecessaria.push(item.codigo);
   }
 
   return NextResponse.json({ status: "ok", processados, revisao_necessaria: revisaoNecessaria });
