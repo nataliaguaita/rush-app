@@ -21,7 +21,7 @@ function serialize(form: HTMLFormElement) {
 
 // Avisa antes de perder um formulário alterado:
 // - guard(fn): envolve fechar modal / Cancelar / Voltar -> card de confirmação
-// - clique em links da página -> card de confirmação
+// - clique em links ou em botões com data-voltar -> card de confirmação
 // - fechar/recarregar a aba -> aviso nativo do navegador (não dá pra personalizar)
 // Uso: <form ref={formRef}> e renderizar {dialog} dentro do form ou do DialogContent.
 export function useUnsavedChanges() {
@@ -68,11 +68,19 @@ export function useUnsavedChanges() {
     }
     function onClick(e: MouseEvent) {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      const a = (e.target as Element).closest?.("a[href]") as HTMLAnchorElement | null;
-      if (!a || a.target === "_blank" || a.hasAttribute("download") || !isDirty()) return;
+      const el = (e.target as Element).closest?.("a[href], [data-voltar]");
+      if (!el || !isDirty()) return;
+      // Botões "Voltar" do cabeçalho (router.back) marcados com data-voltar
+      if (!(el instanceof HTMLAnchorElement)) {
+        e.preventDefault();
+        e.stopPropagation();
+        setPending(() => () => router.back());
+        return;
+      }
+      if (el.target === "_blank" || el.hasAttribute("download")) return;
       e.preventDefault();
       e.stopPropagation();
-      const url = new URL(a.href);
+      const url = new URL(el.href);
       setPending(() => () => {
         if (url.origin === location.origin) router.push(url.pathname + url.search + url.hash);
         else location.assign(url);

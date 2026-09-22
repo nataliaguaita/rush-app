@@ -221,7 +221,7 @@ export default function EntregaDetailPage() {
   if (error) {
     return (
       <div className="space-y-4 w-[50vw] min-w-[340px] mx-auto">
-        <Button variant="ghost" onClick={() => router.back()}>
+        <Button variant="ghost" data-voltar onClick={() => router.back()}>
           <ChevronLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
@@ -241,7 +241,7 @@ export default function EntregaDetailPage() {
   if (!entrega) {
     return (
       <div className="space-y-4">
-        <Button variant="ghost" onClick={() => router.back()}>
+        <Button variant="ghost" data-voltar onClick={() => router.back()}>
           <ChevronLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
@@ -298,7 +298,7 @@ export default function EntregaDetailPage() {
               Editar
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => router.back()}>
+          <Button variant="outline" size="sm" data-voltar onClick={() => router.back()}>
             <ChevronLeft className="mr-1 h-4 w-4" />
             Voltar
           </Button>
