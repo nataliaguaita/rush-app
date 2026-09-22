@@ -56,6 +56,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { updateEntrega, cancelEntrega } from "../actions";
 import { toast } from "sonner";
+import { FinalizarPainelCard } from "./finalizar-painel-card";
 
 const actionLabels: Record<string, string> = {
   entregar: "Entregar",
@@ -75,6 +76,8 @@ export default function EntregaDetailPage() {
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [finalizador, setFinalizador] = useState<string | null>(null);
   const supabase = createClient();
 
   const load = useCallback(async () => {
@@ -109,6 +112,19 @@ export default function EntregaDetailPage() {
       .single();
 
     setCriador(creator);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+      setIsAdmin(me?.role === "admin");
+    }
+
+    if (e.finalizado_por) {
+      const { data: fin } = await supabase.from("profiles").select("name").eq("id", e.finalizado_por).single();
+      setFinalizador(fin?.name ?? "admin");
+    } else {
+      setFinalizador(null);
+    }
 
     const { data: fotosData } = await supabase
       .from("entrega_fotos")
@@ -264,6 +280,11 @@ export default function EntregaDetailPage() {
               <Badge variant="destructive">
                 <AlertTriangle className="mr-1 h-3 w-3" />
                 Urgente
+              </Badge>
+            )}
+            {finalizador && (
+              <Badge variant="outline" className="border-amber-500/40 text-amber-700 dark:text-amber-400">
+                Finalizada pelo painel por {finalizador}
               </Badge>
             )}
           </div>
@@ -444,6 +465,11 @@ export default function EntregaDetailPage() {
         </CardContent>
       </Card>
 
+      {isAdmin && (["rota_definida", "em_rota"].includes(entrega.status) ||
+        (entrega.status === "retornada" && !entrega.return_confirmed)) && (
+        <FinalizarPainelCard entrega={entrega} onDone={load} />
+      )}
+
       {/* Informações do cancelamento */}
       {entrega.status === "cancelada" && (
         <Card>
@@ -496,7 +522,7 @@ export default function EntregaDetailPage() {
                 )}
                 {entrega.receiver_note && (
                   <div>
-                    <p className="text-xs text-muted-foreground">Observação do entregador</p>
+                    <p className="text-xs text-muted-foreground">{entrega.finalizado_por ? "Observação" : "Observação do entregador"}</p>
                     <p className="text-sm whitespace-pre-wrap">{entrega.receiver_note}</p>
                   </div>
                 )}
