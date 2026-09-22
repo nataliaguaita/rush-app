@@ -71,6 +71,7 @@ export function ClienteEditForm({
             <Select
               name="active"
               defaultValue={String(cliente.active)}
+              items={{ true: "Ativo", false: "Inativo" }}
             >
               <SelectTrigger className="w-full">
                 <SelectValue />

@@ -303,7 +303,7 @@ export function NovaEntregaForm({
             <Label>Programar Entrega:</Label>
             <div className="flex gap-2">
               <Label>Turno:</Label>
-              <Select name="scheduled_period" value={scheduledPeriod} onValueChange={(value) => setScheduledPeriod(value as "manha" | "tarde")}>
+              <Select name="scheduled_period" value={scheduledPeriod} items={{ manha: "Manhã", tarde: "Tarde" }} onValueChange={(value) => setScheduledPeriod(value as "manha" | "tarde")}>
                 <SelectTrigger className="w-28">
                   <SelectValue />
                 </SelectTrigger>

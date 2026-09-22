@@ -338,7 +338,7 @@ export function NovaEntregaGrupoForm({
               {addressCliente && (
                 <div className="space-y-2">
                   <Label>Endereço *</Label>
-                  <Select value={selectedEnderecoId} onValueChange={(v) => setSelectedEnderecoId(v ?? "")}>
+                  <Select value={selectedEnderecoId} onValueChange={(v) => setSelectedEnderecoId(v ?? "")} items={Object.fromEntries(enderecos.map((e) => [e.id, `${e.label ? `${e.label} — ` : ""}${e.rua}, ${e.numero}${e.bairro ? ` (${e.bairro})` : ""}`]))}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Escolha o endereço" />
                     </SelectTrigger>
