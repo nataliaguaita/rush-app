@@ -39,15 +39,26 @@ function parseTextoEndereco(texto: string): { rua: string; numero: string; compl
   return { rua, numero, complemento: complemento || null, ok: true };
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Uma falha pontual de rede/timeout não pode jogar um CEP válido pra fila de
+// revisão manual pra sempre — 3 tentativas com pequeno intervalo cobre o caso
+// comum de instabilidade transitória sem represar demais um sync com muitos
+// clientes.
 async function consultaCep(cep: string): Promise<{ bairro: string; cidade: string } | null> {
-  try {
-    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-    const json = await res.json();
-    if (json.erro) return null;
-    return { bairro: json.bairro || "", cidade: json.localidade || "" };
-  } catch {
-    return null;
+  for (let tentativa = 1; tentativa <= 3; tentativa++) {
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const json = await res.json();
+      if (json.erro) return null;
+      return { bairro: json.bairro || "", cidade: json.localidade || "" };
+    } catch {
+      if (tentativa < 3) await sleep(500 * tentativa);
+    }
   }
+  return null;
 }
 
 export async function tratarEnderecoExterno(enderecoTexto: string, cepBruto: string): Promise<EnderecoTratado> {
