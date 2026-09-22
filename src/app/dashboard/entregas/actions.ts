@@ -5,40 +5,47 @@ import { geocode } from "@/lib/geocode";
 import { toTitleCase } from "@/lib/utils";
 import type { DeliveryStatus, ReceiverRole, RouteChangeType } from "@/types/database";
 
+// Endereço escolhido no EnderecoPicker: o id de um cadastrado, ou cria um novo
+// a partir dos campos custom_* (vinculado ao cliente se save_to_cliente).
+async function resolveEnderecoId(
+  supabase: ReturnType<typeof createClient>,
+  formData: FormData,
+  clienteId: string,
+): Promise<string> {
+  if (formData.get("custom_address") !== "true") return formData.get("endereco_id") as string;
+
+  const rua = formData.get("custom_rua") as string;
+  const numero = (formData.get("custom_numero") as string) || "";
+  const cidade = (formData.get("custom_cidade") as string) || "";
+  const saveToCliente = formData.get("save_to_cliente") === "on";
+  const coords = await geocode(rua, numero, cidade);
+  const addrData = {
+    cliente_id: saveToCliente ? clienteId : null,
+    rua: toTitleCase(rua),
+    numero,
+    complemento: formData.get("custom_complemento") ? toTitleCase(formData.get("custom_complemento") as string) : null,
+    bairro: formData.get("custom_bairro") ? toTitleCase(formData.get("custom_bairro") as string) : null,
+    cidade: toTitleCase(cidade),
+    cep: (formData.get("custom_cep") as string) || null,
+    label: formData.get("custom_label") ? toTitleCase(formData.get("custom_label") as string) : null,
+    ...coords,
+  };
+  const { data: newEndereco, error: addrError } = await supabase
+    .from("enderecos")
+    .insert(addrData)
+    .select("id")
+    .single();
+  if (addrError) throw new Error(addrError.message);
+  return newEndereco.id;
+}
+
 export async function createEntrega(formData: FormData) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Não autenticado");
 
   const clienteId = formData.get("cliente_id") as string;
-  let enderecoId = formData.get("endereco_id") as string;
-  const isCustomAddress = formData.get("custom_address") === "true";
-
-  if (isCustomAddress) {
-    const rua = formData.get("custom_rua") as string;
-    const numero = (formData.get("custom_numero") as string) || "";
-    const cidade = (formData.get("custom_cidade") as string) || "";
-    const saveToCliente = formData.get("save_to_cliente") === "on";
-    const coords = await geocode(rua, numero, cidade);
-    const addrData = {
-      cliente_id: saveToCliente ? clienteId : null,
-      rua: toTitleCase(rua),
-      numero,
-      complemento: formData.get("custom_complemento") ? toTitleCase(formData.get("custom_complemento") as string) : null,
-      bairro: formData.get("custom_bairro") ? toTitleCase(formData.get("custom_bairro") as string) : null,
-      cidade: toTitleCase(cidade),
-      cep: (formData.get("custom_cep") as string) || null,
-      label: formData.get("custom_label") ? toTitleCase(formData.get("custom_label") as string) : null,
-      ...coords,
-    };
-    const { data: newEndereco, error: addrError } = await supabase
-      .from("enderecos")
-      .insert(addrData)
-      .select("id")
-      .single();
-    if (addrError) throw new Error(addrError.message);
-    enderecoId = newEndereco.id;
-  }
+  const enderecoId = await resolveEnderecoId(supabase, formData, clienteId);
 
   const rawValor = formData.get("valor") as string;
   const valor = rawValor ? parseFloat(rawValor) : null;
@@ -81,13 +88,16 @@ export async function updateEntrega(entregaId: string, formData: FormData) {
 
   const { data: entrega } = await supabase
     .from("entregas")
-    .select("status")
+    .select("status, cliente_id")
     .eq("id", entregaId)
     .single();
 
   if (!entrega || entrega.status !== "aguardando_atribuicao") {
     throw new Error("Entrega não pode mais ser editada");
   }
+
+  const enderecoId = await resolveEnderecoId(supabase, formData, entrega.cliente_id);
+  if (!enderecoId) throw new Error("Selecione o endereço da entrega");
 
   const rawValor = formData.get("valor") as string;
   const valor = rawValor ? parseFloat(rawValor) : null;
@@ -106,6 +116,7 @@ export async function updateEntrega(entregaId: string, formData: FormData) {
   const { error } = await supabase
     .from("entregas")
     .update({
+      endereco_id: enderecoId,
       valor,
       actions: actions.length > 0 ? actions : ["entregar"],
       scheduled_period: scheduledPeriod as "manha" | "tarde" | null,
