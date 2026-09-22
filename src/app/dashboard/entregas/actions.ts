@@ -135,6 +135,8 @@ export async function updateEntrega(entregaId: string, formData: FormData) {
 
 export async function cancelEntrega(entregaId: string, reason: string) {
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Não autenticado");
 
   const { data: entrega } = await supabase
     .from("entregas")
@@ -148,7 +150,7 @@ export async function cancelEntrega(entregaId: string, reason: string) {
 
   const { error } = await supabase
     .from("entregas")
-    .update({ status: "cancelada" as DeliveryStatus, cancel_reason: reason || null })
+    .update({ status: "cancelada" as DeliveryStatus, cancel_reason: reason || null, cancelado_por: user.id })
     .eq("id", entregaId);
 
   if (error) throw new Error(error.message);

@@ -88,6 +88,7 @@ export interface Entrega {
   refusal_reason: string | null;
   cancel_reason: string | null;
   finalizado_por: string | null;
+  cancelado_por: string | null;
   nota_devolvida: boolean;
   nota_devolvida_at: string | null;
   created_at: string;
