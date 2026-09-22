@@ -32,6 +32,31 @@ function safeEqual(a: string, b: string): boolean {
   return bufA.length === bufB.length && timingSafeEqual(bufA, bufB);
 }
 
+function soDigitos(texto: string | null | undefined): string {
+  return (texto || "").replace(/\D/g, "");
+}
+
+// CEP + número identifica o mesmo endereço mesmo quando origem_integracao
+// ainda não foi setado nele (ex.: linha sincronizada antes da coluna existir
+// e não pega pelo backfill) — o texto da rua sozinho não serve porque o
+// sistema de vendas manda formatos diferentes (abreviado/maiúsculo) em
+// sincronizações diferentes para o mesmo endereço real.
+function mesmoEndereco(
+  a: { rua: string; numero: string; cidade: string | null; cep?: string | null },
+  b: { rua: string; numero: string; cidade: string | null; cep?: string | null }
+): boolean {
+  const cepA = soDigitos(a.cep);
+  const cepB = soDigitos(b.cep);
+  if (cepA && cepB) {
+    return cepA === cepB && cepA.length === 8 && a.numero.trim().toLowerCase() === b.numero.trim().toLowerCase();
+  }
+  return (
+    a.rua.trim().toLowerCase() === b.rua.trim().toLowerCase() &&
+    a.numero.trim().toLowerCase() === b.numero.trim().toLowerCase() &&
+    (a.cidade || "").trim().toLowerCase() === (b.cidade || "").trim().toLowerCase()
+  );
+}
+
 function getAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -157,6 +182,21 @@ export async function POST(request: Request) {
       .eq("origem_integracao", true)
       .maybeSingle();
     if (enderecoAtual?.lat != null) continue;
+
+    // Sem match por origem_integracao: ainda pode já existir um endereço
+    // igual, com a flag ainda não setada (linha de antes da coluna existir,
+    // fora do alcance do backfill por causa do texto do label). Adota esse
+    // endereço como o da integração em vez de duplicar.
+    const { data: enderecosDoCliente } = await supabase
+      .from("enderecos")
+      .select("id, rua, numero, cidade, cep, lat")
+      .eq("cliente_id", clienteId)
+      .eq("active", true);
+    const equivalente = (enderecosDoCliente ?? []).find((e) => mesmoEndereco(enderecoTratado, e));
+    if (equivalente) {
+      await supabase.from("enderecos").update({ origem_integracao: true }).eq("id", equivalente.id);
+      continue;
+    }
 
     // Nominatim limita a ~1 requisição/segundo; sem essa pausa, uma sincronização
     // com muitos clientes estoura o limite e a maioria dos geocodes falha em silêncio.
