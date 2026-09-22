@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { geocode } from "@/lib/geocode";
 import { toTitleCase } from "@/lib/utils";
-import type { DeliveryStatus, RouteChangeType } from "@/types/database";
+import type { DeliveryStatus, ReceiverRole, RouteChangeType } from "@/types/database";
 
 export async function createEntrega(formData: FormData) {
   const supabase = createClient();
@@ -263,4 +263,44 @@ export async function confirmarRetorno(entregaId: string) {
     .update({ status: "retornada" as DeliveryStatus })
     .eq("id", entregaId);
   if (error) throw error;
+}
+
+export type FinalizacaoPainel =
+  | { tipo: "entregue"; receiver_name: string; receiver_role: ReceiverRole | null; receiver_note: string; delivered_at: string }
+  | { tipo: "recusada"; motivo: string }
+  | { tipo: "retorno" };
+
+// Finaliza pelo painel uma entrega que o entregador não finalizou.
+// O filtro de status evita sobrescrever se o entregador finalizar ao mesmo tempo.
+export async function finalizarPeloPainel(entregaId: string, f: FinalizacaoPainel) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Não autenticado");
+
+  let query;
+  if (f.tipo === "retorno") {
+    query = supabase
+      .from("entregas")
+      .update({ return_confirmed: true, return_confirmed_at: new Date().toISOString(), finalizado_por: user.id })
+      .eq("status", "retornada")
+      .or("return_confirmed.is.null,return_confirmed.eq.false");
+  } else {
+    const updates = f.tipo === "entregue"
+      ? {
+          status: "entregue" as DeliveryStatus,
+          receiver_name: toTitleCase(f.receiver_name.trim()),
+          receiver_role: f.receiver_role,
+          receiver_note: f.receiver_note.trim() || null,
+          delivered_at: f.delivered_at,
+        }
+      : { status: "recusada" as DeliveryStatus, refusal_reason: f.motivo.trim() };
+    query = supabase
+      .from("entregas")
+      .update({ ...updates, finalizado_por: user.id })
+      .in("status", ["rota_definida", "em_rota"]);
+  }
+
+  const { data, error } = await query.eq("id", entregaId).select("id");
+  if (error) throw new Error(error.message);
+  if (!data?.length) throw new Error("Esta entrega já foi finalizada ou mudou de status");
 }
