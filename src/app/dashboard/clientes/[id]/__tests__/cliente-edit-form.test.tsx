@@ -4,6 +4,9 @@ import { toast } from "sonner";
 import { updateCliente } from "../../actions";
 import { ClienteEditForm } from "../cliente-edit-form";
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
+}));
 jest.mock("../../actions", () => ({ updateCliente: jest.fn() }));
 jest.mock("sonner", () => ({
   toast: { error: jest.fn(), success: jest.fn() },

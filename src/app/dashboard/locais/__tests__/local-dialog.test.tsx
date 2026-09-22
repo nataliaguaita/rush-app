@@ -6,6 +6,9 @@ import { createLocal, updateLocal } from "../actions";
 import { LocalDialog } from "../local-dialog";
 import type { LocalFrequente } from "@/types/database";
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
+}));
 jest.mock("../actions", () => ({
   createLocal: jest.fn(),
   updateLocal: jest.fn(),
