@@ -21,10 +21,12 @@ import {
 } from "@/components/ui/select";
 import { Plus, Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import { createUser } from "./actions";
 
 export function CadastroDialog({ onCreated }: { onCreated?: () => void }) {
   const [open, setOpen] = useState(false);
+  const { formRef, guard, dialog } = useUnsavedChanges();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -44,7 +46,7 @@ export function CadastroDialog({ onCreated }: { onCreated?: () => void }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : guard(() => setOpen(false)))}>
       <DialogTrigger
         render={
           <Button>
@@ -60,7 +62,7 @@ export function CadastroDialog({ onCreated }: { onCreated?: () => void }) {
             Crie um novo vendedor ou entregador
           </DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit} className="space-y-4">
+        <form ref={formRef} action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="role">Tipo</Label>
             <Select
@@ -125,7 +127,7 @@ export function CadastroDialog({ onCreated }: { onCreated?: () => void }) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={() => guard(() => setOpen(false))}
             >
               Cancelar
             </Button>
@@ -135,6 +137,7 @@ export function CadastroDialog({ onCreated }: { onCreated?: () => void }) {
             </Button>
           </div>
         </form>
+        {dialog}
       </DialogContent>
     </Dialog>
   );

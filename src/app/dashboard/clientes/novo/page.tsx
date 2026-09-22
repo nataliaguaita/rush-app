@@ -22,6 +22,7 @@ import { ChevronLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 
 interface EnderecoForm {
   key: number;
@@ -189,6 +190,7 @@ function EnderecoCard({
 
 export default function NovoClientePage() {
   const router = useRouter();
+  const { formRef, dialog } = useUnsavedChanges();
   const [enderecos, setEnderecos] = useState<EnderecoForm[]>([emptyEndereco(0)]);
   const [nextKey, setNextKey] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -246,7 +248,7 @@ export default function NovoClientePage() {
         </Link>
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <form ref={formRef} onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Dados do Cliente</CardTitle>
@@ -292,6 +294,7 @@ export default function NovoClientePage() {
             {loading ? "Cadastrando..." : "Cadastrar Cliente"}
           </Button>
         </div>
+        {dialog}
       </form>
     </div>
   );

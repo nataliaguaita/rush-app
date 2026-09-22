@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Loader2 } from "lucide-react";
 import { addEndereco } from "../actions";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import { useCep } from "@/lib/use-cep";
 
 export function AddEnderecoForm({
@@ -36,6 +37,7 @@ export function AddEnderecoForm({
   );
   const { fetchCep, loading: cepLoading, filled: cepFilled } = useCep(handleCepResult);
   const cepHighlight = cepFilled ? "ring-2 ring-green-500/50 transition-shadow" : "transition-shadow";
+  const { formRef, guard, dialog } = useUnsavedChanges();
 
   if (!open) {
     return (
@@ -56,7 +58,7 @@ export function AddEnderecoForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border p-4">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-3 rounded-lg border p-4">
       <div className="space-y-2">
         <Label>Apelido</Label>
         <Input name="label" placeholder='Ex: "Filial"' />
@@ -107,10 +109,11 @@ export function AddEnderecoForm({
         <button type="submit" className="rounded-lg bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-600">
           Salvar
         </button>
-        <Button type="button" variant="ghost" size="sm" onClick={() => { setOpen(false); onCancel?.(); }}>
+        <Button type="button" variant="ghost" size="sm" onClick={() => guard(() => { setOpen(false); onCancel?.(); })}>
           Cancelar
         </Button>
       </div>
+      {dialog}
     </form>
   );
 }

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { updateCliente } from "../actions";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import type { Cliente } from "@/types/database";
 
 export function ClienteEditForm({
@@ -27,6 +28,7 @@ export function ClienteEditForm({
   onCancel?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const { formRef, guard, dialog } = useUnsavedChanges();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -45,12 +47,12 @@ export function ClienteEditForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form ref={formRef} onSubmit={handleSubmit}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Editar Dados</CardTitle>
           {onCancel && (
-            <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+            <Button type="button" variant="ghost" size="sm" onClick={() => guard(onCancel)}>
               Cancelar
             </Button>
           )}
@@ -69,6 +71,7 @@ export function ClienteEditForm({
             <Select
               name="active"
               defaultValue={String(cliente.active)}
+              items={{ true: "Ativo", false: "Inativo" }}
             >
               <SelectTrigger className="w-full">
                 <SelectValue />
@@ -85,6 +88,7 @@ export function ClienteEditForm({
           </Button>
         </CardContent>
       </Card>
+      {dialog}
     </form>
   );
 }

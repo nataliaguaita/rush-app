@@ -4,6 +4,9 @@ import { toast } from "sonner";
 import { createUser } from "../actions";
 import { CadastroDialog } from "../cadastro-dialog";
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
+}));
 jest.mock("../actions", () => ({ createUser: jest.fn() }));
 jest.mock("sonner", () => ({
   toast: { error: jest.fn(), success: jest.fn() },

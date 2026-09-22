@@ -56,6 +56,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { updateEntrega, cancelEntrega } from "../actions";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import { FinalizarPainelCard } from "./finalizar-painel-card";
 import { EnderecoPicker } from "../endereco-picker";
 
@@ -220,7 +221,7 @@ export default function EntregaDetailPage() {
   if (error) {
     return (
       <div className="space-y-4 w-[50vw] min-w-[340px] mx-auto">
-        <Button variant="ghost" onClick={() => router.back()}>
+        <Button variant="ghost" data-voltar onClick={() => router.back()}>
           <ChevronLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
@@ -240,7 +241,7 @@ export default function EntregaDetailPage() {
   if (!entrega) {
     return (
       <div className="space-y-4">
-        <Button variant="ghost" onClick={() => router.back()}>
+        <Button variant="ghost" data-voltar onClick={() => router.back()}>
           <ChevronLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
@@ -297,7 +298,7 @@ export default function EntregaDetailPage() {
               Editar
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => router.back()}>
+          <Button variant="outline" size="sm" data-voltar onClick={() => router.back()}>
             <ChevronLeft className="mr-1 h-4 w-4" />
             Voltar
           </Button>
@@ -640,6 +641,7 @@ function EditEntregaView({
   const [enderecoId, setEnderecoId] = useState(entrega.endereco_id);
   const [enderecos, setEnderecos] = useState<Endereco[]>(entrega.endereco ? [entrega.endereco] : []);
   const [locais, setLocais] = useState<LocalFrequente[]>([]);
+  const { formRef, guard, dialog } = useUnsavedChanges();
 
   useEffect(() => {
     const supabase = createClient();
@@ -713,7 +715,7 @@ function EditEntregaView({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 mx-auto max-w-2xl">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4 mx-auto max-w-2xl">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">
@@ -723,7 +725,7 @@ function EditEntregaView({
             <StatusBadge status={entrega.status} />
           </div>
         </div>
-        <Button variant="outline" size="sm" type="button" onClick={onCancel}>
+        <Button variant="outline" size="sm" type="button" onClick={() => guard(onCancel)}>
           <ChevronLeft className="mr-1 h-4 w-4" />
           Voltar
         </Button>
@@ -936,7 +938,7 @@ function EditEntregaView({
           Excluir Entrega
         </Button>
         <div className="flex gap-3">
-          <Button variant="outline" type="button" onClick={onCancel}>
+          <Button variant="outline" type="button" onClick={() => guard(onCancel)}>
             Cancelar
           </Button>
           <Button type="submit" disabled={saving}>
@@ -972,6 +974,7 @@ function EditEntregaView({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {dialog}
     </form>
   );
 }

@@ -140,7 +140,7 @@ export default function ClienteDetailPage() {
             {cliente.active ? "Ativo" : "Inativo"}
           </Badge>
         </div>
-        <Button variant="outline" size="sm" onClick={() => router.back()}>
+        <Button variant="outline" size="sm" data-voltar onClick={() => router.back()}>
           <ChevronLeft className="mr-1 h-4 w-4" />
           Voltar
         </Button>

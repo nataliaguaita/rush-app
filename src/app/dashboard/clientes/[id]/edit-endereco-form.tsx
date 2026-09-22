@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import { updateEndereco } from "../actions";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import { useCep } from "@/lib/use-cep";
 import { useGeocodeCheck } from "@/lib/use-geocode-check";
 import { GeocodeWarning } from "@/components/geocode-warning";
@@ -29,6 +30,7 @@ export function EditEnderecoForm({
   const [loading, setLoading] = useState(false);
   const numeroRef = useRef<HTMLInputElement>(null);
   const geoCheck = useGeocodeCheck();
+  const { formRef, guard, dialog } = useUnsavedChanges();
 
   const handleCepResult = useCallback(
     (data: { rua: string; bairro: string; cidade: string }) => {
@@ -54,7 +56,7 @@ export function EditEnderecoForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border p-4">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-3 rounded-lg border p-4">
       <div className="space-y-2">
         <Label>Apelido</Label>
         <Input name="label" defaultValue={endereco.label ?? ""} placeholder='Ex: "Filial"' />
@@ -129,10 +131,11 @@ export function EditEnderecoForm({
           {loading && <Loader2 className="animate-spin" />}
           {loading ? "Salvando..." : "Salvar"}
         </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+        <Button type="button" variant="ghost" size="sm" onClick={() => guard(onCancel)}>
           Cancelar
         </Button>
       </div>
+      {dialog}
     </form>
   );
 }

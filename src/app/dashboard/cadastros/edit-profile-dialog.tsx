@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Pencil, Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import { updateProfile } from "./actions";
 import type { Profile } from "@/types/database";
 
@@ -32,6 +33,7 @@ export function EditProfileDialog({
   onSaved: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const { formRef, guard, dialog } = useUnsavedChanges();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -63,7 +65,7 @@ export function EditProfileDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : guard(() => setOpen(false)))}>
       <DialogTrigger
         render={
           <Button variant="ghost" size="icon" aria-label={`Editar ${profile.name}`}>
@@ -78,7 +80,7 @@ export function EditProfileDialog({
             Atualize os dados de {profile.name}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="edit-role">Tipo</Label>
             <Select
@@ -168,7 +170,7 @@ export function EditProfileDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={() => guard(() => setOpen(false))}
             >
               Cancelar
             </Button>
@@ -178,6 +180,7 @@ export function EditProfileDialog({
             </Button>
           </div>
         </form>
+        {dialog}
       </DialogContent>
     </Dialog>
   );

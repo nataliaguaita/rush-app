@@ -23,6 +23,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createEntregaGrupo } from "./actions";
 import { toast } from "sonner";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import { format } from "date-fns";
 import type { ClienteWithEnderecos, LocalFrequente } from "@/types/database";
 import { useCep } from "@/lib/use-cep";
@@ -86,6 +87,7 @@ export function NovaEntregaGrupoForm({
   const addressDropdownRef = useRef<HTMLDivElement>(null);
   const localDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { formRef, dialog } = useUnsavedChanges();
 
   const handleCepResult = useCallback((data: { rua: string; bairro: string; cidade: string }) => {
     setCustomAddr((prev) => ({ ...prev, rua: data.rua, bairro: data.bairro, cidade: data.cidade }));
@@ -245,7 +247,7 @@ export function NovaEntregaGrupoForm({
   const allDestinatariosValid = destinatarios.every((d) => !!d.clienteId);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 w-full sm:w-[50vw] sm:min-w-[340px] mx-auto">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4 w-full sm:w-[50vw] sm:min-w-[340px] mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Users className="h-6 w-6 text-primary" />
@@ -336,7 +338,7 @@ export function NovaEntregaGrupoForm({
               {addressCliente && (
                 <div className="space-y-2">
                   <Label>Endereço *</Label>
-                  <Select value={selectedEnderecoId} onValueChange={(v) => setSelectedEnderecoId(v ?? "")}>
+                  <Select value={selectedEnderecoId} onValueChange={(v) => setSelectedEnderecoId(v ?? "")} items={Object.fromEntries(enderecos.map((e) => [e.id, `${e.label ? `${e.label} — ` : ""}${e.rua}, ${e.numero}${e.bairro ? ` (${e.bairro})` : ""}`]))}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Escolha o endereço" />
                     </SelectTrigger>
@@ -590,6 +592,7 @@ export function NovaEntregaGrupoForm({
           {`Cadastrar ${destinatarios.length} Entrega${destinatarios.length !== 1 ? "s" : ""}`}
         </Button>
       </div>
+      {dialog}
     </form>
   );
 }
