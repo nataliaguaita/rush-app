@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
-import type { EntregaWithRelations, EntregaFoto, Endereco, Profile } from "@/types/database";
+import type { EntregaWithRelations, EntregaFoto, Endereco, LocalFrequente, Profile } from "@/types/database";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,7 @@ import { ptBR } from "date-fns/locale";
 import { updateEntrega, cancelEntrega } from "../actions";
 import { toast } from "sonner";
 import { FinalizarPainelCard } from "./finalizar-painel-card";
+import { EnderecoPicker } from "../endereco-picker";
 
 const actionLabels: Record<string, string> = {
   entregar: "Entregar",
@@ -636,6 +637,23 @@ function EditEntregaView({
   const [cancelReason, setCancelReason] = useState("");
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [enderecoId, setEnderecoId] = useState(entrega.endereco_id);
+  const [enderecos, setEnderecos] = useState<Endereco[]>(entrega.endereco ? [entrega.endereco] : []);
+  const [locais, setLocais] = useState<LocalFrequente[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    Promise.all([
+      supabase.from("enderecos").select("*").eq("cliente_id", entrega.cliente_id).eq("active", true),
+      supabase.from("locais_frequentes").select("*").eq("active", true).order("name"),
+    ]).then(([{ data: e }, { data: l }]) => {
+      const list = (e ?? []) as Endereco[];
+      // Endereço atual pode ser avulso (fora do cadastro do cliente): mantém como opção.
+      if (entrega.endereco && !list.some((x) => x.id === entrega.endereco!.id)) list.unshift(entrega.endereco);
+      setEnderecos(list);
+      setLocais((l ?? []) as LocalFrequente[]);
+    });
+  }, [entrega.cliente_id, entrega.endereco]);
 
   function handleValorBlur() {
     if (!valor) return;
@@ -710,6 +728,22 @@ function EditEntregaView({
           Voltar
         </Button>
       </div>
+
+      {/* Endereço */}
+      <Card className="overflow-visible">
+        <CardHeader>
+          <CardTitle className="text-lg">Endereço</CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-visible">
+          <EnderecoPicker
+            clienteId={entrega.cliente_id}
+            enderecos={enderecos}
+            locaisFrequentes={locais}
+            value={enderecoId}
+            onChange={setEnderecoId}
+          />
+        </CardContent>
+      </Card>
 
       {/* Detalhes */}
       <Card>
