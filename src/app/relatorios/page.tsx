@@ -15,7 +15,6 @@ import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  XCircle,
   Sun,
   Sunset,
   Printer,
@@ -24,6 +23,7 @@ import {
   Users,
   Truck,
   Clock,
+  CalendarCheck,
   Route,
   Ban,
 } from "lucide-react";
@@ -39,11 +39,11 @@ import {
   subWeeks,
   subYears,
   subDays,
-  differenceInMinutes,
   differenceInCalendarDays,
 } from "date-fns";
 import type { Profile, RotaDiaria, DeliveryStatus, DeliveryPeriod } from "@/types/database";
 import { formatOrderNumber } from "@/lib/status";
+import { entregueNoPrazo, intervaloMedianoEntreEntregas } from "./metricas";
 
 interface RelatorioEntrega {
   id: string;
@@ -76,33 +76,30 @@ const HeatmapCard = dynamic(() => import("./heatmap").then((m) => m.HeatmapCard)
 
 function computeCoreStats(entregasList: RelatorioEntrega[], rotasList: RotaDiaria[]) {
   const entregues = entregasList.filter((e) => e.status === "entregue");
-  const recusadas = entregasList.filter((e) => e.status === "recusada");
   const canceladas = entregasList.filter((e) => e.status === "cancelada");
   const manha = entregasList.filter((e) => e.scheduled_period === "manha");
   const tarde = entregasList.filter((e) => e.scheduled_period === "tarde");
 
   const valorTotal = entregues.reduce((sum, e) => sum + (e.valor ?? 0), 0);
   const ticketMedio = entregues.length > 0 ? valorTotal / entregues.length : 0;
-  const taxaRecusa = entregasList.length > 0 ? (recusadas.length / entregasList.length) * 100 : 0;
 
-  const tempos = entregues
-    .filter((e) => e.delivered_at && e.created_at)
-    .map((e) => differenceInMinutes(new Date(e.delivered_at!), new Date(e.created_at)));
-  const tempoMedio = tempos.length > 0 ? tempos.reduce((a, b) => a + b, 0) / tempos.length : 0;
+  const noPrazo = entregues.filter(entregueNoPrazo).length;
+  const taxaNoPrazo = entregues.length > 0 ? (noPrazo / entregues.length) * 100 : 0;
+  const intervaloEntregas = intervaloMedianoEntreEntregas(entregues);
 
   const kmTotal = rotasList.reduce((sum, r) => sum + r.distance_km, 0);
 
   return {
     total: entregasList.length,
     entregues: entregues.length,
-    recusadas: recusadas.length,
     canceladas: canceladas.length,
     manha: manha.length,
     tarde: tarde.length,
     valorTotal,
     ticketMedio,
-    taxaRecusa,
-    tempoMedio,
+    noPrazo,
+    taxaNoPrazo,
+    intervaloEntregas,
     kmTotal,
   };
 }
@@ -408,13 +405,6 @@ export default function RelatoriosPage() {
                 delta={pctChange(stats.kmTotal, prevStats.kmTotal)}
               />
               <KpiCard
-                icon={XCircle}
-                label="Taxa de Recusa"
-                value={`${stats.taxaRecusa.toFixed(1)}%`}
-                sub={`${stats.recusadas} recusada${stats.recusadas !== 1 ? "s" : ""}`}
-                delta={pctChange(stats.taxaRecusa, prevStats.taxaRecusa)}
-              />
-              <KpiCard
                 icon={Sun}
                 label="Manhã / Tarde"
                 value={`${stats.manha} / ${stats.tarde}`}
@@ -422,11 +412,20 @@ export default function RelatoriosPage() {
                 delta={pctChange(stats.manha + stats.tarde, prevStats.manha + prevStats.tarde)}
               />
               <KpiCard
+                icon={CalendarCheck}
+                label="Entregas no Prazo"
+                value={stats.entregues > 0 ? `${stats.taxaNoPrazo.toFixed(1)}%` : "—"}
+                sub={`${stats.entregues - stats.noPrazo} fora do dia ou turno agendado`}
+                delta={pctChange(stats.taxaNoPrazo, prevStats.taxaNoPrazo)}
+              />
+              <KpiCard
                 icon={Clock}
-                label="Tempo Médio"
-                value={formatTempo(stats.tempoMedio)}
-                sub="Criação até entrega"
-                delta={pctChange(stats.tempoMedio, prevStats.tempoMedio)}
+                label="Tempo entre Entregas"
+                value={stats.intervaloEntregas !== null ? formatTempo(stats.intervaloEntregas) : "—"}
+                sub="Mediana entre finalizações na rota"
+                delta={stats.intervaloEntregas !== null && prevStats.intervaloEntregas !== null
+                  ? pctChange(stats.intervaloEntregas, prevStats.intervaloEntregas)
+                  : null}
               />
             </div>
 
