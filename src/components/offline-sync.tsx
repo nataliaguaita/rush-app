@@ -15,6 +15,16 @@ export function OfflineSync() {
     const flush = () => flushQueue(applyOp);
     initQueue().then(flush);
 
+    // Service worker guarda as telas para o app abrir sem internet.
+    // Fora de produção atrapalharia o hot reload.
+    if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then(() => navigator.serviceWorker.ready)
+        .then((reg) => reg.active?.postMessage("precache"))
+        .catch(() => {});
+    }
+
     const onVisible = () => {
       if (document.visibilityState === "visible") flush();
     };

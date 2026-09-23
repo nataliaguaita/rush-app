@@ -11,7 +11,17 @@ export default function Home() {
 
   useEffect(() => {
     async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await supabase.auth.getUser()
+        .then(({ data }) => data.user)
+        .catch(() => null);
+
+      // Sem internet, o entregador abre o app pelo ícone e cai aqui:
+      // manda para a rota salva no aparelho em vez de travar no spinner
+      // (o layout do entregador leva ao login se houver rede e não houver sessão).
+      if (!user && localStorage.getItem("rush-entregador-profile")) {
+        router.replace("/entregador");
+        return;
+      }
 
       if (!user) {
         router.replace("/login");
