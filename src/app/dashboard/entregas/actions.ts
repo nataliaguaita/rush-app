@@ -178,11 +178,31 @@ export async function persistColumnState(
   entregaIds: string[],
 ) {
   const supabase = createClient();
+
+  // O organizador não mostra as entregas já em rota ou finalizadas. Numera
+  // depois delas para não repetir a posição que o entregador já está seguindo.
+  let offset = 0;
+  if (entregadorId && entregaIds.length) {
+    const { data: ref } = await supabase.from("entregas").select("scheduled_date").eq("id", entregaIds[0]).single();
+    if (ref?.scheduled_date) {
+      const { data: iniciadas } = await supabase
+        .from("entregas")
+        .select("route_order")
+        .eq("entregador_id", entregadorId)
+        .eq("scheduled_date", ref.scheduled_date)
+        .in("status", ["em_rota", "entregue", "recusada"])
+        .not("route_order", "is", null)
+        .order("route_order", { ascending: false })
+        .limit(1);
+      offset = iniciadas?.[0]?.route_order ?? 0;
+    }
+  }
+
   await Promise.all(
     entregaIds.map((id, index) => {
       const updates: Record<string, unknown> = {
         entregador_id: entregadorId,
-        route_order: index + 1,
+        route_order: offset + index + 1,
       };
       if (!entregadorId) {
         updates.status = "aguardando_atribuicao" as DeliveryStatus;

@@ -72,6 +72,7 @@ import { Input } from "@/components/ui/input";
 import { persistColumnState, releaseRoute, applyRouteChange, applyAddressChange } from "./actions";
 import type { RouteChangeType, EntregaWithRelations } from "@/types/database";
 import { formatOrderNumber, formatScheduledDate } from "@/lib/status";
+import { compareRouteOrder } from "@/lib/route-order";
 import { GpsBadge } from "@/components/gps-badge";
 import Link from "next/link";
 
@@ -806,12 +807,7 @@ export function KanbanBoard({ entregas, entregadores }: KanbanBoardProps) {
     const groups: Record<string, EntregaWithRelations[]> = {};
     const singles: EntregaWithRelations[] = [];
 
-    const sorted = [...entregas].sort((a, b) => {
-      if (a.route_order != null && b.route_order != null) return a.route_order - b.route_order;
-      if (a.route_order != null) return -1;
-      if (b.route_order != null) return 1;
-      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-    });
+    const sorted = [...entregas].sort(compareRouteOrder);
 
     for (const e of sorted) {
       eMap[e.id] = e;
