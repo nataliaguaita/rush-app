@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,10 @@ export default function DevolucoesPage() {
     if (!profile) return;
     queueMicrotask(load);
   }, [profile, load]);
+
+  useRealtimeRefresh("dashboard-devolucoes", "entregas", () => {
+    if (profile) load();
+  });
 
   const relevantes = entregas.filter((e) => pendencyBadges(e).length > 0);
   const pendentes = relevantes.filter((e) => !e.nota_devolvida);

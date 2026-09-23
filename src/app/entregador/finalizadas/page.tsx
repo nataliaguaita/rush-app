@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,8 +23,8 @@ export default function EntregasFinalizadasPage() {
   const [selectedDate, setSelectedDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const supabase = createClient();
 
-  const load = useCallback(async (dateStr: string) => {
-    setLoading(true);
+  const load = useCallback(async (dateStr: string, { silent = false }: { silent?: boolean } = {}) => {
+    if (!silent) setLoading(true);
     setError(false);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -87,6 +88,8 @@ export default function EntregasFinalizadasPage() {
   useEffect(() => {
     queueMicrotask(() => load(selectedDate));
   }, [load, selectedDate]);
+
+  useRealtimeRefresh("entregador-finalizadas", "entregas", () => load(selectedDate, { silent: true }));
 
   return (
     <div className="space-y-4">

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { createClient } from "@/lib/supabase/client";
 import type { EntregaWithRelations, EntregaFoto, Endereco, LocalFrequente, Profile } from "@/types/database";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -82,8 +83,8 @@ export default function EntregaDetailPage() {
   const [finalizador, setFinalizador] = useState<string | null>(null);
   const supabase = createClient();
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
+    if (!silent) setLoading(true);
     setError(false);
 
     const { data: e, error: fetchError } = await supabase
@@ -153,6 +154,10 @@ export default function EntregaDetailPage() {
   useEffect(() => {
     queueMicrotask(load);
   }, [load]);
+
+  useRealtimeRefresh(`entrega-${params.id}`, "entregas", () => {
+    if (!editing) load({ silent: true });
+  });
 
   function formatEndereco(endereco: Endereco | null | undefined): string {
     if (!endereco) return "";

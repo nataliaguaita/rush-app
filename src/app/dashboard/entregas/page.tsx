@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -65,20 +66,9 @@ export default function EntregasPage() {
 
   useEffect(() => {
     queueMicrotask(load);
+  }, [load]);
 
-    const channel = supabase
-      .channel("entregas-kanban")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "entregas" },
-        () => load({ silent: true }),
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [load, supabase]);
+  useRealtimeRefresh("entregas-kanban", "entregas", () => load({ silent: true }));
 
   const filteredEntregas = selectedPeriod === "todos"
     ? entregas
