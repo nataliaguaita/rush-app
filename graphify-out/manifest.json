@@ -6,8 +6,8 @@
     "semantic_hash": "0640702ec176800b4da26ef8b72c67cd"
   },
   ".claude/launch.json": {
-    "mtime": 1788282532.739345,
-    "seen": 1788530681.0028908,
+    "mtime": 1790164931.3303716,
+    "seen": 1790164954.8680773,
     "ast_hash": "dc0d34d08d4f9165670680430141e1e3",
     "semantic_hash": "dc0d34d08d4f9165670680430141e1e3"
   },
@@ -96,15 +96,15 @@
     "semantic_hash": "072447d9a7124da4e03dbeb95fa70f36"
   },
   "src/app/dashboard/cadastros/cadastro-dialog.tsx": {
-    "mtime": 1788975866.4293656,
-    "seen": 1788976948.5724719,
-    "ast_hash": "ffb38bb0479e53c0d1628a2abd7edc48",
+    "mtime": 1790108528.091191,
+    "seen": 1790164954.8725965,
+    "ast_hash": "b5eed9c88e11d48c30082a6c53f6b11f",
     "semantic_hash": ""
   },
   "src/app/dashboard/cadastros/edit-profile-dialog.tsx": {
-    "mtime": 1788975866.431837,
-    "seen": 1788976948.5724719,
-    "ast_hash": "e37a37c7fcc976dd294685e2b752c98f",
+    "mtime": 1790108528.092198,
+    "seen": 1790164954.8725965,
+    "ast_hash": "881e8353a393498278b9b60fe04ddfd0",
     "semantic_hash": ""
   },
   "src/app/dashboard/cadastros/page.tsx": {
@@ -114,27 +114,27 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/add-endereco-form.tsx": {
-    "mtime": 1790080411.2108896,
-    "seen": 1790098494.3293402,
-    "ast_hash": "aa9bc9d14c9aca247b6dc568ea45d7bc",
+    "mtime": 1790108528.0941973,
+    "seen": 1790164954.8725965,
+    "ast_hash": "065cc306d264b3bb57437bf040276ce9",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/cliente-edit-form.tsx": {
-    "mtime": 1789653296.5630105,
-    "seen": 1789675512.29725,
-    "ast_hash": "fb7743f000e011cc4d681b87c87f54dd",
+    "mtime": 1790108528.095197,
+    "seen": 1790164954.8725965,
+    "ast_hash": "da545ae6e969c7ca1e8cf73084d7d862",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/edit-endereco-form.tsx": {
-    "mtime": 1790080411.2118888,
-    "seen": 1790098494.3293402,
-    "ast_hash": "5e2a9580fec87c28b0ec1be4f0ac84a0",
+    "mtime": 1790108528.095197,
+    "seen": 1790164954.8725965,
+    "ast_hash": "f1da9baf426a9e17cd02059a8eccbcd4",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/page.tsx": {
-    "mtime": 1789741370.0679946,
-    "seen": 1789750120.3930604,
-    "ast_hash": "86736037047d3c0d9bc69ecfef301993",
+    "mtime": 1790108528.0961955,
+    "seen": 1790164954.8725965,
+    "ast_hash": "ab8d7057489d3ce4707f2f67e7787cc0",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/actions.ts": {
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/novo/page.tsx": {
-    "mtime": 1789741370.0689926,
-    "seen": 1789750120.3930604,
-    "ast_hash": "43d6a3895a514417b0274c37271ba7c0",
+    "mtime": 1790108528.0971963,
+    "seen": 1790164954.8725965,
+    "ast_hash": "2f7e1f362ff4850cf9eab0e0e1ba362e",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/page.tsx": {
@@ -156,14 +156,14 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/[id]/page.tsx": {
-    "mtime": 1790106317.84845,
-    "seen": 1790106421.2386527,
-    "ast_hash": "faaf21e8c676369add59300deff3b413",
+    "mtime": 1790108528.0981958,
+    "seen": 1790164954.874593,
+    "ast_hash": "4eee9327cc7ec78bc642b0048c34500c",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/actions.ts": {
-    "mtime": 1790106342.805729,
-    "seen": 1790106421.2396562,
+    "mtime": 1790106960.2019236,
+    "seen": 1790107299.1963174,
     "ast_hash": "cd75ccdf55e50a823b1afed72c7e5e49",
     "semantic_hash": ""
   },
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova-grupo/nova-entrega-grupo-form.tsx": {
-    "mtime": 1789741370.0760167,
-    "seen": 1789750120.393566,
-    "ast_hash": "f51e0abc6007a9d69c25b933cf00e4ea",
+    "mtime": 1790108528.1001973,
+    "seen": 1790164954.8765948,
+    "ast_hash": "aca81422ef58cdf68ccba65c646142cf",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova-grupo/page.tsx": {
@@ -198,9 +198,9 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova/nova-entrega-form.tsx": {
-    "mtime": 1790106317.8519528,
-    "seen": 1790106421.240161,
-    "ast_hash": "88170794bfc113b810e44f6a92ce9fc5",
+    "mtime": 1790108528.101401,
+    "seen": 1790164954.8765948,
+    "ast_hash": "245b52cd57ee8a3e3e9a1aa1ffdb4118",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova/page.tsx": {
@@ -288,14 +288,14 @@
     "semantic_hash": ""
   },
   "src/app/page.tsx": {
-    "mtime": 1789047967.1682606,
-    "seen": 1789053986.8164577,
-    "ast_hash": "9aad8743132c4a69a75406f81092680c",
+    "mtime": 1790164764.8153133,
+    "seen": 1790164954.8805923,
+    "ast_hash": "59f1422395ca10aadb5640429d4ac53a",
     "semantic_hash": ""
   },
   "src/app/relatorios/page.tsx": {
-    "mtime": 1790106364.4246967,
-    "seen": 1790106421.244676,
+    "mtime": 1790106960.2039306,
+    "seen": 1790107299.2051804,
     "ast_hash": "2525e29b9d6fb643a52ca94c5998beaa",
     "semantic_hash": ""
   },
@@ -396,9 +396,9 @@
     "semantic_hash": "a70440da86bfc6a07f15197cca48cb08"
   },
   "src/components/ui/select.tsx": {
-    "mtime": 1788975866.4517481,
-    "seen": 1788976948.5828714,
-    "ast_hash": "18d7ed4f87d9f4262c925e4e7e8c25bf",
+    "mtime": 1790108528.1049242,
+    "seen": 1790164954.887592,
+    "ast_hash": "3037a6acded4349746408536106f8344",
     "semantic_hash": ""
   },
   "src/components/ui/separator.tsx": {
@@ -504,8 +504,8 @@
     "semantic_hash": ""
   },
   "src/types/database.ts": {
-    "mtime": 1790106342.8047314,
-    "seen": 1790106421.2552485,
+    "mtime": 1790106960.2049253,
+    "seen": 1790107299.2191966,
     "ast_hash": "80f222b7a17eb872979f08e60aa61835",
     "semantic_hash": ""
   },
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1788530420.6532493,
-    "seen": 1788541489.8300014,
-    "ast_hash": "b0517ee048d45b5cd5463430230eb52f",
+    "mtime": 1790108528.0886967,
+    "seen": 1790164954.8956037,
+    "ast_hash": "7a5f260e634a9947ad1d7ce86390fe1f",
     "semantic_hash": ""
   },
   "README.md": {
@@ -594,9 +594,9 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/locais/local-dialog.tsx": {
-    "mtime": 1789741370.0815284,
-    "seen": 1789750120.395079,
-    "ast_hash": "f895e0bc64a0d5c17c714de3c8d22f0e",
+    "mtime": 1790108528.1029181,
+    "seen": 1790164954.877594,
+    "ast_hash": "cf9eaf8b802934aed1651f876719acde",
     "semantic_hash": ""
   },
   "src/app/dashboard/locais/page.tsx": {
@@ -762,15 +762,15 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/cadastros/__tests__/cadastro-dialog.test.tsx": {
-    "mtime": 1788964606.7926083,
-    "seen": 1788968319.059158,
-    "ast_hash": "8f1651ac92b568c2a816945430b5b82d",
+    "mtime": 1790108528.0896857,
+    "seen": 1790164954.8725965,
+    "ast_hash": "8f03b003517c45d59c4596b9f8f586a3",
     "semantic_hash": ""
   },
   "src/app/dashboard/clientes/[id]/__tests__/cliente-edit-form.test.tsx": {
-    "mtime": 1789653296.5620072,
-    "seen": 1789675512.2962422,
-    "ast_hash": "c49b115a64edd4e2d7205fd89037778b",
+    "mtime": 1790108528.0931978,
+    "seen": 1790164954.8725965,
+    "ast_hash": "735c1bc0895a1bf48e9ed014f0a80392",
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/nova/__tests__/nova-entrega-form.test.tsx": {
@@ -780,9 +780,9 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/locais/__tests__/local-dialog.test.tsx": {
-    "mtime": 1788964612.1050293,
-    "seen": 1788968319.0636811,
-    "ast_hash": "9f4b7f19df8c0254af237baef7e39adb",
+    "mtime": 1790108528.1029181,
+    "seen": 1790164954.877594,
+    "ast_hash": "a3b4251ce61077de8b52d0207c67cd3b",
     "semantic_hash": ""
   },
   "e2e/criar-entrega.spec.ts": {
@@ -840,9 +840,9 @@
     "semantic_hash": ""
   },
   "src/components/offline-sync.tsx": {
-    "mtime": 1789128912.8950834,
-    "seen": 1789129327.2275877,
-    "ast_hash": "a7f30a0bfc7f13a8cb83e6ac70aa6183",
+    "mtime": 1790164752.1903632,
+    "seen": 1790164954.8835933,
+    "ast_hash": "f68916bbdb667966552df22e273d9d27",
     "semantic_hash": ""
   },
   "src/lib/__tests__/offline-queue.test.ts": {
@@ -960,9 +960,27 @@
     "semantic_hash": ""
   },
   "src/app/dashboard/entregas/__tests__/cancel-entrega.test.ts": {
-    "mtime": 1790106399.133284,
-    "seen": 1790106421.2386527,
-    "ast_hash": "3c5baced8ac2fc846a54405f289abfaa",
+    "mtime": 1790106960.200915,
+    "seen": 1790107299.1953113,
+    "ast_hash": "f44d13c822330871982781cc50f7c204",
+    "semantic_hash": ""
+  },
+  "src/lib/use-unsaved-changes.tsx": {
+    "mtime": 1790108528.1059217,
+    "seen": 1790164954.8945935,
+    "ast_hash": "fda2b28639edec58318a734a9d8a386d",
+    "semantic_hash": ""
+  },
+  "public/sw.js": {
+    "mtime": 1790164901.4854193,
+    "seen": 1790164954.8705943,
+    "ast_hash": "112e47073f0482f59a86c527c4654aac",
+    "semantic_hash": ""
+  },
+  "supabase/__tests__/migrations.test.ts": {
+    "mtime": 1790108528.1059217,
+    "seen": 1790164954.8945935,
+    "ast_hash": "7a605c4280fecf9cacbc15f29c67e74c",
     "semantic_hash": ""
   }
 }
