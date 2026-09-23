@@ -588,6 +588,7 @@ function KanbanColumn({
   const isEntregador = columnId !== UNASSIGNED;
 
   const [countBump, setCountBump] = useState(false);
+  const [confirmPeriod, setConfirmPeriod] = useState<"manha" | "tarde" | null>(null);
   const prevTotalRef = useRef(totalEntregas);
   useEffect(() => {
     if (prevTotalRef.current !== totalEntregas) {
@@ -688,7 +689,7 @@ function KanbanColumn({
                         size="xs"
                         variant="ghost"
                         className="border border-amber-500/40 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-400"
-                        onClick={() => onRelease("manha")}
+                        onClick={() => setConfirmPeriod("manha")}
                       >
                         <Send className="h-3 w-3" />
                         Liberar {countEntregas(manhaIds)}
@@ -710,7 +711,7 @@ function KanbanColumn({
                         size="xs"
                         variant="ghost"
                         className="border border-blue-500/40 bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 dark:text-blue-400"
-                        onClick={() => onRelease("tarde")}
+                        onClick={() => setConfirmPeriod("tarde")}
                       >
                         <Send className="h-3 w-3" />
                         Liberar {countEntregas(tardeIds)}
@@ -741,6 +742,28 @@ function KanbanColumn({
           </p>
         )}
       </div>
+
+      <AlertDialog open={confirmPeriod !== null} onOpenChange={(open) => !open && setConfirmPeriod(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Liberar rota da {confirmPeriod === "manha" ? "manhã" : "tarde"}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {countEntregas(confirmPeriod === "manha" ? manhaIds : tardeIds)} entrega(s) serão liberadas para {title}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmPeriod) onRelease?.(confirmPeriod);
+                setConfirmPeriod(null);
+              }}
+            >
+              Liberar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
