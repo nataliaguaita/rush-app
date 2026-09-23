@@ -59,7 +59,7 @@ async function tryCalculateRouteDistance(
     .eq("entregador_id", entrega.entregador_id)
     .eq("scheduled_date", entrega.scheduled_date)
     .eq("scheduled_period", entrega.scheduled_period)
-    .not("status", "in", '("entregue","recusada","retornada")');
+    .not("status", "in", '("entregue","recusada","retornada","cancelada")');
 
   if ((count ?? 0) > 0) return;
 
@@ -69,7 +69,7 @@ async function tryCalculateRouteDistance(
     .eq("entregador_id", entrega.entregador_id)
     .eq("scheduled_date", entrega.scheduled_date)
     .eq("scheduled_period", entrega.scheduled_period)
-    .eq("status", "entregue")
+    .in("status", ["entregue", "recusada"])
     .order("route_order");
 
   const waypoints = (delivered ?? [])
@@ -98,6 +98,10 @@ async function applyRegistrarRecusa(entregaId: string, motivo: string) {
   }).eq("id", entregaId);
 
   if (error) throw new Error(error.message);
+
+  try {
+    await tryCalculateRouteDistance(supabase, entregaId);
+  } catch {}
 }
 
 async function applyConfirmarRetorno(entregaId: string) {
