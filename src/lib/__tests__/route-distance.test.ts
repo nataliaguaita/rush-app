@@ -1,4 +1,4 @@
-import { calcRouteDistanceKm } from "../route-distance";
+import { calcRouteDistanceKm, ordemRealizada } from "../route-distance";
 
 describe("calcRouteDistanceKm", () => {
   beforeEach(() => {
@@ -90,5 +90,17 @@ describe("calcRouteDistanceKm", () => {
     await expect(
       calcRouteDistanceKm([{ lat: -25.5, lng: -49.3 }], "tarde")
     ).rejects.toThrow("network down");
+  });
+});
+
+describe("ordemRealizada", () => {
+  it("ordena pela hora da finalização, com updated_at quando não há delivered_at (recusa)", () => {
+    const lista = [
+      { id: "c", delivered_at: "2026-09-23T13:05:00Z", updated_at: "2026-09-23T13:05:00Z" },
+      { id: "a", delivered_at: "2026-09-23T12:42:00Z", updated_at: "2026-09-23T12:42:00Z" },
+      { id: "b", delivered_at: null, updated_at: "2026-09-23T12:55:00Z" },
+    ];
+
+    expect(ordemRealizada(lista).map((e) => e.id)).toEqual(["a", "b", "c"]);
   });
 });

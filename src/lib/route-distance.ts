@@ -24,6 +24,13 @@ export async function calcRouteDistanceKm(
   return Math.round((data.routes[0].distance / 1000) * 10) / 10;
 }
 
+// Ordem em que o entregador fez as paradas, não a planejada (route_order pode
+// ter sido reorganizado no meio da rota). Recusa não grava delivered_at, usa updated_at.
+export function ordemRealizada<T extends { delivered_at: string | null; updated_at: string }>(lista: T[]): T[] {
+  const hora = (e: T) => new Date(e.delivered_at ?? e.updated_at).getTime();
+  return [...lista].sort((a, b) => hora(a) - hora(b));
+}
+
 // Grava o km da rota (entregador + dia + período) em rotas_diarias quando
 // a última entrega dela fecha. Chamada por quem muda o status de uma entrega.
 export async function tryCalculateRouteDistance(
@@ -50,14 +57,13 @@ export async function tryCalculateRouteDistance(
 
   const { data: delivered } = await supabase
     .from("entregas")
-    .select("endereco:enderecos(lat, lng)")
+    .select("delivered_at, updated_at, endereco:enderecos(lat, lng)")
     .eq("entregador_id", entrega.entregador_id)
     .eq("scheduled_date", entrega.scheduled_date)
     .eq("scheduled_period", entrega.scheduled_period)
-    .in("status", ["entregue", "recusada"])
-    .order("route_order");
+    .in("status", ["entregue", "recusada"]);
 
-  const waypoints = (delivered ?? [])
+  const waypoints = ordemRealizada(delivered ?? [])
     .map((d) => d.endereco as unknown as Pick<Endereco, "lat" | "lng"> | null)
     .filter((e): e is { lat: number; lng: number } => !!e?.lat && !!e?.lng);
 
