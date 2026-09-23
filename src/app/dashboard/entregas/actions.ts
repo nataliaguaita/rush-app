@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { geocode } from "@/lib/geocode";
+import { tryCalculateRouteDistance } from "@/lib/route-distance";
 import { toTitleCase } from "@/lib/utils";
 import type { DeliveryStatus, ReceiverRole, RouteChangeType } from "@/types/database";
 
@@ -154,6 +155,10 @@ export async function cancelEntrega(entregaId: string, reason: string) {
     .eq("id", entregaId);
 
   if (error) throw new Error(error.message);
+
+  try {
+    await tryCalculateRouteDistance(supabase, entregaId);
+  } catch {}
 }
 
 export async function assignEntregador(entregaId: string, entregadorId: string) {
@@ -171,6 +176,10 @@ export async function updateEntregaStatus(entregaId: string, status: DeliverySta
     updates.delivered_at = new Date().toISOString();
   }
   await supabase.from("entregas").update(updates).eq("id", entregaId);
+
+  try {
+    await tryCalculateRouteDistance(supabase, entregaId);
+  } catch {}
 }
 
 export async function persistColumnState(
@@ -240,6 +249,11 @@ export async function applyRouteChange(
     .update(updates)
     .eq("id", entregaId);
   if (error) throw error;
+  if (type === "cancelada") {
+    try {
+      await tryCalculateRouteDistance(supabase, entregaId);
+    } catch {}
+  }
 }
 
 export async function applyAddressChange(
