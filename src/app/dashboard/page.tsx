@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
 import { RECEIVER_ROLE_LABELS, formatOrderNumber, formatScheduledDate } from "@/lib/status";
+import { compareRouteOrder } from "@/lib/route-order";
 import { Package, Truck, CheckCircle, Clock, MapPin, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight, ChevronDown, Plus, Calendar, Sun, Sunset, Users } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import Link from "next/link";
@@ -35,8 +36,7 @@ export default function DashboardPage() {
     const { data: entregasData, error: entregasError } = await supabase
       .from("entregas")
       .select("*, cliente:clientes(*), endereco:enderecos(*), entregador:profiles!entregas_entregador_id_fkey(id, name)")
-      .eq("scheduled_date", today)
-      .order("route_order", { ascending: true, nullsFirst: false });
+      .eq("scheduled_date", today);
 
     const { data: ent, error: entregadoresError } = await supabase
       .from("profiles")
@@ -51,7 +51,7 @@ export default function DashboardPage() {
       return;
     }
 
-    const all = entregasData ?? [];
+    const all = (entregasData ?? []).sort(compareRouteOrder);
     setMetrics({
       total: all.length,
       pendentes: all.filter((e) => e.status === "aguardando_atribuicao").length,
@@ -267,13 +267,11 @@ export default function DashboardPage() {
                           <>
                             {(() => {
                               const manha = entregasDoEntregador.filter((e) => e.scheduled_period === "manha");
-                              const tarde = entregasDoEntregador.filter((e) => e.scheduled_period === "tarde");
-                              const semPeriodo = entregasDoEntregador.filter((e) => !e.scheduled_period);
+                              // Igual ao organizador: sem período conta como tarde.
+                              const tarde = entregasDoEntregador.filter((e) => e.scheduled_period !== "manha");
                               const sections: { label: string; icon: React.ReactNode; color: string; items: EntregaWithRelations[] }[] = [];
                               if (manha.length > 0) sections.push({ label: "Manhã", icon: <Sun className="h-3.5 w-3.5" />, color: "text-amber-600 dark:text-amber-400", items: manha });
                               if (tarde.length > 0) sections.push({ label: "Tarde", icon: <Sunset className="h-3.5 w-3.5" />, color: "text-blue-600 dark:text-blue-400", items: tarde });
-                              if (semPeriodo.length > 0) sections.push({ label: "Sem período", icon: null, color: "text-muted-foreground", items: semPeriodo });
-
                               return sections.map((section, si) => (
                                 <details key={section.label} className="group" open>
                                   {si > 0 && <div className="my-2" />}
