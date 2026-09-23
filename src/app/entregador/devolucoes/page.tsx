@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +50,8 @@ export default function DevolucoesEntregadorPage() {
   useEffect(() => {
     queueMicrotask(load);
   }, [load]);
+
+  useRealtimeRefresh("entregador-devolucoes", "entregas", load);
 
   return (
     <div className="space-y-4">

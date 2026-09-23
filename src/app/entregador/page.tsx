@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -112,20 +113,9 @@ export default function EntregadorPage() {
 
   useEffect(() => {
     queueMicrotask(load);
+  }, [load]);
 
-    const channel = supabase
-      .channel("entregador-rota")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "entregas" },
-        () => load({ silent: true })
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [load, supabase]);
+  useRealtimeRefresh("entregador-rota", "entregas", () => load({ silent: true }));
 
   return (
     <div className="space-y-4">

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types/database";
 import { Package, CheckCircle, PackageX, LogOut } from "lucide-react";
@@ -43,30 +44,24 @@ export function EntregadorBottomNav() {
   const [pendingDevolucoes, setPendingDevolucoes] = useState(0);
   const supabase = createClient();
 
-  useEffect(() => {
-    async function loadCount() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { count } = await supabase
-        .from("entregas")
-        .select("id", { count: "exact", head: true })
-        .eq("entregador_id", user.id)
-        .eq("nota_devolvida", false)
-        .in("status", ["entregue", "retornada", "recusada"])
-        .or("actions.cs.{assinar_nota},actions.cs.{receber},actions.cs.{receber_e_assinar},return_reminder.eq.true");
-      setPendingDevolucoes(count ?? 0);
-    }
-    loadCount();
-
-    const channel = supabase
-      .channel("entregador-nav-devolucoes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "entregas" }, loadCount)
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+  const loadCount = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { count } = await supabase
+      .from("entregas")
+      .select("id", { count: "exact", head: true })
+      .eq("entregador_id", user.id)
+      .eq("nota_devolvida", false)
+      .in("status", ["entregue", "retornada", "recusada"])
+      .or("actions.cs.{assinar_nota},actions.cs.{receber},actions.cs.{receber_e_assinar},return_reminder.eq.true");
+    setPendingDevolucoes(count ?? 0);
   }, [supabase]);
+
+  useEffect(() => {
+    queueMicrotask(loadCount);
+  }, [loadCount]);
+
+  useRealtimeRefresh("entregador-nav-devolucoes", "entregas", loadCount);
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t bg-card pb-[env(safe-area-inset-bottom)]">

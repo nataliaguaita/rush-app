@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -72,20 +73,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     queueMicrotask(loadData);
+  }, [loadData]);
 
-    const channel = supabase
-      .channel("dashboard-entregas")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "entregas" },
-        () => loadData({ silent: true })
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [loadData, supabase]);
+  useRealtimeRefresh("dashboard-entregas", "entregas", () => loadData({ silent: true }));
 
   const cards = [
     { title: "Total de Entregas Hoje", value: metrics.total, icon: Package, className: "text-muted-foreground" },
