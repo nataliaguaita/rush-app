@@ -22,7 +22,6 @@ function serialize(form: HTMLFormElement) {
 // Avisa antes de perder um formulário alterado:
 // - guard(fn): envolve fechar modal / Cancelar / Voltar -> card de confirmação
 // - clique em links ou em botões com data-voltar -> card de confirmação
-// - fechar/recarregar a aba -> aviso nativo do navegador (não dá pra personalizar)
 // Uso: <form ref={formRef}> e renderizar {dialog} dentro do form ou do DialogContent.
 export function useUnsavedChanges() {
   const router = useRouter();
@@ -61,11 +60,6 @@ export function useUnsavedChanges() {
   );
 
   useEffect(() => {
-    function onBeforeUnload(e: BeforeUnloadEvent) {
-      if (!isDirty()) return;
-      e.preventDefault();
-      e.returnValue = "";
-    }
     function onClick(e: MouseEvent) {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const el = (e.target as Element).closest?.("a[href], [data-voltar]");
@@ -86,10 +80,8 @@ export function useUnsavedChanges() {
         else location.assign(url);
       });
     }
-    window.addEventListener("beforeunload", onBeforeUnload);
     window.addEventListener("click", onClick, true);
     return () => {
-      window.removeEventListener("beforeunload", onBeforeUnload);
       window.removeEventListener("click", onClick, true);
     };
   }, [isDirty, router]);
