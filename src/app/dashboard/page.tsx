@@ -35,8 +35,7 @@ export default function DashboardPage() {
     const { data: entregasData, error: entregasError } = await supabase
       .from("entregas")
       .select("*, cliente:clientes(*), endereco:enderecos(*), entregador:profiles!entregas_entregador_id_fkey(id, name)")
-      .gte("created_at", `${today}T00:00:00`)
-      .lte("created_at", `${today}T23:59:59`)
+      .eq("scheduled_date", today)
       .order("route_order", { ascending: true, nullsFirst: false });
 
     const { data: ent, error: entregadoresError } = await supabase
