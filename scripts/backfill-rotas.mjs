@@ -1,12 +1,14 @@
 // Recalcula o km das rotas já fechadas que ficaram sem registro em rotas_diarias
-// (ou com 0 km). Mesma regra de tryCalculateRouteDistance em src/app/entregador/actions.ts.
-// Uso: node scripts/backfill-rotas.mjs [--dry]
+// (ou com 0 km). Mesma regra de tryCalculateRouteDistance em src/lib/route-distance.ts.
+// Uso: node scripts/backfill-rotas.mjs [--dry] [--data=YYYY-MM-DD]
+// --data recalcula todas as rotas fechadas daquele dia, mesmo as que já têm km.
 import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 
 config({ path: ".env.local" });
 
 const DRY = process.argv.includes("--dry");
+const DATA = process.argv.find((a) => a.startsWith("--data="))?.slice(7);
 const ORIGIN = "-49.2676,-25.4308"; // lng,lat — mesmo de src/lib/constants.ts
 const FECHADAS = ["entregue", "recusada", "retornada", "cancelada"];
 
@@ -46,8 +48,8 @@ async function calcKm(waypoints, period) {
 
 const entregas = await fetchAll(
   "entregas",
-  "entregador_id, scheduled_date, scheduled_period, status, route_order, endereco:enderecos(lat, lng)",
-  (q) => q.not("entregador_id", "is", null).not("scheduled_date", "is", null).not("scheduled_period", "is", null)
+  "entregador_id, scheduled_date, scheduled_period, status, delivered_at, updated_at, endereco:enderecos(lat, lng)",
+  (q) => (DATA ? q.eq("scheduled_date", DATA) : q).not("entregador_id", "is", null).not("scheduled_date", "is", null).not("scheduled_period", "is", null)
 );
 const rotas = await fetchAll("rotas_diarias", "entregador_id, data, period, distance_km");
 const comKm = new Set(
@@ -64,13 +66,14 @@ for (const e of entregas) {
 let ok = 0, pulou = 0, falhou = 0;
 
 for (const [key, lista] of grupos) {
-  if (comKm.has(key)) continue;
+  if (!DATA && comKm.has(key)) continue;
   if (lista.some((e) => !FECHADAS.includes(e.status))) { pulou++; continue; }
 
   const [entregador_id, data, period] = key.split("|");
   const waypoints = lista
     .filter((e) => (e.status === "entregue" || e.status === "recusada") && e.endereco?.lat && e.endereco?.lng)
-    .sort((a, b) => (a.route_order ?? 0) - (b.route_order ?? 0))
+    // ordem em que foram feitas; recusa não grava delivered_at
+    .sort((a, b) => new Date(a.delivered_at ?? a.updated_at) - new Date(b.delivered_at ?? b.updated_at))
     .map((e) => e.endereco);
   if (waypoints.length === 0) { pulou++; continue; }
 
