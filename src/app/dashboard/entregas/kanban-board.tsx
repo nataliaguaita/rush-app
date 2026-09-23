@@ -187,6 +187,14 @@ function optimizeVisualRoute(
 
 // ---- Sortable single card ----
 
+function BairroTag({ bairro }: { bairro: string }) {
+  return (
+    <span className="inline-block max-w-full truncate rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+      {bairro}
+    </span>
+  );
+}
+
 function SortableCard({
   visualId,
   item,
@@ -262,6 +270,7 @@ function SortableCard({
             </div>
 
             <div className="min-w-0 flex-1 space-y-1">
+              {entrega.endereco?.bairro && <BairroTag bairro={entrega.endereco.bairro} />}
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono text-muted-foreground">{formatOrderNumber(entrega.order_number)}</span>
                 <Link href={`/dashboard/entregas/${entrega.id}`} className="truncate font-medium hover:underline">
@@ -279,7 +288,6 @@ function SortableCard({
                   <MapPin className="h-3 w-3 shrink-0" />
                   <span className="truncate">
                     {entrega.endereco.rua}, {entrega.endereco.numero}
-                    {entrega.endereco.bairro ? ` - ${entrega.endereco.bairro}` : ""}
                   </span>
                 </p>
               )}
@@ -415,13 +423,14 @@ function GroupCardContent({
       </div>
 
       <CardContent className="space-y-1.5 px-3 py-2">
+        {endereco?.bairro && <BairroTag bairro={endereco.bairro} />}
+
         {/* Address */}
         {endereco && (
           <p className="flex items-center gap-1 text-xs text-muted-foreground">
             <MapPin className="h-3 w-3 shrink-0" />
             <span className="truncate">
               {endereco.rua}, {endereco.numero}
-              {endereco.bairro ? ` - ${endereco.bairro}` : ""}
             </span>
           </p>
         )}
