@@ -188,10 +188,12 @@ function optimizeVisualRoute(
 
 // ---- Sortable single card ----
 
-function BairroTag({ bairro }: { bairro: string }) {
+function BairroTag({ bairro, cidade }: { bairro?: string | null; cidade?: string | null }) {
+  const text = [bairro, cidade].filter(Boolean).join(" - ");
+  if (!text) return null;
   return (
     <span className="inline-block max-w-full truncate rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-700 dark:bg-gray-700 dark:text-gray-200">
-      {bairro}
+      {text}
     </span>
   );
 }
@@ -271,7 +273,7 @@ function SortableCard({
             </div>
 
             <div className="min-w-0 flex-1 space-y-1">
-              {entrega.endereco?.bairro && <BairroTag bairro={entrega.endereco.bairro} />}
+              {entrega.endereco && <BairroTag bairro={entrega.endereco.bairro} cidade={entrega.endereco.cidade} />}
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono text-muted-foreground">{formatOrderNumber(entrega.order_number)}</span>
                 <Link href={`/dashboard/entregas/${entrega.id}`} className="truncate font-medium hover:underline">
@@ -424,7 +426,7 @@ function GroupCardContent({
       </div>
 
       <CardContent className="space-y-1.5 px-3 py-2">
-        {endereco?.bairro && <BairroTag bairro={endereco.bairro} />}
+        {endereco && <BairroTag bairro={endereco.bairro} cidade={endereco.cidade} />}
 
         {/* Address */}
         {endereco && (
