@@ -57,10 +57,12 @@ interface RelatorioEntrega {
   delivered_at: string | null;
   created_at: string;
   entregador_id: string | null;
+  created_by: string;
   cliente: { name: string } | null;
   endereco: { bairro: string | null; lat: number | null; lng: number | null } | null;
   entregador: { id: string; name: string } | null;
   cancelador: { name: string } | null;
+  vendedor: { name: string } | null;
 }
 
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -196,11 +198,12 @@ export default function RelatoriosPage() {
       setLoading(true);
       const entregaColumns = `
         id, order_number, valor, status, scheduled_period, scheduled_date,
-        delivered_at, created_at, updated_at, entregador_id, cancel_reason,
+        delivered_at, created_at, updated_at, entregador_id, created_by, cancel_reason,
         cliente:clientes(name),
         endereco:enderecos(bairro, lat, lng),
         entregador:profiles!entregas_entregador_id_fkey(id, name),
-        cancelador:profiles!entregas_cancelado_por_fkey(name)
+        cancelador:profiles!entregas_cancelado_por_fkey(name),
+        vendedor:profiles!entregas_created_by_fkey(name)
       `;
       const [entregasRes, rotasRes, prevEntregasRes, prevRotasRes] = await Promise.all([
         supabase.from("entregas").select(entregaColumns).gte("scheduled_date", startDate).lte("scheduled_date", endDate),
@@ -250,6 +253,19 @@ export default function RelatoriosPage() {
       .map(([id, d]) => ({ id, ...d, km: kmByDriver.get(id) ?? 0 }))
       .sort((a, b) => b.count - a.count);
 
+    // Per-seller stats: quem cadastrou a entrega. Valor de venda exclui canceladas.
+    const sellerMap = new Map<string, { name: string; cadastradas: number; canceladas: number; valor: number }>();
+    for (const e of entregas) {
+      const v = sellerMap.get(e.created_by) ?? { name: e.vendedor?.name ?? "Desconhecido", cadastradas: 0, canceladas: 0, valor: 0 };
+      v.cadastradas++;
+      if (e.status === "cancelada") v.canceladas++;
+      else v.valor += e.valor ?? 0;
+      sellerMap.set(e.created_by, v);
+    }
+    const vendedores = Array.from(sellerMap.entries())
+      .map(([id, v]) => ({ id, ...v }))
+      .sort((a, b) => b.valor - a.valor);
+
     // Top clients (volume + revenue)
     const clientMap = new Map<string, { count: number; valor: number }>();
     for (const e of entregas) {
@@ -285,7 +301,7 @@ export default function RelatoriosPage() {
       .filter((e) => e.status === "cancelada")
       .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
 
-    return { ...core, drivers, topClientes, topBairros, heatPoints, canceladasList };
+    return { ...core, drivers, vendedores, topClientes, topBairros, heatPoints, canceladasList };
   }, [entregas, rotas]);
 
   const prevStats = useMemo(() => computeCoreStats(prevEntregas, prevRotas), [prevEntregas, prevRotas]);
@@ -500,6 +516,8 @@ export default function RelatoriosPage() {
               </Card>
             </div>
 
+            <VendedoresTable items={stats.vendedores} />
+
             {stats.canceladasList.length > 0 && <CanceladasTable items={stats.canceladasList} />}
 
             {/* ── Geografia e Demanda ── */}
@@ -650,6 +668,57 @@ function StackedBarCard({ icon: Icon, title, items }: {
               <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /> Manhã</span>
               <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-500" /> Tarde</span>
             </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function VendedoresTable({ items }: { items: { id: string; name: string; cadastradas: number; canceladas: number; valor: number }[] }) {
+  const total = items.reduce(
+    (t, v) => ({ cadastradas: t.cadastradas + v.cadastradas, canceladas: t.canceladas + v.canceladas, valor: t.valor + v.valor }),
+    { cadastradas: 0, canceladas: 0, valor: 0 }
+  );
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Users className="h-4 w-4" />
+          Desempenho por Vendedor
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted-foreground">Nenhum dado no período.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-muted-foreground">
+                  <th className="pb-2 font-medium">Vendedor</th>
+                  <th className="pb-2 font-medium text-center">Cadastradas</th>
+                  <th className="pb-2 font-medium text-center">Canceladas</th>
+                  <th className="pb-2 font-medium text-right">Valor de Venda</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((v) => (
+                  <tr key={v.id} className="border-b last:border-0">
+                    <td className="py-2.5 font-medium">{v.name}</td>
+                    <td className="py-2.5 text-center">{v.cadastradas}</td>
+                    <td className="py-2.5 text-center">{v.canceladas}</td>
+                    <td className="py-2.5 text-right">{brl.format(v.valor)}</td>
+                  </tr>
+                ))}
+                <tr className="font-semibold">
+                  <td className="pt-2">Total</td>
+                  <td className="pt-2 text-center">{total.cadastradas}</td>
+                  <td className="pt-2 text-center">{total.canceladas}</td>
+                  <td className="pt-2 text-right">{brl.format(total.valor)}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         )}
       </CardContent>

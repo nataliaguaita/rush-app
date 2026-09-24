@@ -44,3 +44,16 @@ test("endereço novo salvo no cliente vira o endereço da entrega", async () => 
   expect(enderecos.insert).toHaveBeenCalledWith(expect.objectContaining({ cliente_id: "c1", rua: "Rua Nova", lat: 1 }));
   expect(entregas.update).toHaveBeenCalledWith(expect.objectContaining({ endereco_id: "novo-end" }));
 });
+
+test("vincula a um grupo só quando group_id vem no form", async () => {
+  const { entregas } = mockSupabase();
+  const fd = new FormData();
+  fd.set("endereco_id", "end-grupo");
+  fd.set("group_id", "g1");
+  await updateEntrega("e1", fd);
+  expect(entregas.update).toHaveBeenCalledWith(expect.objectContaining({ group_id: "g1", endereco_id: "end-grupo" }));
+
+  fd.delete("group_id");
+  await updateEntrega("e1", fd);
+  expect(entregas.update.mock.calls[1][0]).not.toHaveProperty("group_id");
+});

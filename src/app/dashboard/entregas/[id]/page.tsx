@@ -51,6 +51,7 @@ import {
   Package,
   Trash2,
   Loader2,
+  Users,
 } from "lucide-react";
 import { formatOrderNumber } from "@/lib/status";
 import { format } from "date-fns";
@@ -60,6 +61,7 @@ import { toast } from "sonner";
 import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import { FinalizarPainelCard } from "./finalizar-painel-card";
 import { EnderecoPicker } from "../endereco-picker";
+import { fetchOpenGroups, type OpenGroup } from "../open-groups";
 
 const actionLabels: Record<string, string> = {
   entregar: "Entregar",
@@ -646,6 +648,9 @@ function EditEntregaView({
   const [enderecoId, setEnderecoId] = useState(entrega.endereco_id);
   const [enderecos, setEnderecos] = useState<Endereco[]>(entrega.endereco ? [entrega.endereco] : []);
   const [locais, setLocais] = useState<LocalFrequente[]>([]);
+  const [openGroups, setOpenGroups] = useState<OpenGroup[]>([]);
+  const [groupId, setGroupId] = useState("none");
+  const selectedGroup = openGroups.find((g) => g.groupId === groupId);
   const { formRef, guard, dialog } = useUnsavedChanges();
 
   useEffect(() => {
@@ -653,14 +658,16 @@ function EditEntregaView({
     Promise.all([
       supabase.from("enderecos").select("*").eq("cliente_id", entrega.cliente_id).eq("active", true),
       supabase.from("locais_frequentes").select("*").eq("active", true).order("name"),
-    ]).then(([{ data: e }, { data: l }]) => {
+      fetchOpenGroups(supabase),
+    ]).then(([{ data: e }, { data: l }, groups]) => {
       const list = (e ?? []) as Endereco[];
       // Endereço atual pode ser avulso (fora do cadastro do cliente): mantém como opção.
       if (entrega.endereco && !list.some((x) => x.id === entrega.endereco!.id)) list.unshift(entrega.endereco);
       setEnderecos(list);
       setLocais((l ?? []) as LocalFrequente[]);
+      setOpenGroups(groups.filter((g) => g.groupId !== entrega.group_id));
     });
-  }, [entrega.cliente_id, entrega.endereco]);
+  }, [entrega.cliente_id, entrega.endereco, entrega.group_id]);
 
   function handleValorBlur() {
     if (!valor) return;
@@ -736,19 +743,55 @@ function EditEntregaView({
         </Button>
       </div>
 
+      {/* Vincular a grupo */}
+      {openGroups.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-violet-600" />
+              Adicionar a um Grupo
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Opcional — a entrega passa a usar o endereço do grupo.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <select
+              aria-label="Grupo"
+              className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+              value={groupId}
+              onChange={(e) => setGroupId(e.target.value)}
+            >
+              <option value="none">{entrega.group_id ? "Manter no grupo atual" : "Nenhum grupo (entrega individual)"}</option>
+              {openGroups.map((g) => (
+                <option key={g.groupId} value={g.groupId}>{g.label}</option>
+              ))}
+            </select>
+            {selectedGroup && <input type="hidden" name="group_id" value={selectedGroup.groupId} />}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Endereço */}
       <Card className="overflow-visible">
         <CardHeader>
           <CardTitle className="text-lg">Endereço</CardTitle>
         </CardHeader>
         <CardContent className="overflow-visible">
-          <EnderecoPicker
-            clienteId={entrega.cliente_id}
-            enderecos={enderecos}
-            locaisFrequentes={locais}
-            value={enderecoId}
-            onChange={setEnderecoId}
-          />
+          {selectedGroup ? (
+            <>
+              <input type="hidden" name="endereco_id" value={selectedGroup.enderecoId} />
+              <p className="text-sm text-muted-foreground">Endereço do grupo selecionado.</p>
+            </>
+          ) : (
+            <EnderecoPicker
+              clienteId={entrega.cliente_id}
+              enderecos={enderecos}
+              locaisFrequentes={locais}
+              value={enderecoId}
+              onChange={setEnderecoId}
+            />
+          )}
         </CardContent>
       </Card>
 

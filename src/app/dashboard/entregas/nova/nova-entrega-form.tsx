@@ -29,7 +29,7 @@ import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import { format } from "date-fns";
 import type { ClienteWithEnderecos, LocalFrequente } from "@/types/database";
 import { EnderecoPicker } from "../endereco-picker";
-import type { OpenGroup } from "./page";
+import type { OpenGroup } from "../open-groups";
 
 export function NovaEntregaForm({
   clientes,

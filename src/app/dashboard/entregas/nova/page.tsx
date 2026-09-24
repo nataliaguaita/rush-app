@@ -4,17 +4,8 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { fetchAll } from "@/lib/fetch-all";
 import { NovaEntregaForm } from "./nova-entrega-form";
-import { format } from "date-fns";
-import type { ClienteWithEnderecos, Endereco, LocalFrequente } from "@/types/database";
-
-export interface OpenGroup {
-  groupId: string;
-  enderecoId: string;
-  label: string;
-  count: number;
-}
-
-type EnderecoResumo = Pick<Endereco, "rua" | "numero" | "bairro" | "label">;
+import { fetchOpenGroups, type OpenGroup } from "../open-groups";
+import type { ClienteWithEnderecos, LocalFrequente } from "@/types/database";
 
 export default function NovaEntregaPage() {
   const [clientes, setClientes] = useState<ClienteWithEnderecos[]>([]);
@@ -37,47 +28,7 @@ export default function NovaEntregaPage() {
       ]);
       setClientes(data);
       setLocais((l ?? []) as LocalFrequente[]);
-
-      // Fetch today's open groups
-      const today = format(new Date(), "yyyy-MM-dd");
-      const { data: groupEntregas } = await supabase
-        .from("entregas")
-        .select("group_id, endereco_id, endereco:enderecos(rua, numero, bairro, label)")
-        .not("group_id", "is", null)
-        .eq("status", "aguardando_atribuicao")
-        .gte("created_at", `${today}T00:00:00`)
-        .lte("created_at", `${today}T23:59:59`);
-
-      if (groupEntregas) {
-        const grouped = new Map<string, { enderecoId: string; endereco: EnderecoResumo | null; count: number }>();
-        for (const e of groupEntregas) {
-          if (!e.group_id) continue;
-          const existing = grouped.get(e.group_id);
-          if (existing) {
-            existing.count++;
-          } else {
-            grouped.set(e.group_id, {
-              enderecoId: e.endereco_id,
-              endereco: e.endereco as unknown as EnderecoResumo | null,
-              count: 1,
-            });
-          }
-        }
-        const groups: OpenGroup[] = [];
-        for (const [gid, info] of grouped) {
-          const addr = info.endereco;
-          const label = addr?.label
-            ? `${addr.label} — ${addr.rua}, ${addr.numero}`
-            : `${addr?.rua ?? "?"}, ${addr?.numero ?? ""}${addr?.bairro ? ` (${addr.bairro})` : ""}`;
-          groups.push({
-            groupId: gid,
-            enderecoId: info.enderecoId,
-            label: `${label} (${info.count} entrega${info.count > 1 ? "s" : ""})`,
-            count: info.count,
-          });
-        }
-        setOpenGroups(groups);
-      }
+      setOpenGroups(await fetchOpenGroups(supabase));
     }
     load();
   }, [supabase]);

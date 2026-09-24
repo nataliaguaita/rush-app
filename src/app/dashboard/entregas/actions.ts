@@ -113,10 +113,13 @@ export async function updateEntrega(entregaId: string, formData: FormData) {
   const actions = [...new Set(formData.getAll("actions") as string[])];
   const rawSacolas = formData.get("numero_sacolas") as string;
   const numeroSacolas = rawSacolas ? parseInt(rawSacolas, 10) : 1;
+  // Só vincula a um grupo; ausente mantém o group_id atual.
+  const groupId = (formData.get("group_id") as string) || undefined;
 
   const { error } = await supabase
     .from("entregas")
     .update({
+      ...(groupId && { group_id: groupId }),
       endereco_id: enderecoId,
       valor,
       actions: actions.length > 0 ? actions : ["entregar"],
