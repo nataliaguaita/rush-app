@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { createEntrega } from "../../actions";
 import { NovaEntregaForm } from "../nova-entrega-form";
 import type { ClienteWithEnderecos } from "@/types/database";
-import type { OpenGroup } from "../page";
+import type { OpenGroup } from "../../open-groups";
 
 jest.mock("../../actions", () => ({ createEntrega: jest.fn() }));
 jest.mock("next/navigation", () => ({
