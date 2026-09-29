@@ -32,10 +32,12 @@ export default function EntregadorPage() {
   const supabase = createClient();
   const knownIds = useRef<Set<string> | null>(null);
 
+  // `now` só importa para virar o dia depois de concluir a rota; sem isso não re-renderiza a lista a cada minuto
   useEffect(() => {
+    if (!completedAt) return;
     const interval = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [completedAt]);
 
   const isNewDay = useMemo(() => {
     if (!completedAt) return false;
@@ -159,7 +161,7 @@ export default function EntregadorPage() {
         <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
           {isNewDay ? (
             <>
-              <div className="text-6xl animate-pulse">📦</div>
+              <div className="text-6xl">📦</div>
               <div>
                 <p className="text-lg font-semibold">Preparando sua rota...</p>
                 <p className="text-sm text-muted-foreground">As entregas do dia estão sendo atribuídas. Aguarde!</p>
