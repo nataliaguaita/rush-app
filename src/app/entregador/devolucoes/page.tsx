@@ -51,7 +51,7 @@ export default function DevolucoesEntregadorPage() {
     queueMicrotask(load);
   }, [load]);
 
-  useRealtimeRefresh("entregador-devolucoes", "entregas", load);
+  useRealtimeRefresh("entregador-devolucoes", "entregas", load, { mine: true });
 
   return (
     <div className="space-y-4">

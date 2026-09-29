@@ -61,7 +61,7 @@ export function EntregadorBottomNav() {
     queueMicrotask(loadCount);
   }, [loadCount]);
 
-  useRealtimeRefresh("entregador-nav-devolucoes", "entregas", loadCount);
+  useRealtimeRefresh("entregador-nav-devolucoes", "entregas", loadCount, { mine: true });
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t bg-card pb-[env(safe-area-inset-bottom)]">
