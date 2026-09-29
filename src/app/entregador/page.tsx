@@ -115,7 +115,7 @@ export default function EntregadorPage() {
     queueMicrotask(load);
   }, [load]);
 
-  useRealtimeRefresh("entregador-rota", "entregas", () => load({ silent: true }));
+  useRealtimeRefresh("entregador-rota", "entregas", () => load({ silent: true }), { mine: true });
 
   return (
     <div className="space-y-4">

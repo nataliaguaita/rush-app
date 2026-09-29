@@ -89,7 +89,7 @@ export default function EntregasFinalizadasPage() {
     queueMicrotask(() => load(selectedDate));
   }, [load, selectedDate]);
 
-  useRealtimeRefresh("entregador-finalizadas", "entregas", () => load(selectedDate, { silent: true }));
+  useRealtimeRefresh("entregador-finalizadas", "entregas", () => load(selectedDate, { silent: true }), { mine: true });
 
   return (
     <div className="space-y-4">
