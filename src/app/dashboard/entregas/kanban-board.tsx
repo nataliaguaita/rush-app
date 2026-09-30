@@ -57,6 +57,7 @@ import {
   ChevronDown,
   Users,
   Package,
+  StickyNote,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -294,6 +295,12 @@ function SortableCard({
                   </span>
                 </p>
               )}
+              {entrega.notes && (
+                <p className="flex items-start gap-1 text-xs italic text-muted-foreground">
+                  <StickyNote className="mt-0.5 h-3 w-3 shrink-0" />
+                  <span className="line-clamp-3 whitespace-pre-wrap">{entrega.notes}</span>
+                </p>
+              )}
               <div className="flex flex-wrap items-center gap-1.5">
                 {entrega.scheduled_date && (
                   <span className="text-xs font-semibold text-primary">{formatScheduledDate(entrega.scheduled_date)}</span>
@@ -441,14 +448,22 @@ function GroupCardContent({
         {/* List of clients */}
         <div className="space-y-0.5">
           {entregas.map((e) => (
-            <div key={e.id} className="flex items-center gap-1.5 rounded px-1.5 py-0.5 text-xs bg-muted/40">
-              <span className="font-mono text-muted-foreground text-[10px]">{formatOrderNumber(e.order_number)}</span>
-              <Link href={`/dashboard/entregas/${e.id}`} className="truncate hover:underline flex-1">
-                {e.cliente?.name ?? "Cliente"}
-              </Link>
-              <span className="text-muted-foreground shrink-0">
-                <Package className="inline h-2.5 w-2.5 mr-0.5" />{e.numero_sacolas ?? 1}
-              </span>
+            <div key={e.id} className="rounded px-1.5 py-0.5 text-xs bg-muted/40">
+              <div className="flex items-center gap-1.5">
+                <span className="font-mono text-muted-foreground text-[10px]">{formatOrderNumber(e.order_number)}</span>
+                <Link href={`/dashboard/entregas/${e.id}`} className="truncate hover:underline flex-1">
+                  {e.cliente?.name ?? "Cliente"}
+                </Link>
+                <span className="text-muted-foreground shrink-0">
+                  <Package className="inline h-2.5 w-2.5 mr-0.5" />{e.numero_sacolas ?? 1}
+                </span>
+              </div>
+              {e.notes && (
+                <p className="mt-0.5 flex items-start gap-1 italic text-muted-foreground">
+                  <StickyNote className="mt-0.5 h-3 w-3 shrink-0" />
+                  <span className="line-clamp-3 whitespace-pre-wrap">{e.notes}</span>
+                </p>
+              )}
             </div>
           ))}
         </div>
