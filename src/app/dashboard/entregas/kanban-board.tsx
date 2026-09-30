@@ -158,22 +158,12 @@ function optimizeVisualRoute(
     return null;
   };
 
-  const isUrgent = (vid: string) => itemsMap[vid]?.entregas[0]?.is_urgent;
   const isManha = (vid: string) => itemsMap[vid]?.entregas[0]?.scheduled_period === "manha";
 
-  // Turno por fora (o entregador sai em duas viagens separadas), urgente
-  // sempre primeiro dentro do turno dele.
-  const sortGroup = (ids: string[], startLat: number, startLng: number) => {
-    const urgent = ids.filter(isUrgent);
-    const normal = ids.filter((id) => !isUrgent(id));
-    const urgentResult = nearestNeighborSort(urgent, getCoords, startLat, startLng);
-    const normalStart = urgent.length > 0
-      ? { lat: urgentResult.lastLat, lng: urgentResult.lastLng }
-      : { lat: startLat, lng: startLng };
-    const normalResult = nearestNeighborSort(normal, getCoords, normalStart.lat, normalStart.lng);
-    const lastResult = normal.length > 0 ? normalResult : urgentResult;
-    return { ordered: [...urgentResult.ordered, ...normalResult.ordered], lastLat: lastResult.lastLat, lastLng: lastResult.lastLng };
-  };
+  // Turno por fora (o entregador sai em duas viagens separadas).
+  // Urgente é só marcação, não influencia a ordem.
+  const sortGroup = (ids: string[], startLat: number, startLng: number) =>
+    nearestNeighborSort(ids, getCoords, startLat, startLng);
 
   const manha = visualIds.filter(isManha);
   const tarde = visualIds.filter((id) => !isManha(id));
