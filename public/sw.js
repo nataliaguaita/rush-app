@@ -17,13 +17,15 @@ async function precache() {
         const res = await fetch(page, { cache: "no-store" });
         if (!res.ok || res.redirected) return;
         const html = await res.clone().text();
-        await cache.put(page, res);
         const assets = [...new Set(html.match(/\/_next\/static\/[^"'\s)\\]+/g) ?? [])];
-        await Promise.all(
+        const ok = await Promise.all(
           assets.map(async (url) => {
-            if (!(await cache.match(url))) await cache.add(url).catch(() => {});
+            if (await cache.match(url)) return true;
+            return cache.add(url).then(() => true, () => false);
           }),
         );
+        // Só guarda a tela se todos os arquivos dela chegaram: nunca fica tela sem arquivos.
+        if (ok.every(Boolean)) await cache.put(page, res);
       } catch {
         // sem rede agora: fica para o próximo precache
       }
