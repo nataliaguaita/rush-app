@@ -3,7 +3,8 @@
 // localStorage/IndexedDB — aqui só entram HTML e arquivos estáticos.
 // Chamadas ao Supabase (outro domínio) nunca passam por aqui.
 
-const CACHE = "rush-shell-v1";
+const CACHE = "rush-shell-v2";
+const NAV_TIMEOUT_MS = 4000;
 const PAGES = ["/", "/login", "/entregador", "/entregador/finalizadas", "/entregador/devolucoes"];
 const FILES = ["/logo.svg", "/icon.svg", "/manifest.json"];
 
@@ -36,7 +37,13 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  // Apaga caches de versões antigas (v1...) para o celular recomeçar limpo.
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim()),
+  );
 });
 
 self.addEventListener("message", (event) => {
@@ -49,8 +56,7 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET" || url.origin !== self.location.origin) return;
 
   // Arquivos com hash no nome nunca mudam: cache primeiro.
-  // ponytail: cache nunca é limpo; versões antigas acumulam a cada deploy.
-  // Trocar CACHE para v2 se o armazenamento virar problema.
+  // ponytail: dentro da mesma versão o cache só cresce; subir CACHE limpa tudo no activate.
   if (url.pathname.startsWith("/_next/static/")) {
     event.respondWith(
       caches.match(req).then(
@@ -74,18 +80,26 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Telas: rede primeiro (sempre a versão nova), cache se estiver sem internet.
+  // Telas: rede primeiro (sempre a versão nova). Se a rede falhar ou demorar
+  // mais que NAV_TIMEOUT_MS (sinal fraco), usa o cache; sem cache, espera a rede.
   if (req.mode === "navigate") {
+    const network = fetch(req)
+      .then((res) => {
+        if (res.ok && !res.redirected) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(url.pathname, copy));
+        }
+        return res;
+      })
+      .catch(() => null);
+    const timeout = new Promise((resolve) => setTimeout(() => resolve(null), NAV_TIMEOUT_MS));
     event.respondWith(
-      fetch(req)
-        .then((res) => {
-          if (res.ok && !res.redirected) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(url.pathname, copy));
-          }
-          return res;
-        })
-        .catch(async () => (await caches.match(url.pathname)) || Response.error()),
+      (async () => {
+        const res = await Promise.race([network, timeout]);
+        if (res) return res;
+        const hit = await caches.match(url.pathname);
+        return hit || (await network) || Response.error();
+      })(),
     );
   }
 });
