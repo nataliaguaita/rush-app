@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { DB_SCHEMA } from "@/lib/supabase/schema";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeUsername } from "@/lib/username";
 
@@ -9,7 +10,7 @@ function getAdminClient() {
   return createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
+    { auth: { autoRefreshToken: false, persistSession: false }, db: { schema: DB_SCHEMA } }
   );
 }
 

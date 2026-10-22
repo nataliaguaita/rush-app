@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { DB_SCHEMA } from "@/lib/supabase/schema";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 interface Options {
@@ -46,7 +47,7 @@ export function useRealtimeRefresh(
       subscribedOnce = false;
       channel = supabase
         .channel(channelName)
-        .on("postgres_changes", { event: "*", schema: "public", table, ...(filter && { filter }) }, trigger)
+        .on("postgres_changes", { event: "*", schema: DB_SCHEMA, table, ...(filter && { filter }) }, trigger)
         .subscribe((status) => {
           if (status !== "SUBSCRIBED") return;
           if (subscribedOnce) trigger();
