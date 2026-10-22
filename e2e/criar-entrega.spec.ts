@@ -14,7 +14,7 @@ test.afterEach(async () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return;
-  await createClient(url, key).from("entregas").delete().eq("notes", marker);
+  await createClient(url, key, { db: { schema: process.env.NEXT_PUBLIC_SUPABASE_SCHEMA || "public" } }).from("entregas").delete().eq("notes", marker);
 });
 
 test("login and create a new entrega", async ({ page }) => {

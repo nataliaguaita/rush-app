@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { DB_SCHEMA } from "@/lib/supabase/schema";
 import { STALE_STATUSES, STALE_HOURS } from "@/lib/status";
 
 export interface StaleEntrega {
@@ -38,7 +39,7 @@ export function useStaleEntregas() {
     load();
     const channel = supabase
       .channel("stale-entregas")
-      .on("postgres_changes", { event: "*", schema: "public", table: "entregas" }, load)
+      .on("postgres_changes", { event: "*", schema: DB_SCHEMA, table: "entregas" }, load)
       .subscribe();
 
     return () => {

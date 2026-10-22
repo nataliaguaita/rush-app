@@ -4,7 +4,10 @@ const nextConfig: NextConfig = {
   serverExternalPackages: [],
   transpilePackages: ["lucide-react"],
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "**.supabase.co", pathname: "/storage/v1/**" }],
+    remotePatterns: [
+      { protocol: "https", hostname: "**.supabase.co", pathname: "/storage/v1/**" },
+      { protocol: "https", hostname: "api.dentalmarechal.com.br", pathname: "/storage/v1/**" }, // Supabase novo (self-hosted)
+    ],
   },
 };
 
