@@ -3,7 +3,7 @@
 // localStorage/IndexedDB — aqui só entram HTML e arquivos estáticos.
 // Chamadas ao Supabase (outro domínio) nunca passam por aqui.
 
-const CACHE = "rush-shell-v2";
+const CACHE = "rush-shell-v3";
 const NAV_TIMEOUT_MS = 4000;
 const PAGES = ["/", "/login", "/entregador", "/entregador/finalizadas", "/entregador/devolucoes"];
 const FILES = ["/logo.svg", "/icon.svg", "/manifest.json"];
