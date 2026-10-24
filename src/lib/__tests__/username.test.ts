@@ -48,11 +48,11 @@ describe("isValidUsername", () => {
 describe("usernameToSyntheticEmail", () => {
   it("appends the synthetic domain", () => {
     expect(usernameToSyntheticEmail("joaosilva")).toBe(
-      "joaosilva@rushapp.local"
+      "joaosilva@login.dentalmarechal.internal"
     );
   });
 
   it("does not normalize the input", () => {
-    expect(usernameToSyntheticEmail("Joao")).toBe("Joao@rushapp.local");
+    expect(usernameToSyntheticEmail("Joao")).toBe("Joao@login.dentalmarechal.internal");
   });
 });
