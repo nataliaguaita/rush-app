@@ -43,7 +43,7 @@ async function resolveEnderecoId(
 export async function createEntrega(formData: FormData) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Não autenticado");
+  if (!user) throw new Error("Sessão expirada. Saia e entre de novo.");
 
   const clienteId = formData.get("cliente_id") as string;
   const enderecoId = await resolveEnderecoId(supabase, formData, clienteId);
@@ -140,7 +140,7 @@ export async function updateEntrega(entregaId: string, formData: FormData) {
 export async function cancelEntrega(entregaId: string, reason: string) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Não autenticado");
+  if (!user) throw new Error("Sessão expirada. Saia e entre de novo.");
 
   const { data: entrega } = await supabase
     .from("entregas")
@@ -325,7 +325,7 @@ export type FinalizacaoPainel =
 export async function finalizarPeloPainel(entregaId: string, f: FinalizacaoPainel) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Não autenticado");
+  if (!user) throw new Error("Sessão expirada. Saia e entre de novo.");
 
   let query;
   if (f.tipo === "retorno") {

@@ -36,7 +36,7 @@ interface CreateEntregaGrupoParams {
 export async function createEntregaGrupo(params: CreateEntregaGrupoParams) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Não autenticado");
+  if (!user) throw new Error("Sessão expirada. Saia e entre de novo.");
 
   if (params.destinatarios.length === 0) throw new Error("Adicione ao menos um destinatário");
 
