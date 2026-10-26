@@ -17,7 +17,7 @@ function getAdminClient() {
 export async function POST(request: Request) {
   const authHeader = request.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "Sessão expirada. Saia e entre de novo." }, { status: 401 });
   }
 
   const token = authHeader.split(" ")[1];
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
   const { data: { user }, error: authError } = await adminSupabase.auth.getUser(token);
   if (authError || !user) {
-    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    return NextResponse.json({ error: "Sessão expirada. Saia e entre de novo." }, { status: 401 });
   }
 
   const { data: profile } = await adminSupabase
